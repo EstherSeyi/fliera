@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Github, Linkedin, Twitter } from "lucide-react";
+import { Github, Linkedin, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export const Footer: React.FC = () => {
@@ -53,15 +53,15 @@ export const Footer: React.FC = () => {
 
           <div className="flex items-center space-x-4">
             <a
-              href="https://twitter.com"
+              href="https://x.com/seyi_hadas"
               target="_blank"
               rel="noopener noreferrer"
               className="text-hookersgreen hover:text-accent transition-colors"
             >
-              <Twitter className="h-4 w-4" />
+              <X className="h-4 w-4" />
             </a>
             <a
-              href="https://github.com"
+              href="https://github.com/EstherSeyi"
               target="_blank"
               rel="noopener noreferrer"
               className="text-hookersgreen hover:text-accent transition-colors"
@@ -69,7 +69,7 @@ export const Footer: React.FC = () => {
               <Github className="h-4 w-4" />
             </a>
             <a
-              href="https://linkedin.com"
+              href="https://www.linkedin.com/in/seyi-ogundijo/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-hookersgreen hover:text-accent transition-colors"
