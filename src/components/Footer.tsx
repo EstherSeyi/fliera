@@ -56,9 +56,9 @@ export const Footer: React.FC = () => {
               href="https://twitter.com"
               target="_blank"
               rel="noopener noreferrer"
-              className=" hover:text-accent transition-colors"
+              className="text-hookersgreen hover:text-accent transition-colors"
             >
-              <Twitter className="h-4 w-4 text-hookersgreen" />
+              <Twitter className="h-4 w-4" />
             </a>
             <a
               href="https://github.com"
