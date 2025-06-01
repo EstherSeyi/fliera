@@ -27,7 +27,7 @@ export const Home: React.FC = () => {
           For your events.
         </motion.h1>
         <motion.p 
-          className="text-xl text-secondary max-w-2xl mx-auto"
+          className="text-xl text-secondary max-w-2xl"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
