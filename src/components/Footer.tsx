@@ -61,7 +61,7 @@ export const Footer: React.FC = () => {
               <img 
                 src="https://static.cdnlogo.com/logos/x/9/x.svg" 
                 alt="X logo" 
-                className="h-4 w-4 invert"
+                className="h-3 w-3 invert"
               />
             </a>
             <a
