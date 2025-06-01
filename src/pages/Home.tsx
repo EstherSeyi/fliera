@@ -15,7 +15,7 @@ export const Home: React.FC = () => {
 
   return (
     <div className="space-y-16 animate-fade-in text-sans">
-      <section className="text-center space-y-6 py-16">
+      <section className="text-start space-y-6 py-16">
         <motion.h1 
           className="text-6xl font-bold text-primary"
           initial={{ opacity: 0, y: 20 }}
