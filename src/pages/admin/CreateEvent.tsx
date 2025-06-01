@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Upload, Plus } from 'lucide-react';
 import { useEvents } from '../../context/EventContext';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import type { Event } from '../../types';
 
 export const CreateEvent: React.FC = () => {
@@ -12,24 +13,32 @@ export const CreateEvent: React.FC = () => {
   const [date, setDate] = useState('');
   const [description, setDescription] = useState('');
   const [flyerUrl, setFlyerUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    const newEvent: Event = {
-      id: Date.now().toString(),
-      title,
-      date,
-      description,
-      flyerUrl,
-      placeholderZones: {
-        photo: { x: 50, y: 50, width: 200, height: 200 },
-        text: { x: 50, y: 270, width: 200, height: 50 },
-      },
-    };
+    try {
+      const newEvent: Event = {
+        id: Date.now().toString(),
+        title,
+        date,
+        description,
+        flyerUrl,
+        placeholderZones: {
+          photo: { x: 50, y: 50, width: 200, height: 200 },
+          text: { x: 50, y: 270, width: 200, height: 50 },
+        },
+      };
 
-    addEvent(newEvent);
-    navigate('/events');
+      await addEvent(newEvent);
+      navigate('/events');
+    } catch (error) {
+      console.error('Error creating event:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -56,6 +65,7 @@ export const CreateEvent: React.FC = () => {
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -70,6 +80,7 @@ export const CreateEvent: React.FC = () => {
               onChange={(e) => setDate(e.target.value)}
               className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -83,6 +94,7 @@ export const CreateEvent: React.FC = () => {
               onChange={(e) => setDescription(e.target.value)}
               className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary h-32"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -98,15 +110,26 @@ export const CreateEvent: React.FC = () => {
               className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
               placeholder="Enter image URL"
               required
+              disabled={isLoading}
             />
           </div>
 
           <button
             type="submit"
-            className="w-full flex items-center justify-center px-6 py-3 bg-thistle text-primary rounded-lg hover:bg-thistle/90 transition-colors"
+            disabled={isLoading}
+            className="w-full flex items-center justify-center px-6 py-3 bg-thistle text-primary rounded-lg hover:bg-thistle/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            <Plus className="w-5 h-5 mr-2" />
-            Create Event
+            {isLoading ? (
+              <>
+                <LoadingSpinner className="mr-2" />
+                Creating event...
+              </>
+            ) : (
+              <>
+                <Plus className="w-5 h-5 mr-2" />
+                Create Event
+              </>
+            )}
           </button>
         </form>
       </motion.div>

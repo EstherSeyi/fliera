@@ -3,16 +3,25 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 export const Login: React.FC = () => {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(email, password);
+    setIsLoading(true);
+    try {
+      await login(email, password);
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -39,6 +48,7 @@ export const Login: React.FC = () => {
                 className="w-full pl-10 pr-4 py-2 border border-primary/20 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary"
                 placeholder="Enter your email"
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -57,11 +67,13 @@ export const Login: React.FC = () => {
                 className="w-full pl-10 pr-12 py-2 border border-primary/20 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary"
                 placeholder="Enter your password"
                 required
+                disabled={isLoading}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hover:text-primary transition-colors"
+                disabled={isLoading}
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -74,9 +86,17 @@ export const Login: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full bg-primary text-neutral py-2 rounded-lg hover:bg-primary/90 transition-colors"
+            disabled={isLoading}
+            className="w-full bg-primary text-neutral py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
           >
-            Sign In
+            {isLoading ? (
+              <>
+                <LoadingSpinner className="text-neutral mr-2" />
+                Signing in...
+              </>
+            ) : (
+              'Sign In'
+            )}
           </button>
         </form>
 

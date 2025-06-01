@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { PageSpinner } from "./PageSpinner";
 
 export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -14,7 +15,7 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [isLoggedIn, navigate, loading]);
 
-  if (loading) return <div className="text-center py-10">Loading...</div>;
+  if (loading) return <PageSpinner />;
 
   return isLoggedIn ? <>{children}</> : null;
 };
