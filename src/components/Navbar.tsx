@@ -70,3 +70,4 @@ export const Navbar: React.FC = () => {
       </div>
     </nav>
   );
+};
