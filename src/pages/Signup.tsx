@@ -1,20 +1,19 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export const Signup: React.FC = () => {
-  const { login } = useAuth();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { signup } = useAuth();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For now, we'll just use the login function
-    await login(email, password);
+    await signup(email, password, name);
   };
 
   return (
@@ -25,10 +24,15 @@ export const Signup: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-3xl font-bold text-primary mb-6 text-center">Create Account</h2>
+        <h2 className="text-3xl font-bold text-primary mb-6 text-center">
+          Create Account
+        </h2>
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <label htmlFor="name" className="block text-sm font-medium text-secondary">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-secondary"
+            >
               Full Name
             </label>
             <div className="relative">
@@ -46,7 +50,10 @@ export const Signup: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="email" className="block text-sm font-medium text-secondary">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-secondary"
+            >
               Email
             </label>
             <div className="relative">
@@ -64,7 +71,10 @@ export const Signup: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="password" className="block text-sm font-medium text-secondary">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-secondary"
+            >
               Password
             </label>
             <div className="relative">
@@ -101,7 +111,7 @@ export const Signup: React.FC = () => {
         </form>
 
         <p className="mt-4 text-center text-secondary">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <Link to="/login" className="text-primary hover:text-primary/80">
             Sign in
           </Link>
