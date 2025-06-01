@@ -1,11 +1,12 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { User } from "@supabase/supabase-js";
+import { supabase } from "../lib/supabase";
 
 interface AuthContextType {
   isLoggedIn: boolean;
   user: User | null;
+  loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, fullName: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -13,23 +14,29 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session);
+      console.log("Session:", session, session?.user.aud === "authenticated");
+      setIsLoggedIn(session?.user.aud === "authenticated");
       setUser(session?.user ?? null);
+      setLoading(false);
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session);
+      setIsLoggedIn(session?.user.aud === "authenticated");
       setUser(session?.user ?? null);
     });
 
@@ -44,9 +51,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) throw error;
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (error) {
-      console.error('Error logging in:', error);
+      console.error("Error logging in:", error);
       throw error;
     }
   };
@@ -64,9 +71,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (signUpError) throw signUpError;
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (error) {
-      console.error('Error signing up:', error);
+      console.error("Error signing up:", error);
       throw error;
     }
   };
@@ -75,15 +82,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      navigate('/');
+      navigate("/");
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error("Error logging out:", error);
       throw error;
     }
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{ isLoggedIn, user, loading, login, signup, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -92,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
