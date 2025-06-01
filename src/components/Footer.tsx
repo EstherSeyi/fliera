@@ -10,7 +10,7 @@ export const Footer: React.FC = () => {
     <footer className="bg-primary text-neutral mt-16">
       <div className="container mx-auto px-4">
         <div className="py-8 border-b border-neutral/10">
-          <nav className="flex flex-wrap justify-center gap-6">
+          <nav className="flex flex-wrap gap-6">
             <Link to="/events" className="hover:text-accent transition-colors">
               Events
             </Link>
