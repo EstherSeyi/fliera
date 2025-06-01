@@ -1,9 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export const Signup: React.FC = () => {
+  const { login } = useAuth();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // For now, we'll just use the login function
+    await login(email, password);
+  };
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center">
       <motion.div
@@ -13,7 +25,7 @@ export const Signup: React.FC = () => {
         transition={{ duration: 0.5 }}
       >
         <h2 className="text-3xl font-bold text-primary mb-6 text-center">Create Account</h2>
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <label htmlFor="name" className="block text-sm font-medium text-secondary">
               Full Name
@@ -23,8 +35,11 @@ export const Signup: React.FC = () => {
               <input
                 type="text"
                 id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-primary/20 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary"
                 placeholder="Enter your full name"
+                required
               />
             </div>
           </div>
@@ -38,8 +53,11 @@ export const Signup: React.FC = () => {
               <input
                 type="email"
                 id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-primary/20 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary"
                 placeholder="Enter your email"
+                required
               />
             </div>
           </div>
@@ -53,8 +71,11 @@ export const Signup: React.FC = () => {
               <input
                 type="password"
                 id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-primary/20 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary"
                 placeholder="Choose a password"
+                required
               />
             </div>
           </div>
