@@ -58,10 +58,10 @@ export const Navbar: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Link
-                  to="/signup"
+                  to="/login"
                   className="flex items-center px-6 py-2 bg-accent text-primary rounded-lg hover:bg-accent/90 transition-colors"
                 >
-                  Sign Up
+                  Login
                 </Link>
               </motion.div>
             )}
