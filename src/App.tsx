@@ -8,7 +8,6 @@ const router = createBrowserRouter([
     path: "/",
     element: (
       <AuthProvider>
-        {" "}
         <Layout />
       </AuthProvider>
     ),
