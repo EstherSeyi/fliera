@@ -33,6 +33,34 @@ const router = createBrowserRouter([
           return { Component: CreateEvent };
         },
       },
+      {
+        path: 'login',
+        async lazy() {
+          const { Login } = await import('./pages/Login');
+          return { Component: Login };
+        },
+      },
+      {
+        path: 'signup',
+        async lazy() {
+          const { Signup } = await import('./pages/Signup');
+          return { Component: Signup };
+        },
+      },
+      {
+        path: 'dashboard',
+        async lazy() {
+          const { Dashboard } = await import('./pages/Dashboard');
+          return { Component: Dashboard };
+        },
+      },
+      {
+        path: 'my-dps',
+        async lazy() {
+          const { MyDPs } = await import('./pages/MyDPs');
+          return { Component: MyDPs };
+        },
+      },
     ],
   },
 ]);
