@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { Home } from "./pages/Home";
 import { AuthProvider } from "./context/AuthContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const router = createBrowserRouter([
   {
@@ -34,7 +35,13 @@ const router = createBrowserRouter([
         path: "admin/create",
         async lazy() {
           const { CreateEvent } = await import("./pages/admin/CreateEvent");
-          return { Component: CreateEvent };
+          return { 
+            Component: () => (
+              <ProtectedRoute>
+                <CreateEvent />
+              </ProtectedRoute>
+            ),
+          };
         },
       },
       {
@@ -55,14 +62,26 @@ const router = createBrowserRouter([
         path: "dashboard",
         async lazy() {
           const { Dashboard } = await import("./pages/Dashboard");
-          return { Component: Dashboard };
+          return { 
+            Component: () => (
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            ),
+          };
         },
       },
       {
         path: "my-dps",
         async lazy() {
           const { MyDPs } = await import("./pages/MyDPs");
-          return { Component: MyDPs };
+          return { 
+            Component: () => (
+              <ProtectedRoute>
+                <MyDPs />
+              </ProtectedRoute>
+            ),
+          };
         },
       },
     ],
