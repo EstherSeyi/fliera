@@ -24,7 +24,7 @@ export const Navbar: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center space-x-2 text-primary hover:text-primary/90">
-            <Calendar className="w-6 h-6" />
+            <Calendar className="w-6 h-6" strokeWidth={1.5} />
             <span className="text-xl font-light">EventDP</span>
           </Link>
           
