@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Github, Linkedin } from "lucide-react";
+import { Github, Linkedin, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export const Footer: React.FC = () => {
@@ -58,11 +58,7 @@ export const Footer: React.FC = () => {
               rel="noopener noreferrer"
               className="text-hookersgreen hover:text-accent transition-colors"
             >
-              <img 
-                src="https://static.cdnlogo.com/logos/x/9/x.svg" 
-                alt="X logo" 
-                className="h-3 w-3 invert"
-              />
+              <X className="h-4 w-4" />
             </a>
             <a
               href="https://github.com/EstherSeyi"
