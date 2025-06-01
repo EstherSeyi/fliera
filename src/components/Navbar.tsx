@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar } from 'lucide-react';
+import { Calendar, PlusCircle } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
@@ -31,6 +31,12 @@ export const Navbar: React.FC = () => {
           
           <div className="flex items-center space-x-4">
             <NavLink to="/events">Events</NavLink>
+            <NavLink to="/dashboard">Dashboard</NavLink>
+            <NavLink to="/my-dps">My DPs</NavLink>
+            <NavLink to="/admin/create">
+              <PlusCircle className="w-5 h-5 mr-1" />
+              Create Event
+            </NavLink>
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
