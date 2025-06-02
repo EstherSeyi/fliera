@@ -1,8 +1,14 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Stage, Layer, Image, Transformer, Rect } from 'react-konva';
-import { useFormContext } from 'react-hook-form';
-import type { Event, ImagePlaceholderZone } from '../../../types';
+import React, { useRef, useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Stage,
+  Layer,
+  Image as KonvaImage,
+  Transformer,
+  Rect,
+} from "react-konva";
+import { useFormContext } from "react-hook-form";
+import type { Event, ImagePlaceholderZone } from "../../../types";
 
 export const ImagePlaceholderStep: React.FC = () => {
   const { watch, setValue } = useFormContext<Event>();
@@ -11,9 +17,9 @@ export const ImagePlaceholderStep: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const transformerRef = useRef<any>(null);
   const rectRef = useRef<any>(null);
-  
-  const flyer_url = watch('flyer_url');
-  const imagePlaceholders = watch('image_placeholders');
+
+  const flyer_url = watch("flyer_url");
+  const imagePlaceholders = watch("image_placeholders");
   const placeholder = imagePlaceholders[0]; // We're working with the first placeholder
 
   useEffect(() => {
@@ -26,7 +32,7 @@ export const ImagePlaceholderStep: React.FC = () => {
         const scale = containerWidth / img.width;
         setStageSize({
           width: containerWidth,
-          height: img.height * scale
+          height: img.height * scale,
         });
       }
     };
@@ -53,10 +59,10 @@ export const ImagePlaceholderStep: React.FC = () => {
         x: Math.round(node.x()),
         y: Math.round(node.y()),
         width: Math.round(node.width() * scaleX),
-        height: Math.round(node.height() * scaleY)
+        height: Math.round(node.height() * scaleY),
       };
 
-      setValue('image_placeholders', [newPlaceholder]);
+      setValue("image_placeholders", [newPlaceholder]);
     }
   };
 
@@ -68,15 +74,19 @@ export const ImagePlaceholderStep: React.FC = () => {
       className="space-y-6"
     >
       <div className="text-center space-y-2">
-        <h3 className="text-xl font-semibold text-primary">Position Image Placeholder</h3>
-        <p className="text-secondary">Drag and resize the box to set where user photos will appear</p>
+        <h3 className="text-xl font-semibold text-primary">
+          Position Image Placeholder
+        </h3>
+        <p className="text-secondary">
+          Drag and resize the box to set where user photos will appear
+        </p>
       </div>
 
       <div ref={containerRef} className="border rounded-lg overflow-hidden">
         {image && stageSize.width > 0 && (
           <Stage width={stageSize.width} height={stageSize.height}>
             <Layer>
-              <Image
+              <KonvaImage
                 image={image}
                 width={stageSize.width}
                 height={stageSize.height}
