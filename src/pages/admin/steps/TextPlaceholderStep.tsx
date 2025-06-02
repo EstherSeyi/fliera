@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Stage, Layer,   Image as KonvaImage,, Text, Transformer } from 'react-konva';
+import { Stage, Layer,   Image as KonvaImage, Text, Transformer } from 'react-konva';
 import { useFormContext } from 'react-hook-form';
 import { Plus, Trash2 } from 'lucide-react';
 import type { CreateEventFormData, TextPlaceholderZone } from '../../../types';
