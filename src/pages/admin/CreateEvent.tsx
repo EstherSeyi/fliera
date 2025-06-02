@@ -25,11 +25,26 @@ export const CreateEvent: React.FC = () => {
         title,
         date,
         description,
-        flyerUrl,
-        placeholderZones: {
-          photo: { x: 50, y: 50, width: 200, height: 200 },
-          text: { x: 50, y: 270, width: 200, height: 50 },
-        },
+        flyer_url: flyerUrl,
+        image_placeholders: [
+          { x: 50, y: 50, width: 200, height: 200 }
+        ],
+        text_placeholders: [
+          {
+            x: 50,
+            y: 270,
+            width: 200,
+            height: 50,
+            text: '',
+            fontSize: 24,
+            color: '#000000',
+            textAlign: 'center',
+            fontFamily: 'Open Sans',
+            fontStyle: 'normal',
+            textTransform: 'none',
+            fontWeight: '600'
+          }
+        ]
       };
 
       await addEvent(newEvent);

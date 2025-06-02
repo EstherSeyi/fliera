@@ -14,11 +14,26 @@ const sampleEvent: Event = {
   title: 'Tech Conference 2024',
   date: '2024-04-15',
   description: 'Join us for the biggest tech conference of the year!',
-  flyerUrl: 'https://images.pexels.com/photos/2747449/pexels-photo-2747449.jpeg',
-  placeholderZones: {
-    photo: { x: 50, y: 50, width: 200, height: 200 },
-    text: { x: 50, y: 270, width: 200, height: 50 },
-  },
+  flyer_url: 'https://images.pexels.com/photos/2747449/pexels-photo-2747449.jpeg',
+  image_placeholders: [
+    { x: 50, y: 50, width: 200, height: 200 }
+  ],
+  text_placeholders: [
+    {
+      x: 50,
+      y: 270,
+      width: 200,
+      height: 50,
+      text: '',
+      fontSize: 24,
+      color: '#000000',
+      textAlign: 'center',
+      fontFamily: 'Open Sans',
+      fontStyle: 'normal',
+      textTransform: 'none',
+      fontWeight: '600'
+    }
+  ]
 };
 
 export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

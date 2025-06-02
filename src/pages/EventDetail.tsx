@@ -33,26 +33,57 @@ export const EventDetail: React.FC = () => {
 
     // Load and draw the flyer template
     const flyerImage = new Image();
-    flyerImage.src = event.flyerUrl;
+    flyerImage.src = event.flyer_url;
     await new Promise(resolve => { flyerImage.onload = resolve; });
     
     canvas.width = flyerImage.width;
     canvas.height = flyerImage.height;
     ctx.drawImage(flyerImage, 0, 0);
 
-    // Load and draw the user's photo in the placeholder zone
+    // Load and draw the user's photo in the first image placeholder
     const userImage = new Image();
     userImage.src = userPhoto;
     await new Promise(resolve => { userImage.onload = resolve; });
     
-    const { photo, text } = event.placeholderZones;
-    ctx.drawImage(userImage, photo.x, photo.y, photo.width, photo.height);
+    const imagePlaceholder = event.image_placeholders[0];
+    if (imagePlaceholder) {
+      const { x, y, width, height } = imagePlaceholder;
+      ctx.drawImage(userImage, x, y, width, height);
+    }
 
-    // Add the user's name
-    ctx.font = '24px "Open Sans"';
-    ctx.fillStyle = '#000000';
-    ctx.textAlign = 'center';
-    ctx.fillText(userName, text.x + text.width / 2, text.y + text.height / 2);
+    // Draw all text placeholders
+    event.text_placeholders.forEach(placeholder => {
+      const {
+        x,
+        y,
+        text,
+        fontSize,
+        color,
+        textAlign,
+        fontFamily,
+        fontStyle,
+        fontWeight,
+        textTransform
+      } = placeholder;
+
+      ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px "${fontFamily}"`;
+      ctx.fillStyle = color;
+      ctx.textAlign = textAlign;
+      
+      // Transform the text according to textTransform
+      let displayText = text || userName;
+      if (textTransform === 'uppercase') {
+        displayText = displayText.toUpperCase();
+      } else if (textTransform === 'lowercase') {
+        displayText = displayText.toLowerCase();
+      } else if (textTransform === 'capitalize') {
+        displayText = displayText.split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      }
+
+      ctx.fillText(displayText, x, y);
+    });
 
     setIsGenerating(false);
   };
