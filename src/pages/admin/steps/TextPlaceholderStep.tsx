@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Stage, Layer, Image, Text, Transformer } from 'react-konva';
+import { Stage, Layer,   Image as KonvaImage,, Text, Transformer } from 'react-konva';
 import { useFormContext } from 'react-hook-form';
 import { Plus, Trash2 } from 'lucide-react';
 import type { CreateEventFormData, TextPlaceholderZone } from '../../../types';
@@ -124,7 +124,7 @@ export const TextPlaceholderStep: React.FC = () => {
           {image && stageSize.width > 0 && (
             <Stage width={stageSize.width} height={stageSize.height}>
               <Layer>
-                <Image
+                <KonvaImage
                   image={image}
                   width={stageSize.width}
                   height={stageSize.height}
