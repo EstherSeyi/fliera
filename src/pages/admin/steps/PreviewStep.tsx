@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Stage, Layer, Image, Text, Rect } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Text, Rect } from 'react-konva';
 import { useFormContext } from 'react-hook-form';
 import type { CreateEventFormData } from '../../../types';
 
