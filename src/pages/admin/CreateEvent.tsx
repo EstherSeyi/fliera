@@ -5,13 +5,12 @@ import { Plus, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { useEvents } from '../../context/EventContext';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
-import type { Event } from '../../types';
+import { supabase } from '../../lib/supabase';
+import type { Event, CreateEventFormData } from '../../types';
 import { EventDetailsStep } from './steps/EventDetailsStep';
 import { ImagePlaceholderStep } from './steps/ImagePlaceholderStep';
 import { TextPlaceholderStep } from './steps/TextPlaceholderStep';
 import { PreviewStep } from './steps/PreviewStep';
-
-type FormData = Omit<Event, 'id' | 'user_id' | 'created_at'>;
 
 const STEPS = [
   { id: 'details', title: 'Event Details' },
@@ -25,13 +24,13 @@ export const CreateEvent: React.FC = () => {
   const { addEvent } = useEvents();
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const methods = useForm<FormData>({
+  const methods = useForm<CreateEventFormData>({
     defaultValues: {
       title: '',
       date: '',
       description: '',
-      flyer_url: '',
       image_placeholders: [{ x: 50, y: 50, width: 200, height: 200 }],
       text_placeholders: [{
         x: 50,
@@ -50,17 +49,43 @@ export const CreateEvent: React.FC = () => {
     }
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: CreateEventFormData) => {
     setIsLoading(true);
+    setError(null);
+    
     try {
+      const file = data.flyer_file[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `event-flyers/${fileName}`;
+
+      // Upload file to Supabase Storage
+      const { error: uploadError, data: uploadData } = await supabase.storage
+        .from('events')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from('events')
+        .getPublicUrl(filePath);
+
       const newEvent: Event = {
         id: Date.now().toString(),
-        ...data
+        title: data.title,
+        date: data.date,
+        description: data.description,
+        flyer_url: publicUrl,
+        image_placeholders: data.image_placeholders,
+        text_placeholders: data.text_placeholders
       };
+
       await addEvent(newEvent);
       navigate('/events');
-    } catch (error) {
-      console.error('Error creating event:', error);
+    } catch (err) {
+      console.error('Error creating event:', err);
+      setError('Failed to create event. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -116,6 +141,12 @@ export const CreateEvent: React.FC = () => {
               ))}
             </div>
           </div>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
+              {error}
+            </div>
+          )}
 
           <FormProvider {...methods}>
             <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">

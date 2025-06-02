@@ -31,3 +31,7 @@ export interface Event {
   text_placeholders: TextPlaceholderZone[];
   created_at?: string;
 }
+
+export interface CreateEventFormData extends Omit<Event, 'id' | 'user_id' | 'created_at' | 'flyer_url'> {
+  flyer_file: FileList;
+}
