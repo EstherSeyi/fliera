@@ -1,10 +1,16 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFormContext } from 'react-hook-form';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, FileText } from 'lucide-react';
 import type { CreateEventFormData } from '../../../types';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return bytes + ' B';
+  else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  else return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+};
 
 export const EventDetailsStep: React.FC = () => {
   const { register, formState: { errors }, watch, setValue } = useFormContext<CreateEventFormData>();
@@ -141,22 +147,41 @@ export const EventDetailsStep: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="relative rounded-lg overflow-hidden"
+                className="relative rounded-lg overflow-hidden bg-neutral/50 border-2 border-primary/20"
               >
                 {tempFlyerUrl && (
-                  <img
-                    src={tempFlyerUrl}
-                    alt="Preview"
-                    className="w-full h-64 object-cover rounded-lg"
-                  />
+                  <>
+                    <img
+                      src={tempFlyerUrl}
+                      alt="Preview"
+                      className="w-full h-64 object-cover"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 bg-white/90 backdrop-blur-sm p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <FileText className="w-5 h-5 text-primary/60" />
+                          <div>
+                            <p className="text-sm font-medium text-primary truncate max-w-[200px]">
+                              {flyerFile[0]?.name}
+                            </p>
+                            <p className="text-xs text-secondary">
+                              {formatFileSize(flyerFile[0]?.size || 0)}
+                            </p>
+                          </div>
+                        </div>
+                        <motion.button
+                          type="button"
+                          onClick={clearFile}
+                          className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <X className="w-5 h-5" />
+                        </motion.button>
+                      </div>
+                    </div>
+                  </>
                 )}
-                <button
-                  type="button"
-                  onClick={clearFile}
-                  className="absolute top-2 right-2 p-2 bg-white/80 rounded-full hover:bg-white transition-colors"
-                >
-                  <X className="w-5 h-5 text-primary" />
-                </button>
               </motion.div>
             )}
           </AnimatePresence>
