@@ -2,19 +2,21 @@ import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Stage, Layer, Image, Text, Rect } from 'react-konva';
 import { useFormContext } from 'react-hook-form';
-import type { Event } from '../../../types';
+import type { CreateEventFormData } from '../../../types';
 
 export const PreviewStep: React.FC = () => {
-  const { watch } = useFormContext<Event>();
+  const { watch } = useFormContext<CreateEventFormData>();
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const { flyer_url, image_placeholders, text_placeholders } = watch();
+  const { temp_flyer_url, image_placeholders, text_placeholders } = watch();
 
   useEffect(() => {
+    if (!temp_flyer_url) return;
+
     const img = new Image();
-    img.src = flyer_url;
+    img.src = temp_flyer_url;
     img.onload = () => {
       setImage(img);
       if (containerRef.current) {
@@ -26,7 +28,11 @@ export const PreviewStep: React.FC = () => {
         });
       }
     };
-  }, [flyer_url]);
+  }, [temp_flyer_url]);
+
+  if (!temp_flyer_url) {
+    return null;
+  }
 
   return (
     <motion.div

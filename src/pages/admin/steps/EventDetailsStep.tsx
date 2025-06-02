@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFormContext } from 'react-hook-form';
 import { Upload, X } from 'lucide-react';
@@ -8,25 +8,34 @@ const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
 
 export const EventDetailsStep: React.FC = () => {
   const { register, formState: { errors }, watch, setValue } = useFormContext<CreateEventFormData>();
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const flyerFile = watch('flyer_file');
+  const tempFlyerUrl = watch('temp_flyer_url');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // Create preview URL
       const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      setValue('temp_flyer_url', url);
     }
   };
 
   const clearFile = () => {
     setValue('flyer_file', undefined as any);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
+    if (tempFlyerUrl) {
+      URL.revokeObjectURL(tempFlyerUrl);
+      setValue('temp_flyer_url', null);
     }
   };
+
+  // Cleanup object URL when component unmounts or when tempFlyerUrl changes
+  useEffect(() => {
+    return () => {
+      if (tempFlyerUrl) {
+        URL.revokeObjectURL(tempFlyerUrl);
+      }
+    };
+  }, [tempFlyerUrl]);
 
   return (
     <motion.div
@@ -134,9 +143,9 @@ export const EventDetailsStep: React.FC = () => {
                 exit={{ opacity: 0 }}
                 className="relative rounded-lg overflow-hidden"
               >
-                {previewUrl && (
+                {tempFlyerUrl && (
                   <img
-                    src={previewUrl}
+                    src={tempFlyerUrl}
                     alt="Preview"
                     className="w-full h-64 object-cover rounded-lg"
                   />

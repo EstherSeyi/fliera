@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Stage, Layer, Image, Text, Transformer } from 'react-konva';
 import { useFormContext } from 'react-hook-form';
 import { Plus, Trash2 } from 'lucide-react';
-import type { Event, TextPlaceholderZone } from '../../../types';
+import type { CreateEventFormData, TextPlaceholderZone } from '../../../types';
 
 const TEXT_STYLES = {
   fontFamilies: ['Open Sans', 'Arial', 'Times New Roman'],
@@ -14,7 +14,7 @@ const TEXT_STYLES = {
 };
 
 export const TextPlaceholderStep: React.FC = () => {
-  const { watch, setValue } = useFormContext<Event>();
+  const { watch, setValue } = useFormContext<CreateEventFormData>();
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
@@ -22,12 +22,14 @@ export const TextPlaceholderStep: React.FC = () => {
   const transformerRef = useRef<any>(null);
   const textRefs = useRef<any[]>([]);
   
-  const flyer_url = watch('flyer_url');
+  const tempFlyerUrl = watch('temp_flyer_url');
   const textPlaceholders = watch('text_placeholders');
 
   useEffect(() => {
+    if (!tempFlyerUrl) return;
+
     const img = new Image();
-    img.src = flyer_url;
+    img.src = tempFlyerUrl;
     img.onload = () => {
       setImage(img);
       if (containerRef.current) {
@@ -39,7 +41,7 @@ export const TextPlaceholderStep: React.FC = () => {
         });
       }
     };
-  }, [flyer_url]);
+  }, [tempFlyerUrl]);
 
   useEffect(() => {
     if (transformerRef.current && selectedIndex >= 0) {
@@ -100,6 +102,10 @@ export const TextPlaceholderStep: React.FC = () => {
     newPlaceholders[index] = { ...newPlaceholders[index], [field]: value };
     setValue('text_placeholders', newPlaceholders);
   };
+
+  if (!tempFlyerUrl) {
+    return null;
+  }
 
   return (
     <motion.div

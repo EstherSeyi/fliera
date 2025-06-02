@@ -8,23 +8,25 @@ import {
   Rect,
 } from "react-konva";
 import { useFormContext } from "react-hook-form";
-import type { Event, ImagePlaceholderZone } from "../../../types";
+import type { CreateEventFormData, ImagePlaceholderZone } from "../../../types";
 
 export const ImagePlaceholderStep: React.FC = () => {
-  const { watch, setValue } = useFormContext<Event>();
+  const { watch, setValue } = useFormContext<CreateEventFormData>();
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const transformerRef = useRef<any>(null);
   const rectRef = useRef<any>(null);
 
-  const flyer_url = watch("flyer_url");
+  const tempFlyerUrl = watch("temp_flyer_url");
   const imagePlaceholders = watch("image_placeholders");
   const placeholder = imagePlaceholders[0]; // We're working with the first placeholder
 
   useEffect(() => {
+    if (!tempFlyerUrl) return;
+
     const img = new Image();
-    img.src = flyer_url;
+    img.src = tempFlyerUrl;
     img.onload = () => {
       setImage(img);
       if (containerRef.current) {
@@ -36,7 +38,7 @@ export const ImagePlaceholderStep: React.FC = () => {
         });
       }
     };
-  }, [flyer_url]);
+  }, [tempFlyerUrl]);
 
   useEffect(() => {
     if (transformerRef.current && rectRef.current) {
@@ -65,6 +67,10 @@ export const ImagePlaceholderStep: React.FC = () => {
       setValue("image_placeholders", [newPlaceholder]);
     }
   };
+
+  if (!tempFlyerUrl) {
+    return null;
+  }
 
   return (
     <motion.div
