@@ -50,7 +50,7 @@ export const PreviewStep: React.FC = () => {
         {image && stageSize.width > 0 && (
           <Stage width={stageSize.width} height={stageSize.height}>
             <Layer>
-              <Image
+              <KonvaImage
                 image={image}
                 width={stageSize.width}
                 height={stageSize.height}
