@@ -18,15 +18,21 @@ export const ImagePlaceholderStep: React.FC = () => {
   const transformerRef = useRef<any>(null);
   const rectRef = useRef<any>(null);
 
-  const tempFlyerUrl = watch("temp_flyer_url");
+  const flyer_file = watch("flyer_file");
+
+  const eventName = watch("title");
+
+  console.log(flyer_file, "here", eventName);
+
+  const flyer_url = flyer_file?.name ? URL.createObjectURL(flyer_file) : null;
   const imagePlaceholders = watch("image_placeholders");
   const placeholder = imagePlaceholders[0]; // We're working with the first placeholder
 
   useEffect(() => {
-    if (!tempFlyerUrl) return;
+    if (!flyer_url) return;
 
     const img = new Image();
-    img.src = tempFlyerUrl;
+    img.src = flyer_url;
     img.onload = () => {
       setImage(img);
       if (containerRef.current) {
@@ -38,7 +44,7 @@ export const ImagePlaceholderStep: React.FC = () => {
         });
       }
     };
-  }, [tempFlyerUrl]);
+  }, [flyer_url]);
 
   useEffect(() => {
     if (transformerRef.current && rectRef.current) {
@@ -67,10 +73,6 @@ export const ImagePlaceholderStep: React.FC = () => {
       setValue("image_placeholders", [newPlaceholder]);
     }
   };
-
-  if (!tempFlyerUrl) {
-    return null;
-  }
 
   return (
     <motion.div
