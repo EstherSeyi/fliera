@@ -233,7 +233,7 @@ export const EventDetail: React.FC = () => {
           <button
             onClick={downloadDP}
             disabled={!userPhoto || !userName || isGenerating}
-            className="w-full flex items-center justify-center px-6 py-3 bg-thistle text-primary rounded-lg hover:bg-thistle/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center px-6 py-3 bg-thistle text-primary hover:bg-thistle/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-5 h-5 mr-2" />
             Download Your DP
