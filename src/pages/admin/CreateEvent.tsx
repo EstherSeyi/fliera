@@ -57,6 +57,11 @@ export const CreateEvent: React.FC = () => {
   });
 
   const onSubmit = async (data: CreateEventFormData) => {
+    // Only proceed with form submission if we're on the last step
+    if (currentStep !== STEPS.length - 1) {
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
