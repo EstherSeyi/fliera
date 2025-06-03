@@ -1,22 +1,24 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Stage, Layer, Image as KonvaImage, Text, Rect } from 'react-konva';
-import { useFormContext } from 'react-hook-form';
-import type { CreateEventFormData } from '../../../types';
+import React, { useRef, useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Stage, Layer, Image as KonvaImage, Text, Rect } from "react-konva";
+import { useFormContext } from "react-hook-form";
+import type { CreateEventFormData } from "../../../types";
 
 export const PreviewStep: React.FC = () => {
   const { watch } = useFormContext<CreateEventFormData>();
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  const { temp_flyer_url, image_placeholders, text_placeholders } = watch();
+
+  const { image_placeholders, text_placeholders, flyer_file } = watch();
+
+  const tempFlyerUrl = flyer_file ? URL.createObjectURL(flyer_file) : null;
 
   useEffect(() => {
-    if (!temp_flyer_url) return;
+    if (!tempFlyerUrl) return;
 
     const img = new Image();
-    img.src = temp_flyer_url;
+    img.src = tempFlyerUrl;
     img.onload = () => {
       setImage(img);
       if (containerRef.current) {
@@ -24,13 +26,13 @@ export const PreviewStep: React.FC = () => {
         const scale = containerWidth / img.width;
         setStageSize({
           width: containerWidth,
-          height: img.height * scale
+          height: img.height * scale,
         });
       }
     };
-  }, [temp_flyer_url]);
+  }, [tempFlyerUrl]);
 
-  if (!temp_flyer_url) {
+  if (!tempFlyerUrl) {
     return null;
   }
 
@@ -42,7 +44,9 @@ export const PreviewStep: React.FC = () => {
       className="space-y-6"
     >
       <div className="text-center space-y-2">
-        <h3 className="text-xl font-semibold text-primary">Preview Your Template</h3>
+        <h3 className="text-xl font-semibold text-primary">
+          Preview Your Template
+        </h3>
         <p className="text-secondary">Review how your DP template will look</p>
       </div>
 
@@ -65,10 +69,7 @@ export const PreviewStep: React.FC = () => {
                 />
               ))}
               {text_placeholders.map((placeholder, index) => (
-                <Text
-                  key={index}
-                  {...placeholder}
-                />
+                <Text key={index} {...placeholder} />
               ))}
             </Layer>
           </Stage>
