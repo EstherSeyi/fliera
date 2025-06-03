@@ -1,16 +1,22 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Stage, Layer,   Image as KonvaImage, Text, Transformer } from 'react-konva';
-import { useFormContext } from 'react-hook-form';
-import { Plus, Trash2 } from 'lucide-react';
-import type { CreateEventFormData, TextPlaceholderZone } from '../../../types';
+import React, { useRef, useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Stage,
+  Layer,
+  Image as KonvaImage,
+  Text,
+  Transformer,
+} from "react-konva";
+import { useFormContext } from "react-hook-form";
+import { Plus, Trash2 } from "lucide-react";
+import type { CreateEventFormData, TextPlaceholderZone } from "../../../types";
 
 const TEXT_STYLES = {
-  fontFamilies: ['Open Sans', 'Arial', 'Times New Roman'],
-  fontStyles: ['normal', 'italic'],
-  fontWeights: ['normal', 'bold'],
-  textTransforms: ['none', 'uppercase', 'lowercase', 'capitalize'],
-  textAligns: ['left', 'center', 'right'] as CanvasTextAlign[]
+  fontFamilies: ["Open Sans", "Arial", "Times New Roman"],
+  fontStyles: ["normal", "italic"],
+  fontWeights: ["normal", "bold"],
+  textTransforms: ["none", "uppercase", "lowercase", "capitalize"],
+  textAligns: ["left", "center", "right"] as CanvasTextAlign[],
 };
 
 export const TextPlaceholderStep: React.FC = () => {
@@ -21,9 +27,12 @@ export const TextPlaceholderStep: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const transformerRef = useRef<any>(null);
   const textRefs = useRef<any[]>([]);
-  
-  const tempFlyerUrl = watch('temp_flyer_url');
-  const textPlaceholders = watch('text_placeholders');
+
+  // const tempFlyerUrl = watch('temp_flyer_url');
+  const flyer_file = watch("flyer_file");
+  const tempFlyerUrl = flyer_file ? URL.createObjectURL(flyer_file) : null;
+
+  const textPlaceholders = watch("text_placeholders");
 
   useEffect(() => {
     if (!tempFlyerUrl) return;
@@ -37,7 +46,7 @@ export const TextPlaceholderStep: React.FC = () => {
         const scale = containerWidth / img.width;
         setStageSize({
           width: containerWidth,
-          height: img.height * scale
+          height: img.height * scale,
         });
       }
     };
@@ -64,12 +73,12 @@ export const TextPlaceholderStep: React.FC = () => {
         x: Math.round(node.x()),
         y: Math.round(node.y()),
         width: Math.round(node.width() * scaleX),
-        height: Math.round(node.height() * scaleY)
+        height: Math.round(node.height() * scaleY),
       };
 
       const newPlaceholders = [...textPlaceholders];
       newPlaceholders[index] = newPlaceholder;
-      setValue('text_placeholders', newPlaceholders);
+      setValue("text_placeholders", newPlaceholders);
     }
   };
 
@@ -79,28 +88,32 @@ export const TextPlaceholderStep: React.FC = () => {
       y: 50,
       width: 200,
       height: 50,
-      text: 'Sample Text',
+      text: "Sample Text",
       fontSize: 24,
-      color: '#000000',
-      textAlign: 'center',
-      fontFamily: 'Open Sans',
-      fontStyle: 'normal',
-      textTransform: 'none',
-      fontWeight: 'normal'
+      color: "#000000",
+      textAlign: "center",
+      fontFamily: "Open Sans",
+      fontStyle: "normal",
+      textTransform: "none",
+      fontWeight: "normal",
     };
-    setValue('text_placeholders', [...textPlaceholders, newPlaceholder]);
+    setValue("text_placeholders", [...textPlaceholders, newPlaceholder]);
   };
 
   const removeTextPlaceholder = (index: number) => {
     const newPlaceholders = textPlaceholders.filter((_, i) => i !== index);
-    setValue('text_placeholders', newPlaceholders);
+    setValue("text_placeholders", newPlaceholders);
     setSelectedIndex(-1);
   };
 
-  const updateTextStyle = (index: number, field: keyof TextPlaceholderZone, value: any) => {
+  const updateTextStyle = (
+    index: number,
+    field: keyof TextPlaceholderZone,
+    value: any
+  ) => {
     const newPlaceholders = [...textPlaceholders];
     newPlaceholders[index] = { ...newPlaceholders[index], [field]: value };
-    setValue('text_placeholders', newPlaceholders);
+    setValue("text_placeholders", newPlaceholders);
   };
 
   if (!tempFlyerUrl) {
@@ -115,12 +128,19 @@ export const TextPlaceholderStep: React.FC = () => {
       className="space-y-6"
     >
       <div className="text-center space-y-2">
-        <h3 className="text-xl font-semibold text-primary">Position Text Elements</h3>
-        <p className="text-secondary">Add and style text placeholders for your event DP</p>
+        <h3 className="text-xl font-semibold text-primary">
+          Position Text Elements
+        </h3>
+        <p className="text-secondary">
+          Add and style text placeholders for your event DP
+        </p>
       </div>
 
       <div className="flex gap-6">
-        <div ref={containerRef} className="flex-1 border rounded-lg overflow-hidden">
+        <div
+          ref={containerRef}
+          className="flex-1 border rounded-lg overflow-hidden"
+        >
           {image && stageSize.width > 0 && (
             <Stage width={stageSize.width} height={stageSize.height}>
               <Layer>
@@ -132,7 +152,7 @@ export const TextPlaceholderStep: React.FC = () => {
                 {textPlaceholders.map((placeholder, index) => (
                   <Text
                     key={index}
-                    ref={el => textRefs.current[index] = el}
+                    ref={(el) => (textRefs.current[index] = el)}
                     {...placeholder}
                     draggable
                     onClick={() => setSelectedIndex(index)}
@@ -145,7 +165,9 @@ export const TextPlaceholderStep: React.FC = () => {
                   ref={transformerRef}
                   boundBoxFunc={(oldBox, newBox) => {
                     const minSize = 20;
-                    return newBox.width < minSize || newBox.height < minSize ? oldBox : newBox;
+                    return newBox.width < minSize || newBox.height < minSize
+                      ? oldBox
+                      : newBox;
                   }}
                 />
               </Layer>
@@ -177,21 +199,33 @@ export const TextPlaceholderStep: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm text-secondary">Sample Text</label>
+                <label className="block text-sm text-secondary">
+                  Sample Text
+                </label>
                 <input
                   type="text"
                   value={textPlaceholders[selectedIndex].text}
-                  onChange={(e) => updateTextStyle(selectedIndex, 'text', e.target.value)}
+                  onChange={(e) =>
+                    updateTextStyle(selectedIndex, "text", e.target.value)
+                  }
                   className="w-full px-3 py-2 border rounded"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm text-secondary">Font Size</label>
+                <label className="block text-sm text-secondary">
+                  Font Size
+                </label>
                 <input
                   type="number"
                   value={textPlaceholders[selectedIndex].fontSize}
-                  onChange={(e) => updateTextStyle(selectedIndex, 'fontSize', parseInt(e.target.value))}
+                  onChange={(e) =>
+                    updateTextStyle(
+                      selectedIndex,
+                      "fontSize",
+                      parseInt(e.target.value)
+                    )
+                  }
                   className="w-full px-3 py-2 border rounded"
                 />
               </div>
@@ -201,7 +235,9 @@ export const TextPlaceholderStep: React.FC = () => {
                 <input
                   type="color"
                   value={textPlaceholders[selectedIndex].color}
-                  onChange={(e) => updateTextStyle(selectedIndex, 'color', e.target.value)}
+                  onChange={(e) =>
+                    updateTextStyle(selectedIndex, "color", e.target.value)
+                  }
                   className="w-full h-10 p-1 rounded"
                 />
               </div>
@@ -209,11 +245,23 @@ export const TextPlaceholderStep: React.FC = () => {
               {Object.entries(TEXT_STYLES).map(([key, values]) => (
                 <div key={key} className="space-y-2">
                   <label className="block text-sm text-secondary">
-                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                    {key
+                      .replace(/([A-Z])/g, " $1")
+                      .replace(/^./, (str) => str.toUpperCase())}
                   </label>
                   <select
-                    value={textPlaceholders[selectedIndex][key.replace('ies', 'y') as keyof TextPlaceholderZone]}
-                    onChange={(e) => updateTextStyle(selectedIndex, key.replace('ies', 'y') as keyof TextPlaceholderZone, e.target.value)}
+                    value={
+                      textPlaceholders[selectedIndex][
+                        key.replace("ies", "y") as keyof TextPlaceholderZone
+                      ]
+                    }
+                    onChange={(e) =>
+                      updateTextStyle(
+                        selectedIndex,
+                        key.replace("ies", "y") as keyof TextPlaceholderZone,
+                        e.target.value
+                      )
+                    }
                     className="w-full px-3 py-2 border rounded"
                   >
                     {values.map((value) => (
