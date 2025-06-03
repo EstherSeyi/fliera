@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Stage, Layer, Image as KonvaImage, Text, Rect } from "react-konva";
 import { useFormContext } from "react-hook-form";
@@ -12,7 +12,10 @@ export const PreviewStep: React.FC = () => {
 
   const { image_placeholders, text_placeholders, flyer_file } = watch();
 
-  const tempFlyerUrl = flyer_file ? URL.createObjectURL(flyer_file) : null;
+  const tempFlyerUrl = useMemo(
+    () => (flyer_file ? URL.createObjectURL(flyer_file) : null),
+    [flyer_file]
+  );
 
   useEffect(() => {
     if (!tempFlyerUrl) return;
