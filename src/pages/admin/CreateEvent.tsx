@@ -58,9 +58,7 @@ export const CreateEvent: React.FC = () => {
 
   const onSubmit = async (data: CreateEventFormData) => {
     // Only proceed with form submission if we're on the last step
-    if (currentStep !== STEPS.length - 1) {
-      return;
-    }
+    if (currentStep !== STEPS.length - 1) return;
 
     setIsLoading(true);
     setError(null);
@@ -200,7 +198,10 @@ export const CreateEvent: React.FC = () => {
                 {currentStep < STEPS.length - 1 ? (
                   <button
                     type="button"
-                    onClick={handleNext}
+                    onClick={(evt) => {
+                      evt.preventDefault();
+                      handleNext();
+                    }}
                     className="ml-auto flex items-center px-6 py-2 bg-thistle text-primary rounded-lg hover:bg-thistle/90 transition-colors"
                   >
                     Next
