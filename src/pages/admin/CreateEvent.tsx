@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, ArrowLeft, ArrowRight } from "lucide-react";
 import { useForm, FormProvider } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useEvents } from "../../context/EventContext";
 import { LoadingSpinner } from "../../components/LoadingSpinner";
 import { supabase } from "../../lib/supabase";
 import type { Event, CreateEventFormData } from "../../types";
+import { createEventSchema } from "../../validation/eventSchema";
 import { EventDetailsStep } from "./steps/EventDetailsStep";
 import { ImagePlaceholderStep } from "./steps/ImagePlaceholderStep";
 import { TextPlaceholderStep } from "./steps/TextPlaceholderStep";
@@ -27,6 +29,7 @@ export const CreateEvent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const methods = useForm<CreateEventFormData>({
+    resolver: zodResolver(createEventSchema),
     defaultValues: {
       title: "",
       date: "",
@@ -105,8 +108,6 @@ export const CreateEvent: React.FC = () => {
     if (isValid) {
       setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
     }
-
-    return;
   };
 
   const handleBack = () => {
