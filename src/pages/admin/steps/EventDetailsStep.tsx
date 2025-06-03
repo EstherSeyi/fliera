@@ -1,34 +1,41 @@
-import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useFormContext } from 'react-hook-form';
-import { Upload, X } from 'lucide-react';
-import type { CreateEventFormData } from '../../../types';
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useFormContext } from "react-hook-form";
+import { Upload, X } from "lucide-react";
+import type { CreateEventFormData } from "../../../types";
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 export const EventDetailsStep: React.FC = () => {
-  const { register, formState: { errors }, watch, setValue } = useFormContext<CreateEventFormData>();
-  const flyerFile = watch('flyer_file');
-  const tempFlyerUrl = watch('temp_flyer_url');
+  const [tempFlyerUrl, setTempFlyerUrl] = useState("");
+
+  const {
+    register,
+    formState: { errors },
+    watch,
+    setValue,
+  } = useFormContext<CreateEventFormData>();
+  const flyerFile = watch("flyer_file");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Create preview URL
+      setValue("flyer_file", file);
+
       const url = URL.createObjectURL(file);
-      setValue('temp_flyer_url', url);
+      setTempFlyerUrl(url);
     }
   };
 
   const clearFile = () => {
-    setValue('flyer_file', undefined as any);
+    setValue("flyer_file", undefined as any);
+
     if (tempFlyerUrl) {
       URL.revokeObjectURL(tempFlyerUrl);
-      setValue('temp_flyer_url', null);
+      setTempFlyerUrl("");
     }
   };
 
-  // Cleanup object URL when component unmounts or when tempFlyerUrl changes
   useEffect(() => {
     return () => {
       if (tempFlyerUrl) {
@@ -51,7 +58,7 @@ export const EventDetailsStep: React.FC = () => {
         <input
           type="text"
           id="title"
-          {...register('title', { required: 'Title is required' })}
+          {...register("title", { required: "Title is required" })}
           className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
         />
         {errors.title && (
@@ -66,7 +73,7 @@ export const EventDetailsStep: React.FC = () => {
         <input
           type="date"
           id="date"
-          {...register('date', { required: 'Date is required' })}
+          {...register("date", { required: "Date is required" })}
           className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
         />
         {errors.date && (
@@ -80,35 +87,31 @@ export const EventDetailsStep: React.FC = () => {
         </label>
         <textarea
           id="description"
-          {...register('description')}
+          {...register("description")}
           className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary h-32"
         />
       </div>
 
       <div className="space-y-2">
-        <label className="block text-primary font-medium">
-          Flyer Image
-        </label>
+        <label className="block text-primary font-medium">Flyer Image</label>
         <div className="relative">
           <input
             type="file"
             accept="image/*"
             id="flyer_file"
-            className="hidden"
-            {...register('flyer_file', {
-              required: 'Flyer image is required',
+            className="absolute -z-[1] h-[0.1px] w-[0.1px] overflow-hidden opacity-0"
+            {...register("flyer_file", {
+              required: "Flyer image is required",
               validate: {
-                fileSize: (files) => {
-                  const file = files?.[0];
+                fileSize: (file) => {
                   if (file && file.size > MAX_FILE_SIZE) {
-                    return 'File size must be less than 2MB';
+                    return "File size must be less than 2MB";
                   }
                   return true;
                 },
-                fileType: (files) => {
-                  const file = files?.[0];
-                  if (file && !file.type.startsWith('image/')) {
-                    return 'File must be an image';
+                fileType: (file) => {
+                  if (file && !file.type.startsWith("image/")) {
+                    return "File must be an image";
                   }
                   return true;
                 },
@@ -116,9 +119,9 @@ export const EventDetailsStep: React.FC = () => {
             })}
             onChange={handleFileChange}
           />
-          
+
           <AnimatePresence mode="wait">
-            {!flyerFile?.length ? (
+            {!flyerFile ? (
               <motion.label
                 htmlFor="flyer_file"
                 initial={{ opacity: 0 }}
@@ -132,7 +135,9 @@ export const EventDetailsStep: React.FC = () => {
                   whileTap={{ scale: 0.95 }}
                 >
                   <Upload className="w-12 h-12 text-primary/60 mb-4 group-hover:text-primary/80 transition-colors" />
-                  <p className="text-primary/80 font-medium mb-1">Click to upload your flyer image</p>
+                  <p className="text-primary/80 font-medium mb-1">
+                    Click to upload your flyer image
+                  </p>
                   <p className="text-secondary text-sm">PNG, JPG up to 2MB</p>
                 </motion.div>
               </motion.label>
