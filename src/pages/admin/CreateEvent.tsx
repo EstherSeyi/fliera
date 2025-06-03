@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, ArrowLeft, ArrowRight } from 'lucide-react';
-import { useForm, FormProvider } from 'react-hook-form';
-import { useEvents } from '../../context/EventContext';
-import { LoadingSpinner } from '../../components/LoadingSpinner';
-import { supabase } from '../../lib/supabase';
-import type { Event, CreateEventFormData } from '../../types';
-import { EventDetailsStep } from './steps/EventDetailsStep';
-import { ImagePlaceholderStep } from './steps/ImagePlaceholderStep';
-import { TextPlaceholderStep } from './steps/TextPlaceholderStep';
-import { PreviewStep } from './steps/PreviewStep';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, ArrowLeft, ArrowRight } from "lucide-react";
+import { useForm, FormProvider } from "react-hook-form";
+import { useEvents } from "../../context/EventContext";
+import { LoadingSpinner } from "../../components/LoadingSpinner";
+import { supabase } from "../../lib/supabase";
+import type { Event, CreateEventFormData } from "../../types";
+import { EventDetailsStep } from "./steps/EventDetailsStep";
+import { ImagePlaceholderStep } from "./steps/ImagePlaceholderStep";
+import { TextPlaceholderStep } from "./steps/TextPlaceholderStep";
+import { PreviewStep } from "./steps/PreviewStep";
 
 const STEPS = [
-  { id: 'details', title: 'Event Details' },
-  { id: 'image', title: 'Image Placeholder' },
-  { id: 'text', title: 'Text Placeholders' },
-  { id: 'preview', title: 'Preview' },
+  { id: "details", title: "Event Details" },
+  { id: "image", title: "Image Placeholder" },
+  { id: "text", title: "Text Placeholders" },
+  { id: "preview", title: "Preview" },
 ];
 
 export const CreateEvent: React.FC = () => {
@@ -28,49 +28,54 @@ export const CreateEvent: React.FC = () => {
 
   const methods = useForm<CreateEventFormData>({
     defaultValues: {
-      title: '',
-      date: '',
-      description: '',
-      temp_flyer_url: null,
+      title: "",
+      date: "",
+      description: "",
+      flyer_file: null,
       image_placeholders: [{ x: 50, y: 50, width: 200, height: 200 }],
-      text_placeholders: [{
-        x: 50,
-        y: 270,
-        width: 200,
-        height: 50,
-        text: '',
-        fontSize: 24,
-        color: '#000000',
-        textAlign: 'center',
-        fontFamily: 'Open Sans',
-        fontStyle: 'normal',
-        textTransform: 'none',
-        fontWeight: '600'
-      }]
-    }
+      text_placeholders: [
+        {
+          x: 50,
+          y: 270,
+          width: 200,
+          height: 50,
+          text: "",
+          fontSize: 24,
+          color: "#000000",
+          textAlign: "center",
+          fontFamily: "Open Sans",
+          fontStyle: "normal",
+          textTransform: "none",
+          fontWeight: "600",
+        },
+      ],
+    },
+    mode: "onChange",
   });
 
   const onSubmit = async (data: CreateEventFormData) => {
     setIsLoading(true);
     setError(null);
-    
+
+    if (!data?.flyer_file) return;
+
     try {
-      const file = data.flyer_file[0];
-      const fileExt = file.name.split('.').pop();
+      const file = data?.flyer_file;
+      const fileExt = file.name.split(".").pop();
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `event-flyers/${fileName}`;
 
       // Upload file to Supabase Storage
       const { error: uploadError, data: uploadData } = await supabase.storage
-        .from('events')
+        .from("events")
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       // Get the public URL for the uploaded file
-      const { data: { publicUrl } } = supabase.storage
-        .from('events')
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("events").getPublicUrl(filePath);
 
       const newEvent: Event = {
         id: Date.now().toString(),
@@ -79,24 +84,29 @@ export const CreateEvent: React.FC = () => {
         description: data.description,
         flyer_url: publicUrl,
         image_placeholders: data.image_placeholders,
-        text_placeholders: data.text_placeholders
+        text_placeholders: data.text_placeholders,
       };
 
       await addEvent(newEvent);
-      navigate('/events');
+      navigate("/events");
     } catch (err) {
-      console.error('Error creating event:', err);
-      setError('Failed to create event. Please try again.');
+      console.error("Error creating event:", err);
+      setError("Failed to create event. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleNext = async () => {
-    const isValid = await methods.trigger(Object.keys(methods.getValues()) as any);
+    const isValid = await methods.trigger(
+      Object.keys(methods.getValues()) as any
+    );
+
     if (isValid) {
       setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
     }
+
+    return;
   };
 
   const handleBack = () => {
@@ -112,7 +122,9 @@ export const CreateEvent: React.FC = () => {
       >
         <div className="text-center">
           <h1 className="text-4xl font-bold text-primary">Create New Event</h1>
-          <p className="mt-2 text-secondary">Set up your event details and DP template</p>
+          <p className="mt-2 text-secondary">
+            Set up your event details and DP template
+          </p>
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6">
@@ -123,18 +135,24 @@ export const CreateEvent: React.FC = () => {
                   <div className="flex items-center">
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        index <= currentStep ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'
+                        index <= currentStep
+                          ? "bg-primary text-white"
+                          : "bg-gray-200 text-gray-500"
                       }`}
                     >
                       {index + 1}
                     </div>
-                    <span className="ml-2 text-sm font-medium hidden sm:block">{step.title}</span>
+                    <span className="ml-2 text-sm font-medium hidden sm:block">
+                      {step.title}
+                    </span>
                   </div>
                   {index < STEPS.length - 1 && (
                     <div className="flex-1 mx-4 h-0.5 bg-gray-200">
                       <div
                         className="h-full bg-primary transition-all duration-300"
-                        style={{ width: `${index < currentStep ? '100%' : '0%'}` }}
+                        style={{
+                          width: `${index < currentStep ? "100%" : "0%"}`,
+                        }}
                       />
                     </div>
                   )}
@@ -150,7 +168,10 @@ export const CreateEvent: React.FC = () => {
           )}
 
           <FormProvider {...methods}>
-            <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={methods.handleSubmit(onSubmit)}
+              className="space-y-6"
+            >
               <AnimatePresence mode="wait">
                 {currentStep === 0 && <EventDetailsStep />}
                 {currentStep === 1 && <ImagePlaceholderStep />}
@@ -169,7 +190,7 @@ export const CreateEvent: React.FC = () => {
                     Back
                   </button>
                 )}
-                
+
                 {currentStep < STEPS.length - 1 ? (
                   <button
                     type="button"
