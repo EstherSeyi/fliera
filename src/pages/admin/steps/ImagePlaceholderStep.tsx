@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Stage,
@@ -20,13 +20,13 @@ export const ImagePlaceholderStep: React.FC = () => {
 
   const flyer_file = watch("flyer_file");
 
-  const eventName = watch("title");
-
-  console.log(flyer_file, "here", eventName);
-
-  const flyer_url = flyer_file?.name ? URL.createObjectURL(flyer_file) : null;
   const imagePlaceholders = watch("image_placeholders");
-  const placeholder = imagePlaceholders[0]; // We're working with the first placeholder
+  const placeholder = imagePlaceholders[0];
+
+  const flyer_url = useMemo(
+    () => (flyer_file?.name ? URL.createObjectURL(flyer_file) : null),
+    [flyer_file]
+  );
 
   useEffect(() => {
     if (!flyer_url) return;
