@@ -34,7 +34,7 @@ export const Navbar: React.FC = () => {
       <Link
         to={to}
         onClick={onClick}
-        className={`flex items-center px-4 py-2 rounded-lg transition-all duration-200 hover:bg-primary/10 focus:bg-primary/10 ${
+        className={`flex items-center px-4 py-2 transition-all duration-200 hover:bg-primary/10 focus:bg-primary/10 ${
           isActive ? "text-primary font-semibold" : "text-primary/70"
         }`}
       >
@@ -71,7 +71,7 @@ export const Navbar: React.FC = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={logout}
-                  className="flex items-center px-6 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
+                  className="flex items-center px-6 py-2 bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                 >
                   <LogOut className="w-5 h-5 mr-2" />
                   Logout
@@ -84,7 +84,7 @@ export const Navbar: React.FC = () => {
               >
                 <Link
                   to="/login"
-                  className="flex items-center px-6 py-2 bg-accent text-primary rounded-lg hover:bg-accent/90 transition-colors"
+                  className="flex items-center px-6 py-2 bg-accent text-primary  hover:bg-accent/90 transition-colors"
                 >
                   Login
                 </Link>
