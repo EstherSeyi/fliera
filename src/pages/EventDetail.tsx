@@ -1,17 +1,17 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Upload, Download, Image as ImageIcon } from 'lucide-react';
-import { useEvents } from '../context/EventContext';
+import React, { useState, useRef, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Download, Image as ImageIcon } from "lucide-react";
+import { useEvents } from "../context/EventContext";
 
 export const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { getEvent } = useEvents();
-  const event = getEvent(id || '');
+  const event = getEvent(id || "");
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
+
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,17 +25,20 @@ export const EventDetail: React.FC = () => {
 
   const generateDP = async () => {
     if (!event || !userPhoto || !canvasRef.current) return;
-    
+
     setIsGenerating(true);
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     // Load and draw the flyer template
     const flyerImage = new Image();
+    flyerImage.crossOrigin = "anonymous";
     flyerImage.src = event.flyer_url;
-    await new Promise(resolve => { flyerImage.onload = resolve; });
-    
+    await new Promise((resolve) => {
+      flyerImage.onload = resolve;
+    });
+
     canvas.width = flyerImage.width;
     canvas.height = flyerImage.height;
     ctx.drawImage(flyerImage, 0, 0);
@@ -43,8 +46,10 @@ export const EventDetail: React.FC = () => {
     // Load and draw the user's photo in the first image placeholder
     const userImage = new Image();
     userImage.src = userPhoto;
-    await new Promise(resolve => { userImage.onload = resolve; });
-    
+    await new Promise((resolve) => {
+      userImage.onload = resolve;
+    });
+
     const imagePlaceholder = event.image_placeholders[0];
     if (imagePlaceholder) {
       const { x, y, width, height } = imagePlaceholder;
@@ -52,7 +57,7 @@ export const EventDetail: React.FC = () => {
     }
 
     // Draw all text placeholders
-    event.text_placeholders.forEach(placeholder => {
+    event.text_placeholders.forEach((placeholder) => {
       const {
         x,
         y,
@@ -63,23 +68,24 @@ export const EventDetail: React.FC = () => {
         fontFamily,
         fontStyle,
         fontWeight,
-        textTransform
+        textTransform,
       } = placeholder;
 
       ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px "${fontFamily}"`;
       ctx.fillStyle = color;
       ctx.textAlign = textAlign;
-      
+
       // Transform the text according to textTransform
       let displayText = text || userName;
-      if (textTransform === 'uppercase') {
+      if (textTransform === "uppercase") {
         displayText = displayText.toUpperCase();
-      } else if (textTransform === 'lowercase') {
+      } else if (textTransform === "lowercase") {
         displayText = displayText.toLowerCase();
-      } else if (textTransform === 'capitalize') {
-        displayText = displayText.split(' ')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
+      } else if (textTransform === "capitalize") {
+        displayText = displayText
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ");
       }
 
       ctx.fillText(displayText, x, y);
@@ -90,7 +96,7 @@ export const EventDetail: React.FC = () => {
 
   const downloadDP = () => {
     if (!canvasRef.current) return;
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.download = `${event?.title}-dp.png`;
     link.href = canvasRef.current.toDataURL();
     link.click();
@@ -125,7 +131,9 @@ export const EventDetail: React.FC = () => {
           transition={{ delay: 0.2 }}
         >
           <div className="space-y-4">
-            <label className="block text-primary font-medium">Upload Your Photo</label>
+            <label className="block text-primary font-medium">
+              Upload Your Photo
+            </label>
             <div className="border-2 border-dashed border-primary/20 rounded-lg p-8 text-center hover:border-primary/40 transition-colors">
               <input
                 type="file"
@@ -139,7 +147,9 @@ export const EventDetail: React.FC = () => {
                 className="cursor-pointer space-y-2 block"
               >
                 <ImageIcon className="w-8 h-8 mx-auto text-primary/60" />
-                <span className="text-secondary">Click to upload your photo</span>
+                <span className="text-secondary">
+                  Click to upload your photo
+                </span>
               </label>
             </div>
           </div>
@@ -167,17 +177,14 @@ export const EventDetail: React.FC = () => {
         >
           <h3 className="text-xl font-semibold text-primary">Preview</h3>
           <div className="relative bg-white rounded-lg shadow-lg overflow-hidden">
-            <canvas
-              ref={canvasRef}
-              className="w-full h-auto"
-            />
+            <canvas ref={canvasRef} className="w-full h-auto" />
             {isGenerating && (
               <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             )}
           </div>
-          
+
           <button
             onClick={downloadDP}
             disabled={!userPhoto || !userName || isGenerating}
