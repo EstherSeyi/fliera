@@ -32,7 +32,7 @@ export interface Event {
   created_at?: string;
 }
 
-export interface CreateEventFormData extends Omit<Event, 'id' | 'user_id' | 'created_at' | 'flyer_url'> {
-  flyer_file: FileList;
-  temp_flyer_url?: string | null;
+export interface CreateEventFormData
+  extends Omit<Event, "id" | "user_id" | "created_at" | "flyer_url"> {
+  flyer_file: File | null;
 }
