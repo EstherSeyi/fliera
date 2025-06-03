@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Stage,
@@ -28,11 +28,14 @@ export const TextPlaceholderStep: React.FC = () => {
   const transformerRef = useRef<any>(null);
   const textRefs = useRef<any[]>([]);
 
-  // const tempFlyerUrl = watch('temp_flyer_url');
   const flyer_file = watch("flyer_file");
-  const tempFlyerUrl = flyer_file ? URL.createObjectURL(flyer_file) : null;
 
   const textPlaceholders = watch("text_placeholders");
+
+  const tempFlyerUrl = useMemo(
+    () => (flyer_file?.name ? URL.createObjectURL(flyer_file) : null),
+    [flyer_file]
+  );
 
   useEffect(() => {
     if (!tempFlyerUrl) return;
