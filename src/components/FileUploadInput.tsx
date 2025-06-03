@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Upload, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState } from "react";
+import { Upload, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface FileUploadInputProps {
   value: File | null;
@@ -15,13 +15,13 @@ interface FileUploadInputProps {
 export const FileUploadInput: React.FC<FileUploadInputProps> = ({
   value,
   onChange,
-  label = 'Upload File',
-  accept = 'image/*',
-  maxSize = 2 * 1024 * 1024, // 2MB default
+  label = "Upload File",
+  accept = "image/*",
+  maxSize = 2 * 1024 * 1024,
   error,
   disabled = false,
 }) => {
-  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [previewUrl, setPreviewUrl] = useState<string>("");
 
   useEffect(() => {
     if (value && value instanceof File) {
@@ -50,10 +50,13 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
   return (
     <div className="space-y-2">
       {label && (
-        <label className="block text-primary font-medium">{label}</label>
+        <label htmlFor="file-upload" className="block text-primary font-medium">
+          {label}
+        </label>
       )}
       <div className="relative">
         <input
+          id="file-upload"
           type="file"
           accept={accept}
           className="absolute -z-[1] h-[0.1px] w-[0.1px] overflow-hidden opacity-0"
@@ -64,6 +67,7 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
         <AnimatePresence mode="wait">
           {!value ? (
             <motion.label
+              htmlFor="file-upload"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -79,7 +83,7 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
                   Click to upload your file
                 </p>
                 <p className="text-secondary text-sm">
-                  {accept === 'image/*' ? 'PNG, JPG' : accept} up to{' '}
+                  {accept === "image/*" ? "PNG, JPG" : accept} up to{" "}
                   {Math.round(maxSize / 1024 / 1024)}MB
                 </p>
               </motion.div>
