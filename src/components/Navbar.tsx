@@ -50,7 +50,7 @@ export const Navbar: React.FC = () => {
           </Link>
           
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden sm:flex items-center space-x-4">
             <NavLink to="/events">Events</NavLink>
             
             {isLoggedIn ? (
@@ -89,7 +89,7 @@ export const Navbar: React.FC = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(true)}
-            className="md:hidden p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+            className="sm:hidden p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
           >
             <Menu className="w-6 h-6" />
           </button>
@@ -101,7 +101,7 @@ export const Navbar: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/50 z-50 md:hidden"
+                className="fixed inset-0 bg-black/50 z-50 sm:hidden"
               >
                 <motion.div
                   ref={mobileMenuRef}
