@@ -1,61 +1,97 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import { supabase } from '../lib/supabase';
 import type { Event } from '../types';
 
 interface EventContextType {
   events: Event[];
-  addEvent: (event: Event) => void;
-  getEvent: (id: string) => Event | undefined;
+  loading: boolean;
+  error: string | null;
+  addEvent: (event: Omit<Event, 'id' | 'created_at'>) => Promise<void>;
+  getEvent: (id: string) => Promise<Event | null>;
+  refreshEvents: () => Promise<void>;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
-const sampleEvent: Event = {
-  id: '1',
-  title: 'Tech Conference 2024',
-  date: '2024-04-15',
-  description: 'Join us for the biggest tech conference of the year!',
-  flyer_url: 'https://images.pexels.com/photos/2747449/pexels-photo-2747449.jpeg',
-  image_placeholders: [
-    { x: 50, y: 50, width: 200, height: 200 }
-  ],
-  text_placeholders: [
-    {
-      x: 50,
-      y: 270,
-      width: 200,
-      height: 50,
-      text: '',
-      fontSize: 24,
-      color: '#000000',
-      textAlign: 'center',
-      fontFamily: 'Open Sans',
-      fontStyle: 'normal',
-      textTransform: 'none',
-      fontWeight: '600'
-    }
-  ]
-};
-
 export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [events, setEvents] = useState<Event[]>(() => {
-    const savedEvents = localStorage.getItem('events');
-    return savedEvents ? JSON.parse(savedEvents) : [sampleEvent];
-  });
+  const { user } = useAuth();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    localStorage.setItem('events', JSON.stringify(events));
-  }, [events]);
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const { data, error: fetchError } = await supabase
+        .from('events')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const addEvent = (event: Event) => {
-    setEvents((prev) => [...prev, event]);
+      if (fetchError) throw fetchError;
+      
+      setEvents(data || []);
+    } catch (err) {
+      console.error('Error fetching events:', err);
+      setError('Failed to load events');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getEvent = (id: string) => {
-    return events.find((event) => event.id === id);
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const addEvent = async (eventData: Omit<Event, 'id' | 'created_at'>) => {
+    try {
+      setError(null);
+      
+      const { data, error: insertError } = await supabase
+        .from('events')
+        .insert([{ ...eventData, user_id: user?.id }])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+      
+      setEvents(prev => [data, ...prev]);
+    } catch (err) {
+      console.error('Error adding event:', err);
+      throw new Error('Failed to create event');
+    }
+  };
+
+  const getEvent = async (id: string): Promise<Event | null> => {
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) throw fetchError;
+      
+      return data;
+    } catch (err) {
+      console.error('Error fetching event:', err);
+      throw new Error('Failed to fetch event');
+    }
   };
 
   return (
-    <EventContext.Provider value={{ events, addEvent, getEvent }}>
+    <EventContext.Provider 
+      value={{ 
+        events, 
+        loading, 
+        error, 
+        addEvent, 
+        getEvent,
+        refreshEvents: fetchEvents
+      }}
+    >
       {children}
     </EventContext.Provider>
   );

@@ -1,18 +1,44 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Download, Image as ImageIcon } from "lucide-react";
 import { useEvents } from "../context/EventContext";
+import { LoadingSpinner } from "../components/LoadingSpinner";
+import type { Event } from "../types";
 
 export const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { getEvent } = useEvents();
-  const event = getEvent(id || "");
+  const [event, setEvent] = useState<Event | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+
+  useEffect(() => {
+    const fetchEvent = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const eventData = await getEvent(id || "");
+        if (!eventData) {
+          throw new Error("Event not found");
+        }
+        setEvent(eventData);
+      } catch (err) {
+        console.error("Error fetching event:", err);
+        setError("Failed to load event");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvent();
+  }, [id, getEvent]);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,67 +57,74 @@ export const EventDetail: React.FC = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Load and draw the flyer template
-    const flyerImage = new Image();
-    flyerImage.crossOrigin = "anonymous";
-    flyerImage.src = event.flyer_url;
-    await new Promise((resolve) => {
-      flyerImage.onload = resolve;
-    });
+    try {
+      // Load and draw the flyer template
+      const flyerImage = new Image();
+      flyerImage.crossOrigin = "anonymous";
+      flyerImage.src = event.flyer_url;
+      await new Promise((resolve, reject) => {
+        flyerImage.onload = resolve;
+        flyerImage.onerror = reject;
+      });
 
-    canvas.width = flyerImage.width;
-    canvas.height = flyerImage.height;
-    ctx.drawImage(flyerImage, 0, 0);
+      canvas.width = flyerImage.width;
+      canvas.height = flyerImage.height;
+      ctx.drawImage(flyerImage, 0, 0);
 
-    // Load and draw the user's photo in the first image placeholder
-    const userImage = new Image();
-    userImage.src = userPhoto;
-    await new Promise((resolve) => {
-      userImage.onload = resolve;
-    });
+      // Load and draw the user's photo in the first image placeholder
+      const userImage = new Image();
+      userImage.src = userPhoto;
+      await new Promise((resolve, reject) => {
+        userImage.onload = resolve;
+        userImage.onerror = reject;
+      });
 
-    const imagePlaceholder = event.image_placeholders[0];
-    if (imagePlaceholder) {
-      const { x, y, width, height } = imagePlaceholder;
-      ctx.drawImage(userImage, x, y, width, height);
-    }
-
-    // Draw all text placeholders
-    event.text_placeholders.forEach((placeholder) => {
-      const {
-        x,
-        y,
-        text,
-        fontSize,
-        color,
-        textAlign,
-        fontFamily,
-        fontStyle,
-        fontWeight,
-        textTransform,
-      } = placeholder;
-
-      ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px "${fontFamily}"`;
-      ctx.fillStyle = color;
-      ctx.textAlign = textAlign;
-
-      // Transform the text according to textTransform
-      let displayText = text || userName;
-      if (textTransform === "uppercase") {
-        displayText = displayText.toUpperCase();
-      } else if (textTransform === "lowercase") {
-        displayText = displayText.toLowerCase();
-      } else if (textTransform === "capitalize") {
-        displayText = displayText
-          .split(" ")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ");
+      const imagePlaceholder = event.image_placeholders[0];
+      if (imagePlaceholder) {
+        const { x, y, width, height } = imagePlaceholder;
+        ctx.drawImage(userImage, x, y, width, height);
       }
 
-      ctx.fillText(displayText, x, y);
-    });
+      // Draw all text placeholders
+      event.text_placeholders.forEach((placeholder) => {
+        const {
+          x,
+          y,
+          text,
+          fontSize,
+          color,
+          textAlign,
+          fontFamily,
+          fontStyle,
+          fontWeight,
+          textTransform,
+        } = placeholder;
 
-    setIsGenerating(false);
+        ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px "${fontFamily}"`;
+        ctx.fillStyle = color;
+        ctx.textAlign = textAlign;
+
+        // Transform the text according to textTransform
+        let displayText = text || userName;
+        if (textTransform === "uppercase") {
+          displayText = displayText.toUpperCase();
+        } else if (textTransform === "lowercase") {
+          displayText = displayText.toLowerCase();
+        } else if (textTransform === "capitalize") {
+          displayText = displayText
+            .split(" ")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+        }
+
+        ctx.fillText(displayText, x, y);
+      });
+    } catch (err) {
+      console.error("Error generating DP:", err);
+      setError("Failed to generate DP");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const downloadDP = () => {
@@ -108,8 +141,20 @@ export const EventDetail: React.FC = () => {
     }
   }, [userPhoto, userName]);
 
-  if (!event) {
-    return <div className="text-center text-primary">Event not found</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <LoadingSpinner size={32} />
+      </div>
+    );
+  }
+
+  if (error || !event) {
+    return (
+      <div className="text-center text-red-500 min-h-[50vh] flex items-center justify-center">
+        <p>{error || "Event not found"}</p>
+      </div>
+    );
   }
 
   return (
@@ -180,7 +225,7 @@ export const EventDetail: React.FC = () => {
             <canvas ref={canvasRef} className="w-full h-auto" />
             {isGenerating && (
               <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <LoadingSpinner size={32} />
               </div>
             )}
           </div>
