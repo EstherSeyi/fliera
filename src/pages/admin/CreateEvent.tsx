@@ -72,8 +72,8 @@ export const CreateEvent: React.FC = () => {
       const filePath = `event-flyers/${fileName}`;
 
       // Upload file to Supabase Storage
-      const { error: uploadError, data: uploadData } = await supabase.storage
-        .from("events")
+      const { error: uploadError } = await supabase.storage
+        .from("event-flyers")
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
@@ -81,7 +81,7 @@ export const CreateEvent: React.FC = () => {
       // Get the public URL for the uploaded file
       const {
         data: { publicUrl },
-      } = supabase.storage.from("events").getPublicUrl(filePath);
+      } = supabase.storage.from("event-flyers").getPublicUrl(filePath);
 
       const newEvent: Event = {
         id: Date.now().toString(),
