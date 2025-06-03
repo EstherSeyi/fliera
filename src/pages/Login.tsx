@@ -64,7 +64,7 @@ export const Login: React.FC = () => {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-12 py-2 border border-primary/20 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary"
+                className="w-full pl-10 pr-12 py-2 border border-primary/20 focus:ring-1 focus:ring-primary focus:border-primary"
                 placeholder="Enter your password"
                 required
                 disabled={isLoading}
