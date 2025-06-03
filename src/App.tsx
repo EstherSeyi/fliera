@@ -4,13 +4,21 @@ import { Home } from "./pages/Home";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
+import { EventProvider } from "./context/EventContext";
+
+export const AppProviders = ({ children }: { children: React.ReactNode }) => (
+  <AuthProvider>
+    <EventProvider>{children}</EventProvider>
+  </AuthProvider>
+);
+
 const router = createBrowserRouter([
   {
     path: "/",
     element: (
-      <AuthProvider>
+      <AppProviders>
         <Layout />
-      </AuthProvider>
+      </AppProviders>
     ),
     children: [
       {
@@ -35,7 +43,7 @@ const router = createBrowserRouter([
         path: "admin/create",
         async lazy() {
           const { CreateEvent } = await import("./pages/admin/CreateEvent");
-          return { 
+          return {
             Component: () => (
               <ProtectedRoute>
                 <CreateEvent />
@@ -62,7 +70,7 @@ const router = createBrowserRouter([
         path: "dashboard",
         async lazy() {
           const { Dashboard } = await import("./pages/Dashboard");
-          return { 
+          return {
             Component: () => (
               <ProtectedRoute>
                 <Dashboard />
@@ -75,7 +83,7 @@ const router = createBrowserRouter([
         path: "my-dps",
         async lazy() {
           const { MyDPs } = await import("./pages/MyDPs");
-          return { 
+          return {
             Component: () => (
               <ProtectedRoute>
                 <MyDPs />
