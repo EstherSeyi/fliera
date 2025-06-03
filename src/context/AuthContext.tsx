@@ -26,7 +26,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Session:", session, session?.user.aud === "authenticated");
       setIsLoggedIn(session?.user.aud === "authenticated");
       setUser(session?.user ?? null);
       setLoading(false);
