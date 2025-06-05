@@ -9,7 +9,7 @@ export const Footer: React.FC = () => {
   return (
     <footer className="bg-primary text-neutral mt-16">
       <div className="container mx-auto px-4">
-        <div className="py-8 border-b border-neutral/10">
+        <div className="py-8 border-b border-neutral/10 flex justify-between items-center">
           {/*  */}
           <nav className="flex flex-wrap gap-6 text-sm">
             <Link to="/events" className="hover:text-accent transition-colors">
