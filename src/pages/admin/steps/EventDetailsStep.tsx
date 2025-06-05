@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useFormContext, Controller } from "react-hook-form";
 import type { CreateEventFormData } from "../../../types";
 import { FileUploadInput } from "../../../components/FileUploadInput";
-
+import { RichTextEditor } from "../../../components/RichTextEditor";
 
 export const EventDetailsStep: React.FC = () => {
   const {
@@ -50,18 +50,22 @@ export const EventDetailsStep: React.FC = () => {
         )}
       </div>
 
-
-       <div className="space-y-2">
+      <div className="space-y-2">
         <label htmlFor="description" className="block text-primary font-medium">
           Description
         </label>
-        <textarea
-          id="description"
-          {...register("description")}
-          className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary h-32"
-          placeholder="Briefly describe the purpose, theme, or mood of this event..."
+        <Controller
+          name="description"
+          control={control}
+          render={({ field }) => (
+            <RichTextEditor
+              value={field.value || ""}
+              onChange={field.onChange}
+              placeholder="Briefly describe the purpose, theme, or mood of this event..."
+            />
+          )}
         />
-      </div> 
+      </div>
 
       <Controller
         name="flyer_file"
