@@ -107,7 +107,7 @@ export const Navbar: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/50 z-50 md:hidden"
+                className="fixed inset-0 z-50 md:hidden"
               >
                 <motion.div
                   ref={mobileMenuRef}
@@ -117,20 +117,17 @@ export const Navbar: React.FC = () => {
                   transition={{ type: "tween", duration: 0.3 }}
                   className="absolute right-0 top-0 h-full w-64 bg-neutral shadow-xl"
                 >
-                  <div className="p-4 flex flex-col h-full">
-                    <div className="flex justify-between items-center mb-6">
-                      <span className="text-lg font-semibold text-primary">
-                        Menu
-                      </span>
+                  <div className="flex flex-col h-full shadow-sm pt-2">
+                    <div className="flex justify-end">
                       <button
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                        className="p-2 text-primary hover:text-accent transition-colors"
                       >
                         <X className="w-6 h-6" />
                       </button>
                     </div>
 
-                    <div className="flex flex-col space-y-2">
+                    <div className="flex flex-col space-y-2 bg-white w-full">
                       <NavLink
                         to="/events"
                         onClick={() => setIsMobileMenuOpen(false)}
@@ -164,7 +161,7 @@ export const Navbar: React.FC = () => {
                               logout();
                               setIsMobileMenuOpen(false);
                             }}
-                            className="flex items-center px-4 py-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            className="flex items-center px-4 py-2 text-imperialred hover:bg-imperialred/10  transition-colors"
                           >
                             <LogOut className="w-5 h-5 mr-2" />
                             Logout
@@ -174,7 +171,7 @@ export const Navbar: React.FC = () => {
                         <Link
                           to="/login"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="flex items-center px-4 py-2 bg-accent text-primary rounded-lg hover:bg-accent/90 transition-colors"
+                          className="flex items-center px-4 py-2 bg-accent text-primary hover:bg-accent/90 transition-colors"
                         >
                           Login
                         </Link>
