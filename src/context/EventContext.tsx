@@ -30,6 +30,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       const { data, error: fetchError } = await supabase
         .from("events")
         .select("*")
+        .eq("visibility", "public")
         .order("created_at", { ascending: false });
 
       if (fetchError) throw fetchError;
