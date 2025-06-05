@@ -51,11 +51,7 @@ export const Navbar: React.FC = () => {
             to="/"
             className="flex items-center space-x-2 text-primary hover:text-primary/90"
           >
-            <img
-              src="/black_circle_360x360.png"
-              alt="Bolt.new Logo"
-              className="w-6 h-6"
-            />
+            <Calendar className="w-6 h-6" strokeWidth={1.5} />
             <span className="text-xl font-light">EventDP</span>
           </Link>
 
