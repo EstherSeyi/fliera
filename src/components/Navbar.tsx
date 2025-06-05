@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, PlusCircle, LogOut, Menu, X } from "lucide-react";
+import { PlusCircle, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export const Navbar: React.FC = () => {
@@ -51,7 +51,11 @@ export const Navbar: React.FC = () => {
             to="/"
             className="flex items-center space-x-2 text-primary hover:text-primary/90"
           >
-            <Calendar className="w-6 h-6" strokeWidth={1.5} />
+            <img
+              src="/black_circle_360x360.png"
+              alt="Bolt.new Logo"
+              className="w-6 h-6"
+            />
             <span className="text-xl font-light">EventDP</span>
           </Link>
 
