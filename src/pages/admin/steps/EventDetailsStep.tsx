@@ -4,6 +4,7 @@ import { useFormContext, Controller } from "react-hook-form";
 import type { CreateEventFormData } from "../../../types";
 import { FileUploadInput } from "../../../components/FileUploadInput";
 
+
 export const EventDetailsStep: React.FC = () => {
   const {
     register,
@@ -27,6 +28,7 @@ export const EventDetailsStep: React.FC = () => {
           id="title"
           {...register("title")}
           className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
+          placeholder="e.g. John & Ada's Wedding, Tech Connect 2025, Gospel Vibes Concert"
         />
         {errors.title && (
           <p className="text-red-500 text-sm">{errors.title.message}</p>
@@ -48,7 +50,8 @@ export const EventDetailsStep: React.FC = () => {
         )}
       </div>
 
-      <div className="space-y-2">
+
+       <div className="space-y-2">
         <label htmlFor="description" className="block text-primary font-medium">
           Description
         </label>
@@ -56,8 +59,9 @@ export const EventDetailsStep: React.FC = () => {
           id="description"
           {...register("description")}
           className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary h-32"
+          placeholder="Briefly describe the purpose, theme, or mood of this event..."
         />
-      </div>
+      </div> 
 
       <Controller
         name="flyer_file"
