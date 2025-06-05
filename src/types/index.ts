@@ -20,6 +20,17 @@ export interface TextPlaceholderZone {
   fontWeight: string | number;
 }
 
+export type EventVisibility = 'private' | 'public' | 'archived';
+
+export type EventCategory = 
+  | 'business'
+  | 'technology'
+  | 'music'
+  | 'social'
+  | 'sports'
+  | 'activism'
+  | 'other';
+
 export interface Event {
   id: string;
   user_id?: string;
@@ -30,6 +41,8 @@ export interface Event {
   image_placeholders: ImagePlaceholderZone[];
   text_placeholders: TextPlaceholderZone[];
   created_at?: string;
+  visibility: EventVisibility;
+  category: EventCategory;
 }
 
 export interface CreateEventFormData

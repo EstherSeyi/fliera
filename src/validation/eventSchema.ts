@@ -39,6 +39,8 @@ export const createEventSchema = z.object({
     ),
   image_placeholders: z.array(imagePlaceholderSchema),
   text_placeholders: z.array(textPlaceholderSchema),
+  visibility: z.enum(['private', 'public', 'archived']),
+  category: z.enum(['business', 'technology', 'music', 'social', 'sports', 'activism', 'other']),
 });
 
 export type CreateEventSchema = z.infer<typeof createEventSchema>;

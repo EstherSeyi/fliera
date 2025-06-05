@@ -1,16 +1,38 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useFormContext, Controller } from "react-hook-form";
-import type { CreateEventFormData } from "../../../types";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import type { CreateEventFormData, EventVisibility, EventCategory } from "../../../types";
 import { FileUploadInput } from "../../../components/FileUploadInput";
 import { RichTextEditor } from "../../../components/RichTextEditor";
+import { Eye, EyeOff, Archive } from "lucide-react";
+
+const VISIBILITY_OPTIONS: { value: EventVisibility; label: string; icon: React.FC }[] = [
+  { value: 'public', label: 'Public', icon: Eye },
+  { value: 'private', label: 'Private', icon: EyeOff },
+  { value: 'archived', label: 'Archived', icon: Archive },
+];
+
+const CATEGORY_OPTIONS: { value: EventCategory; label: string }[] = [
+  { value: 'business', label: 'Business' },
+  { value: 'technology', label: 'Technology' },
+  { value: 'music', label: 'Music' },
+  { value: 'social', label: 'Social' },
+  { value: 'sports', label: 'Sports' },
+  { value: 'activism', label: 'Activism' },
+  { value: 'other', label: 'Other' },
+];
 
 export const EventDetailsStep: React.FC = () => {
   const {
     register,
     formState: { errors },
     control,
+    watch,
   } = useFormContext<CreateEventFormData>();
+
+  const selectedVisibility = watch("visibility");
 
   return (
     <motion.div
@@ -37,16 +59,78 @@ export const EventDetailsStep: React.FC = () => {
 
       <div className="space-y-2">
         <label htmlFor="date" className="block text-primary font-medium">
-          Event Date
+          Event Date & Time
         </label>
-        <input
-          type="date"
-          id="date"
-          {...register("date")}
-          className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
+        <Controller
+          name="date"
+          control={control}
+          render={({ field }) => (
+            <DatePicker
+              selected={field.value ? new Date(field.value) : null}
+              onChange={(date) => field.onChange(date?.toISOString())}
+              showTimeSelect
+              timeFormat="HH:mm"
+              timeIntervals={15}
+              dateFormat="MMMM d, yyyy h:mm aa"
+              className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
+              placeholderText="Select date and time"
+            />
+          )}
         />
         {errors.date && (
           <p className="text-red-500 text-sm">{errors.date.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-primary font-medium">Visibility</label>
+        <div className="grid grid-cols-3 gap-4">
+          {VISIBILITY_OPTIONS.map(({ value, label, icon: Icon }) => (
+            <label
+              key={value}
+              className={`
+                flex items-center justify-center gap-2 p-3 rounded-lg border cursor-pointer transition-all
+                ${
+                  selectedVisibility === value
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-primary/20 hover:border-primary/40"
+                }
+              `}
+            >
+              <input
+                type="radio"
+                {...register("visibility")}
+                value={value}
+                className="sr-only"
+              />
+              <Icon className="w-5 h-5" />
+              <span>{label}</span>
+            </label>
+          ))}
+        </div>
+        {errors.visibility && (
+          <p className="text-red-500 text-sm">{errors.visibility.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="category" className="block text-primary font-medium">
+          Category
+        </label>
+        <select
+          id="category"
+          {...register("category")}
+          className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
+        >
+          <option value="">Select a category</option>
+          {CATEGORY_OPTIONS.map(({ value, label }) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        {errors.category && (
+          <p className="text-red-500 text-sm">{errors.category.message}</p>
         )}
       </div>
 
