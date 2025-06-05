@@ -109,7 +109,7 @@ export const Navbar: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 md:hidden"
+                className="fixed inset-0 z-50 md:hidden bg-black/50 flex items-center justify-center"
               >
                 <motion.div
                   ref={mobileMenuRef}
@@ -117,7 +117,7 @@ export const Navbar: React.FC = () => {
                   animate={{ x: 0 }}
                   exit={{ x: "100%" }}
                   transition={{ type: "tween", duration: 0.3 }}
-                  className="fixed inset-x-4 top-4 bottom-4 mx-auto max-w-md rounded-xl bg-white shadow-lg overflow-hidden"
+                  className="absolute inset-x-4 top-4 bottom-4 mx-auto max-w-md rounded-xl bg-white shadow-lg overflow-y-auto"
                 >
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -126,7 +126,7 @@ export const Navbar: React.FC = () => {
                     <X className="w-6 h-6" />
                   </button>
 
-                  <div className="flex flex-col space-y-2 pt-16 px-4 pb-4">
+                  <div className="flex flex-col pt-16 px-4 pb-4">
                     <NavLink
                       to="/events"
                       Icon={Calendar}
