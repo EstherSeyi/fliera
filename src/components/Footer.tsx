@@ -10,6 +10,7 @@ export const Footer: React.FC = () => {
     <footer className="bg-primary text-neutral mt-16">
       <div className="container mx-auto px-4">
         <div className="py-8 border-b border-neutral/10">
+          {/*  */}
           <nav className="flex flex-wrap gap-6 text-sm">
             <Link to="/events" className="hover:text-accent transition-colors">
               Events
@@ -44,7 +45,47 @@ export const Footer: React.FC = () => {
               </Link>
             )}
           </nav>
+          <img
+            src="/white_circle_360x360.png"
+            alt="Bolt.new Logo"
+            className="w-8 h-8"
+          />
         </div>
+          {/* <nav className="flex flex-wrap gap-6 text-sm">
+            <Link to="/events" className="hover:text-accent transition-colors">
+              Events
+            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="hover:text-accent transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/my-dps"
+                  className="hover:text-accent transition-colors"
+                >
+                  My DPs
+                </Link>
+                <Link
+                  to="/admin/create"
+                  className="hover:text-accent transition-colors"
+                >
+                  Create Event
+                </Link>
+              </>
+            ) : (
+              <Link
+                to="/signup"
+                className="hover:text-accent transition-colors"
+              >
+                Sign Up
+              </Link>
+            )}
+          </nav> */}
+       
 
         <div className="py-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-hookersgreen">
