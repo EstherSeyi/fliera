@@ -11,7 +11,7 @@ export default {
         muted: "#F3F1EE",
         thistle: "#BFACC8",
         hookersgreen: "#6d8a83",
-          imperialred: "#E54B4B",
+        imperialred: "#E54B4B",
       },
       fontFamily: {
         sans: ['"Open Sans"', "sans-serif"],
