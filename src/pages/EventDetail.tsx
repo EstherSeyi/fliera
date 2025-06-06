@@ -79,7 +79,33 @@ export const EventDetail: React.FC = () => {
     }
 
     ctx.clip();
-    ctx.drawImage(image, x, y, width, height);
+
+    // Calculate object-fit: cover scaling and positioning
+    const imageAspectRatio = image.width / image.height;
+    const placeholderAspectRatio = width / height;
+
+    let sourceX = 0;
+    let sourceY = 0;
+    let sourceWidth = image.width;
+    let sourceHeight = image.height;
+
+    if (imageAspectRatio > placeholderAspectRatio) {
+      // Image is wider than placeholder - crop horizontally
+      sourceWidth = image.height * placeholderAspectRatio;
+      sourceX = (image.width - sourceWidth) / 2;
+    } else {
+      // Image is taller than placeholder - crop vertically
+      sourceHeight = image.width / placeholderAspectRatio;
+      sourceY = (image.height - sourceHeight) / 2;
+    }
+
+    // Draw the image with proper scaling and cropping
+    ctx.drawImage(
+      image,
+      sourceX, sourceY, sourceWidth, sourceHeight, // Source rectangle
+      x, y, width, height // Destination rectangle
+    );
+
     ctx.restore();
   };
 
