@@ -49,94 +49,6 @@ export const EventDetail: React.FC = () => {
     }
   };
 
-  const drawClippedImage = (
-    ctx: CanvasRenderingContext2D,
-    image: HTMLImageElement,
-    placeholder: any
-  ) => {
-    const { x, y, width, height, holeShape } = placeholder;
-
-    ctx.save();
-    ctx.beginPath();
-
-    switch (holeShape) {
-      case 'circle':
-        const centerX = x + width / 2;
-        const centerY = y + height / 2;
-        const radius = Math.min(width, height) / 2;
-        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-        break;
-      case 'triangle':
-        ctx.moveTo(x + width / 2, y);
-        ctx.lineTo(x + width, y + height);
-        ctx.lineTo(x, y + height);
-        ctx.closePath();
-        break;
-      case 'trapezium':
-        const offset = width * 0.2;
-        ctx.moveTo(x + offset, y);
-        ctx.lineTo(x + width - offset, y);
-        ctx.lineTo(x + width, y + height);
-        ctx.lineTo(x, y + height);
-        ctx.closePath();
-        break;
-      default: // box
-        ctx.rect(x, y, width, height);
-        break;
-    }
-
-    ctx.clip();
-    ctx.drawImage(image, x, y, width, height);
-    ctx.restore();
-  };
-
-  const drawOverlayWithHole = (
-    ctx: CanvasRenderingContext2D,
-    canvasWidth: number,
-    canvasHeight: number,
-    placeholder: any
-  ) => {
-    const { x, y, width, height, holeShape } = placeholder;
-
-    // Draw the semi-transparent overlay
-    ctx.save();
-    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-    // Cut out the hole
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.beginPath();
-
-    switch (holeShape) {
-      case 'circle':
-        const centerX = x + width / 2;
-        const centerY = y + height / 2;
-        const radius = Math.min(width, height) / 2;
-        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-        break;
-      case 'triangle':
-        ctx.moveTo(x + width / 2, y);
-        ctx.lineTo(x + width, y + height);
-        ctx.lineTo(x, y + height);
-        ctx.closePath();
-        break;
-      case 'trapezium':
-        const offset = width * 0.2;
-        ctx.moveTo(x + offset, y);
-        ctx.lineTo(x + width - offset, y);
-        ctx.lineTo(x + width, y + height);
-        ctx.lineTo(x, y + height);
-        ctx.closePath();
-        break;
-      default: // box
-        ctx.rect(x, y, width, height);
-        break;
-    }
-
-    ctx.fill();
-    ctx.restore();
-  };
-
   const generateDP = async () => {
     if (!event || !userPhoto || !canvasRef.current) return;
 
@@ -169,12 +81,8 @@ export const EventDetail: React.FC = () => {
 
       const imagePlaceholder = event.image_placeholders[0];
       if (imagePlaceholder) {
-        drawClippedImage(ctx, userImage, imagePlaceholder);
-      }
-
-      // Draw the overlay with hole
-      if (imagePlaceholder) {
-        drawOverlayWithHole(ctx, canvas.width, canvas.height, imagePlaceholder);
+        const { x, y, width, height } = imagePlaceholder;
+        ctx.drawImage(userImage, x, y, width, height);
       }
 
       // Draw all text placeholders

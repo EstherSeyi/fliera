@@ -35,7 +35,7 @@ export const CreateEvent: React.FC = () => {
       date: "",
       description: "",
       flyer_file: null,
-      image_placeholders: [{ x: 50, y: 50, width: 200, height: 200, holeShape: 'box' }],
+      image_placeholders: [{ x: 50, y: 50, width: 200, height: 200 }],
       text_placeholders: [
         {
           x: 50,
