@@ -345,12 +345,12 @@ export const MyEvents: React.FC = () => {
           >
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Category</label>
-              <Select value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as EventCategory)}>
+              <Select value={selectedCategory || "all-categories"} onValueChange={(value) => setSelectedCategory(value === "all-categories" ? "" : value as EventCategory)}>
                 <SelectTrigger>
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
+                  <SelectItem value="all-categories">All categories</SelectItem>
                   {CATEGORY_OPTIONS.map(({ value, label }) => (
                     <SelectItem key={value} value={value}>
                       {label}
@@ -362,12 +362,12 @@ export const MyEvents: React.FC = () => {
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Visibility</label>
-              <Select value={selectedVisibility} onValueChange={(value) => setSelectedVisibility(value as EventVisibility)}>
+              <Select value={selectedVisibility || "all-visibility"} onValueChange={(value) => setSelectedVisibility(value === "all-visibility" ? "" : value as EventVisibility)}>
                 <SelectTrigger>
                   <SelectValue placeholder="All visibility" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All visibility</SelectItem>
+                  <SelectItem value="all-visibility">All visibility</SelectItem>
                   {VISIBILITY_OPTIONS.map(({ value, label }) => (
                     <SelectItem key={value} value={value}>
                       {label}
