@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Stage, Layer, Image as KonvaImage, Text, Rect } from "react-konva";
+import { Stage, Layer, Image as KonvaImage, Text, Rect, Circle, Shape } from "react-konva";
 import { useFormContext } from "react-hook-form";
 import type { CreateEventFormData } from "../../../types";
 
@@ -35,6 +35,55 @@ export const PreviewStep: React.FC = () => {
     };
   }, [tempFlyerUrl]);
 
+  const renderPlaceholderShape = (placeholder: any, index: number) => {
+    const commonProps = {
+      key: index,
+      x: placeholder.x,
+      y: placeholder.y,
+      fill: "rgba(0, 123, 255, 0.3)",
+      stroke: "rgba(0, 123, 255, 0.8)",
+      strokeWidth: 2,
+    };
+
+    switch (placeholder.holeShape) {
+      case 'circle':
+        return (
+          <Circle
+            {...commonProps}
+            radius={Math.min(placeholder.width, placeholder.height) / 2}
+            offsetX={0}
+            offsetY={0}
+          />
+        );
+      case 'triangle':
+        return (
+          <Shape
+            {...commonProps}
+            sceneFunc={(context, shape) => {
+              const { width, height } = placeholder;
+              context.beginPath();
+              context.moveTo(width / 2, 0);
+              context.lineTo(width, height);
+              context.lineTo(0, height);
+              context.closePath();
+              context.fillStrokeShape(shape);
+            }}
+            width={placeholder.width}
+            height={placeholder.height}
+          />
+        );
+      case 'box':
+      default:
+        return (
+          <Rect
+            {...commonProps}
+            width={placeholder.width}
+            height={placeholder.height}
+          />
+        );
+    }
+  };
+
   if (!tempFlyerUrl) {
     return null;
   }
@@ -62,15 +111,9 @@ export const PreviewStep: React.FC = () => {
                 width={stageSize.width}
                 height={stageSize.height}
               />
-              {image_placeholders.map((placeholder, index) => (
-                <Rect
-                  key={index}
-                  {...placeholder}
-                  fill="rgba(0, 123, 255, 0.3)"
-                  stroke="rgba(0, 123, 255, 0.8)"
-                  strokeWidth={2}
-                />
-              ))}
+              {image_placeholders.map((placeholder, index) => 
+                renderPlaceholderShape(placeholder, index)
+              )}
               {text_placeholders.map((placeholder, index) => (
                 <Text key={index} {...placeholder} />
               ))}

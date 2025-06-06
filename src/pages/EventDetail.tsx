@@ -49,6 +49,40 @@ export const EventDetail: React.FC = () => {
     }
   };
 
+  const drawClippedImage = (
+    ctx: CanvasRenderingContext2D,
+    image: HTMLImageElement,
+    placeholder: any
+  ) => {
+    const { x, y, width, height, holeShape } = placeholder;
+
+    ctx.save();
+    ctx.beginPath();
+
+    switch (holeShape) {
+      case 'circle':
+        const radius = Math.min(width, height) / 2;
+        const centerX = x + radius;
+        const centerY = y + radius;
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        break;
+      case 'triangle':
+        ctx.moveTo(x + width / 2, y);
+        ctx.lineTo(x + width, y + height);
+        ctx.lineTo(x, y + height);
+        ctx.closePath();
+        break;
+      case 'box':
+      default:
+        ctx.rect(x, y, width, height);
+        break;
+    }
+
+    ctx.clip();
+    ctx.drawImage(image, x, y, width, height);
+    ctx.restore();
+  };
+
   const generateDP = async () => {
     if (!event || !userPhoto || !canvasRef.current) return;
 
@@ -81,8 +115,7 @@ export const EventDetail: React.FC = () => {
 
       const imagePlaceholder = event.image_placeholders[0];
       if (imagePlaceholder) {
-        const { x, y, width, height } = imagePlaceholder;
-        ctx.drawImage(userImage, x, y, width, height);
+        drawClippedImage(ctx, userImage, imagePlaceholder);
       }
 
       // Draw all text placeholders
