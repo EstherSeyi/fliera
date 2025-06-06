@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import DatePicker from "react-datepicker";
+import { isPast } from "date-fns";
 import "react-datepicker/dist/react-datepicker.css";
 import { useEvents } from "../context/EventContext";
 import { MyEventTableSkeleton } from "../components/MyEventTableSkeleton";
@@ -72,6 +73,11 @@ export const MyEvents: React.FC = () => {
 
   // Calculate total pages
   const totalPages = Math.ceil(totalEvents / eventsPerPage);
+
+  // Check if event date is in the past
+  const isEventPast = (eventDate: string) => {
+    return isPast(new Date(eventDate));
+  };
 
   // Image loading handlers
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -603,7 +609,14 @@ export const MyEvents: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatDate(event.date)}
+                          <div className="flex flex-col">
+                            <span>{formatDate(event.date)}</span>
+                            {isEventPast(event.date) && (
+                              <span className="text-xs text-red-500 font-medium">
+                                Past Event
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getCategoryBadge(event.category)}
@@ -619,13 +632,23 @@ export const MyEvents: React.FC = () => {
                             <Eye className="w-4 h-4 mr-1" />
                             View
                           </Link>
-                          <Link
-                            to={`/admin/edit/${event.id}`}
-                            className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-                          >
-                            <Edit className="w-4 h-4 mr-1" />
-                            Edit
-                          </Link>
+                          {!isEventPast(event.date) ? (
+                            <Link
+                              to={`/admin/edit/${event.id}`}
+                              className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                            >
+                              <Edit className="w-4 h-4 mr-1" />
+                              Edit
+                            </Link>
+                          ) : (
+                            <span
+                              className="inline-flex items-center px-3 py-1 bg-gray-50 text-gray-400 rounded-md cursor-not-allowed"
+                              title="Cannot edit past events"
+                            >
+                              <Edit className="w-4 h-4 mr-1" />
+                              Edit
+                            </span>
+                          )}
                         </td>
                       </motion.tr>
                     ))}
@@ -672,9 +695,16 @@ export const MyEvents: React.FC = () => {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      <span className="text-sm text-gray-600">
-                        📅 {formatDate(event.date)}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-600">
+                          📅 {formatDate(event.date)}
+                        </span>
+                        {isEventPast(event.date) && (
+                          <span className="text-xs text-red-500 font-medium">
+                            Past Event
+                          </span>
+                        )}
+                      </div>
                       {getCategoryBadge(event.category)}
                       {getVisibilityBadge(event.visibility)}
                     </div>
@@ -687,13 +717,23 @@ export const MyEvents: React.FC = () => {
                         <Eye className="w-4 h-4 mr-1" />
                         View
                       </Link>
-                      <Link
-                        to={`/admin/edit/${event.id}`}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
-                      >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edit
-                      </Link>
+                      {!isEventPast(event.date) ? (
+                        <Link
+                          to={`/admin/edit/${event.id}`}
+                          className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </Link>
+                      ) : (
+                        <span
+                          className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gray-50 text-gray-400 rounded-md cursor-not-allowed text-sm"
+                          title="Cannot edit past events"
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </span>
+                      )}
                     </div>
                   </motion.div>
                 ))}

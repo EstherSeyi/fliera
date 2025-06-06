@@ -51,6 +51,11 @@ export interface CreateEventFormData
   flyer_file: File | null;
 }
 
+export interface EditEventFormData
+  extends Omit<Event, "id" | "user_id" | "created_at" | "flyer_url"> {
+  flyer_file: File | null;
+}
+
 export interface GeneratedDP {
   id: string;
   user_id: string;
