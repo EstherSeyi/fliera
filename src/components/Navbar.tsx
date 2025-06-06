@@ -115,10 +115,18 @@ export const Navbar: React.FC = () => {
               >
                 <motion.div
                   ref={mobileMenuRef}
-                  initial={{ x: "100%" }}
-                  animate={{ x: 0 }}
-                  exit={{ x: "100%" }}
-                  transition={{ type: "tween", duration: 0.3 }}
+                   initial={{
+                    scale: 1.1,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    scale: 1,
+                    opacity: 1,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: 0.75,
+                  }}
                   className="absolute right-4 top-4 bottom-4 w-80 max-w-[calc(100vw-2rem)] rounded-xl bg-white shadow-lg overflow-y-auto"
                 >
                   <button
