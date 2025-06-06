@@ -102,8 +102,6 @@ export const Home: React.FC = () => {
         </motion.div>
       </section>
 
-  
-
       <section className="space-y-8">
         <h2 className="text-3xl font-bold text-primary text-center">
           Events By Categories
@@ -150,6 +148,9 @@ export const Home: React.FC = () => {
               ))}
         </div>
       </section>
+
+          {/* DP Generation Tutorial Section */}
+      <DPGenerationTutorial />
     </div>
   );
 };
