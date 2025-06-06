@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
+import { TwitterColorPickerInput } from "../../../components/TwitterColorPickerInput";
 
 const TEXT_STYLE_OPTIONS = [
   {
@@ -85,7 +86,6 @@ export const TextPlaceholderStep: React.FC = () => {
 
   const flyer_file = watch("flyer_file");
   const textPlaceholders = watch("text_placeholders");
-  console.log(textPlaceholders, "TEXT PLACEHOLDER");
 
   const tempFlyerUrl = useMemo(
     () => (flyer_file?.name ? URL.createObjectURL(flyer_file) : null),
@@ -310,17 +310,13 @@ export const TextPlaceholderStep: React.FC = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm text-secondary">Color</label>
-                <input
-                  type="color"
-                  value={textPlaceholders[selectedIndex].color}
-                  onChange={(e) =>
-                    updateTextStyle(selectedIndex, "color", e.target.value)
-                  }
-                  className="w-full h-10 p-1 rounded"
-                />
-              </div>
+              <TwitterColorPickerInput
+                label="Color"
+                value={textPlaceholders[selectedIndex].color}
+                onChange={(color) =>
+                  updateTextStyle(selectedIndex, "color", color)
+                }
+              />
 
               {TEXT_STYLE_OPTIONS.map(({ key, label, options }) => (
                 <div key={key} className="space-y-2">
