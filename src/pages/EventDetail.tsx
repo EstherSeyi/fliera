@@ -118,11 +118,12 @@ export const EventDetail: React.FC = () => {
         drawClippedImage(ctx, userImage, imagePlaceholder);
       }
 
-      // Draw all text placeholders
+      // Draw all text placeholders with proper positioning
       event.text_placeholders.forEach((placeholder) => {
         const {
           x,
           y,
+          width,
           text,
           fontSize,
           color,
@@ -150,7 +151,19 @@ export const EventDetail: React.FC = () => {
             .join(" ");
         }
 
-        ctx.fillText(displayText, x, y);
+        // Calculate proper x position based on textAlign
+        let textX = x;
+        if (textAlign === 'center') {
+          textX = x + width / 2;
+        } else if (textAlign === 'right') {
+          textX = x + width;
+        }
+
+        // Calculate proper y position (Canvas fillText uses baseline, not top)
+        // Add fontSize to y to account for the difference between Konva.Text (top) and Canvas fillText (baseline)
+        const textY = y + fontSize;
+
+        ctx.fillText(displayText, textX, textY);
       });
     } catch (err) {
       console.error("Error generating DP:", err);
