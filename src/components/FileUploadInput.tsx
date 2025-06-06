@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Upload, X } from "lucide-react";
+import { Upload, X, File } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface FileUploadInputProps {
@@ -28,6 +28,8 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
       const url = URL.createObjectURL(value);
       setPreviewUrl(url);
       return () => URL.revokeObjectURL(url);
+    } else {
+      setPreviewUrl("");
     }
     return () => {};
   }, [value]);
@@ -45,6 +47,14 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
 
   const clearFile = () => {
     onChange(null);
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   return (
@@ -93,23 +103,59 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="relative rounded-lg overflow-hidden"
+              className="space-y-3"
             >
-              {previewUrl && (
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full h-64 object-cover rounded-lg"
-                />
+              {previewUrl ? (
+                <div className="relative rounded-lg overflow-hidden">
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={clearFile}
+                    disabled={disabled}
+                    className="absolute top-2 right-2 p-2 bg-white/80 rounded-full hover:bg-white transition-colors"
+                  >
+                    <X className="w-5 h-5 text-primary" />
+                  </button>
+                </div>
+              ) : (
+                <div className="relative border-2 border-dashed border-primary/20 rounded-lg p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <File className="w-8 h-8 text-primary/60" />
+                      <div>
+                        <p className="text-primary font-medium">{value.name}</p>
+                        <p className="text-secondary text-sm">
+                          {formatFileSize(value.size)}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={clearFile}
+                      disabled={disabled}
+                      className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
               )}
-              <button
-                type="button"
-                onClick={clearFile}
-                disabled={disabled}
-                className="absolute top-2 right-2 p-2 bg-white/80 rounded-full hover:bg-white transition-colors"
-              >
-                <X className="w-5 h-5 text-primary" />
-              </button>
+
+              {/* File info display */}
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">File selected:</span>
+                  <span className="text-primary font-medium">{value.name}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm mt-1">
+                  <span className="text-gray-600">Size:</span>
+                  <span className="text-secondary">{formatFileSize(value.size)}</span>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
