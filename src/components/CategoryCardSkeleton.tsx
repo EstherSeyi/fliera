@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 
 import { Link, useLocation } from "react-router-dom";
 
-export const CategoryCardSkeleton: React.FC = () => {
+export const CategoryCardSkeleton: React.FC = ({href}:{href:string}) => {
   return (
     <Link to={href} className="group relative overflow-hidden rounded-xl bg-white shadow-lg">
       <div className="aspect-video overflow-hidden bg-gray-200 animate-pulse" />
