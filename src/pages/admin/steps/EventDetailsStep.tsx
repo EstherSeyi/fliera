@@ -7,6 +7,13 @@ import type { CreateEventFormData, EventVisibility, EventCategory } from "../../
 import { FileUploadInput } from "../../../components/FileUploadInput";
 import { RichTextEditor } from "../../../components/RichTextEditor";
 import { Eye, EyeOff, Archive } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
 
 const VISIBILITY_OPTIONS: { value: EventVisibility; label: string; icon: React.FC }[] = [
   { value: 'public', label: 'Public', icon: Eye },
@@ -72,8 +79,21 @@ export const EventDetailsStep: React.FC = () => {
               timeFormat="HH:mm"
               timeIntervals={15}
               dateFormat="MMMM d, yyyy h:mm aa"
-              className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
+              minDate={new Date()}
+              className="w-full"
               placeholderText="Select date and time"
+              filterTime={(time) => {
+                const selectedDate = field.value ? new Date(field.value) : new Date();
+                const now = new Date();
+                
+                // If the selected date is today, disable past times
+                if (selectedDate.toDateString() === now.toDateString()) {
+                  return time.getTime() > now.getTime();
+                }
+                
+                // For future dates, all times are allowed
+                return true;
+              }}
             />
           )}
         />
@@ -117,18 +137,24 @@ export const EventDetailsStep: React.FC = () => {
         <label htmlFor="category" className="block text-primary font-medium">
           Category
         </label>
-        <select
-          id="category"
-          {...register("category")}
-          className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
-        >
-          <option value="">Select a category</option>
-          {CATEGORY_OPTIONS.map(({ value, label }) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+        <Controller
+          name="category"
+          control={control}
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORY_OPTIONS.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
         {errors.category && (
           <p className="text-red-500 text-sm">{errors.category.message}</p>
         )}
