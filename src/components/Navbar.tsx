@@ -35,8 +35,10 @@ export const Navbar: React.FC = () => {
       <Link
         to={to}
         onClick={onClick}
-        className={`flex items-center px-6 py-4 rounded-lg transition-all duration-200 hover:bg-gray-100 focus:bg-gray-100 ${
-          isActive ? "text-gray-900 font-semibold" : "text-gray-700"
+        className={`flex items-center px-6 py-4 rounded-lg transition-all duration-200 ${
+          isActive
+            ? "text-gray-900 font-semibold bg-gray-100 md:bg-transparent"
+            : "text-gray-700"
         }`}
       >
         {Icon && <Icon className="w-5 h-5 mr-3" />}
