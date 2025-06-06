@@ -30,7 +30,11 @@ interface EventContextType {
   addEvent: (event: Event) => Promise<void>;
   getEvent: (id: string) => Promise<Event | null>;
   refreshEvents: () => Promise<void>;
-  fetchEventsByUser: (page?: number, limit?: number, filters?: EventFilters) => Promise<PaginatedEventsResult>;
+  fetchEventsByUser: (
+    page?: number,
+    limit?: number,
+    filters?: EventFilters
+  ) => Promise<PaginatedEventsResult>;
   updateEvent: (id: string, eventData: Partial<Event>) => Promise<void>;
   saveGeneratedDP: (dpData: SaveDPData) => Promise<void>;
 }
@@ -68,8 +72,8 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const fetchEventsByUser = async (
-    page = 1, 
-    limit = 10, 
+    page = 1,
+    limit = 10,
     filters: EventFilters = {}
   ): Promise<PaginatedEventsResult> => {
     if (!user) {
@@ -209,27 +213,13 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const saveGeneratedDP = async (dpData: SaveDPData) => {
     try {
-      // Upload user photo to storage
-      const fileExt = dpData.user_photo.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const userPhotoPath = `user-photos/${fileName}`;
-
-      const { error: photoUploadError } = await supabase.storage
-        .from("generated-dps")
-        .upload(userPhotoPath, dpData.user_photo);
-
-      if (photoUploadError) throw photoUploadError;
-
-      // Get public URL for user photo
-      const { data: { publicUrl: userPhotoUrl } } = supabase.storage
-        .from("generated-dps")
-        .getPublicUrl(userPhotoPath);
-
       // Convert base64 data URL to blob and upload generated DP
       const response = await fetch(dpData.generated_image_data);
       const blob = await response.blob();
-      
-      const dpFileName = `dp-${Date.now()}-${Math.random().toString(36).substring(2)}.png`;
+
+      const dpFileName = `dp-${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2)}.png`;
       const dpPath = `generated-dps/${dpFileName}`;
 
       const { error: dpUploadError } = await supabase.storage
@@ -241,23 +231,19 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       if (dpUploadError) throw dpUploadError;
 
       // Get public URL for generated DP
-      const { data: { publicUrl: generatedImageUrl } } = supabase.storage
-        .from("generated-dps")
-        .getPublicUrl(dpPath);
+      const {
+        data: { publicUrl: generatedImageUrl },
+      } = supabase.storage.from("generated-dps").getPublicUrl(dpPath);
 
       // Save DP record to database
-      const { error: insertError } = await supabase
-        .from("dps")
-        .insert({
-          user_id: user?.id || null,
-          event_id: dpData.event_id,
-          generated_image_url: generatedImageUrl,
-          user_name: dpData.user_name,
-          user_photo_url: userPhotoUrl,
-        });
+      const { error: insertError } = await supabase.from("dps").insert({
+        user_id: user?.id || null,
+        event_id: dpData.event_id,
+        generated_image_url: generatedImageUrl,
+        user_name: dpData.user_name,
+      });
 
       if (insertError) throw insertError;
-
     } catch (err) {
       console.error("Error saving generated DP:", err);
       throw new Error("Failed to save your DP");
