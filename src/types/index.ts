@@ -50,3 +50,21 @@ export interface CreateEventFormData
   extends Omit<Event, "id" | "user_id" | "created_at" | "flyer_url"> {
   flyer_file: File | null;
 }
+
+export interface GeneratedDP {
+  id: string;
+  user_id: string;
+  event_id: string;
+  generated_image_url: string;
+  user_name: string;
+  created_at: string;
+  event?: {
+    title: string;
+    date: string;
+  };
+}
+
+export interface PaginatedDPsResult {
+  dps: GeneratedDP[];
+  totalCount: number;
+}
