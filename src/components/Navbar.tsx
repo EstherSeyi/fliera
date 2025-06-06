@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, PlusCircle, LogOut, Menu, X, LayoutDashboard, Image as ImageIcon, LogIn } from "lucide-react";
+import { Calendar, PlusCircle, LogOut, Menu, X, LayoutDashboard, Image as ImageIcon, LogIn, List } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export const Navbar: React.FC = () => {
@@ -66,6 +66,7 @@ export const Navbar: React.FC = () => {
             {isLoggedIn ? (
               <>
                 <NavLink to="/dashboard">Dashboard</NavLink>
+                <NavLink to="/my-events">My Events</NavLink>
                 <NavLink to="/my-dps">My DPs</NavLink>
                 <NavLink to="/admin/create">
                   <PlusCircle className="w-5 h-5 mr-1" />
@@ -153,6 +154,13 @@ export const Navbar: React.FC = () => {
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           Dashboard
+                        </NavLink>
+                        <NavLink
+                          to="/my-events"
+                          Icon={List}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          My Events
                         </NavLink>
                         <NavLink
                           to="/my-dps"

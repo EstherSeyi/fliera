@@ -10,6 +10,8 @@ interface EventContextType {
   addEvent: (event: Event) => Promise<void>;
   getEvent: (id: string) => Promise<Event | null>;
   refreshEvents: () => Promise<void>;
+  fetchEventsByUser: () => Promise<Event[]>;
+  updateEvent: (id: string, eventData: Partial<Event>) => Promise<void>;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
@@ -44,6 +46,27 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const fetchEventsByUser = async (): Promise<Event[]> => {
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    try {
+      const { data, error: fetchError } = await supabase
+        .from("events")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (fetchError) throw fetchError;
+
+      return data || [];
+    } catch (err) {
+      console.error("Error fetching user events:", err);
+      throw new Error("Failed to load your events");
+    }
+  };
+
   useEffect(() => {
     fetchEvents();
   }, []);
@@ -66,6 +89,32 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (err) {
       console.error("Error adding event:", err);
       throw new Error("Failed to create event");
+    }
+  };
+
+  const updateEvent = async (id: string, eventData: Partial<Event>) => {
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    try {
+      const { error: updateError } = await supabase
+        .from("events")
+        .update(eventData)
+        .eq("id", id)
+        .eq("user_id", user.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state if the event is in the current events list
+      setEvents((prev) =>
+        prev.map((event) =>
+          event.id === id ? { ...event, ...eventData } : event
+        )
+      );
+    } catch (err) {
+      console.error("Error updating event:", err);
+      throw new Error("Failed to update event");
     }
   };
 
@@ -95,6 +144,8 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
         addEvent,
         getEvent,
         refreshEvents: fetchEvents,
+        fetchEventsByUser,
+        updateEvent,
       }}
     >
       {children}

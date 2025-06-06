@@ -53,6 +53,19 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "admin/edit/:id",
+        async lazy() {
+          const { EditEvent } = await import("./pages/admin/EditEvent");
+          return {
+            Component: () => (
+              <ProtectedRoute>
+                <EditEvent />
+              </ProtectedRoute>
+            ),
+          };
+        },
+      },
+      {
         path: "login",
         async lazy() {
           const { Login } = await import("./pages/Login");
@@ -87,6 +100,19 @@ const router = createBrowserRouter([
             Component: () => (
               <ProtectedRoute>
                 <MyDPs />
+              </ProtectedRoute>
+            ),
+          };
+        },
+      },
+      {
+        path: "my-events",
+        async lazy() {
+          const { MyEvents } = await import("./pages/MyEvents");
+          return {
+            Component: () => (
+              <ProtectedRoute>
+                <MyEvents />
               </ProtectedRoute>
             ),
           };

@@ -24,6 +24,12 @@ export const Footer: React.FC = () => {
                   Dashboard
                 </Link>
                 <Link
+                  to="/my-events"
+                  className="hover:text-accent transition-colors"
+                >
+                  My Events
+                </Link>
+                <Link
                   to="/my-dps"
                   className="hover:text-accent transition-colors"
                 >
