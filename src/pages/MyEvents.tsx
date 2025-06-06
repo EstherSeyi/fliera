@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Calendar, Eye, Edit, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEvents } from "../context/EventContext";
 import { LoadingSpinner } from "../components/LoadingSpinner";
+import { getPlainTextSnippet } from "../lib/utils";
 import type { Event } from "../types";
 
 export const MyEvents: React.FC = () => {
@@ -305,7 +306,7 @@ export const MyEvents: React.FC = () => {
                             {event.title}
                           </Link>
                           <div className="text-sm text-gray-500 truncate max-w-xs">
-                            {event.description}
+                            {getPlainTextSnippet(event.description, 100)}
                           </div>
                         </div>
                       </div>
@@ -365,7 +366,7 @@ export const MyEvents: React.FC = () => {
                       {event.title}
                     </Link>
                     <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                      {event.description}
+                      {getPlainTextSnippet(event.description, 120)}
                     </p>
                   </div>
                 </div>
