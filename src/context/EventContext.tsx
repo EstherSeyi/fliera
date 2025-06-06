@@ -35,6 +35,11 @@ interface EventContextType {
     limit?: number,
     filters?: EventFilters
   ) => Promise<PaginatedEventsResult>;
+  fetchPublicEvents: (
+    page?: number,
+    limit?: number,
+    filters?: EventFilters
+  ) => Promise<PaginatedEventsResult>;
   updateEvent: (id: string, eventData: Partial<Event>) => Promise<void>;
   saveGeneratedDP: (dpData: SaveDPData) => Promise<void>;
   fetchGeneratedDPsByUser: (
@@ -73,6 +78,69 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       setError("Failed to load events");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPublicEvents = async (
+    page = 1,
+    limit = 12,
+    filters: EventFilters = {}
+  ): Promise<PaginatedEventsResult> => {
+    try {
+      // Calculate offset for pagination
+      const offset = (page - 1) * limit;
+
+      // Build the base query for public events only
+      let countQuery = supabase
+        .from("events")
+        .select("*", { count: "exact", head: true })
+        .eq("visibility", "public");
+
+      let dataQuery = supabase
+        .from("events")
+        .select("*")
+        .eq("visibility", "public");
+
+      // Apply filters
+      if (filters.title) {
+        const titleFilter = `%${filters.title}%`;
+        countQuery = countQuery.ilike("title", titleFilter);
+        dataQuery = dataQuery.ilike("title", titleFilter);
+      }
+
+      if (filters.category) {
+        countQuery = countQuery.eq("category", filters.category);
+        dataQuery = dataQuery.eq("category", filters.category);
+      }
+
+      if (filters.dateFrom) {
+        countQuery = countQuery.gte("date", filters.dateFrom);
+        dataQuery = dataQuery.gte("date", filters.dateFrom);
+      }
+
+      if (filters.dateTo) {
+        countQuery = countQuery.lte("date", filters.dateTo);
+        dataQuery = dataQuery.lte("date", filters.dateTo);
+      }
+
+      // Execute count query
+      const { count, error: countError } = await countQuery;
+      if (countError) throw countError;
+
+      // Execute data query with pagination and ordering
+      const { data, error: fetchError } = await dataQuery
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (fetchError) throw fetchError;
+
+      return {
+        events: data || [],
+        totalCount: count || 0,
+      };
+    } catch (err) {
+      console.error("Error fetching public events:", err);
+      throw new Error("Failed to load events");
     }
   };
 
@@ -358,6 +426,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
         getEvent,
         refreshEvents: fetchEvents,
         fetchEventsByUser,
+        fetchPublicEvents,
         updateEvent,
         saveGeneratedDP,
         fetchGeneratedDPsByUser,

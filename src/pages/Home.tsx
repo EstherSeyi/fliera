@@ -102,7 +102,8 @@ export const Home: React.FC = () => {
         </motion.div>
       </section>
 
-  
+      {/* DP Generation Tutorial Section */}
+      <DPGenerationTutorial />
 
       <section className="space-y-8">
         <h2 className="text-3xl font-bold text-primary text-center">
@@ -118,37 +119,38 @@ export const Home: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <CategoryCardSkeleton />
+                  <CategoryCardSkeleton href={`/events?category=${categories[index]?.id || ''}`} />
                 </motion.div>
               ))
             : // Show actual category cards once images are loaded
               categories.map((category, index) => (
                 <motion.div
                   key={category.id}
-                  className="group relative overflow-hidden rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <div className="aspect-video overflow-hidden">
-                    <img
-                      src={category.image}
-                      alt={category.title}
-                      className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-neutral transform translate-y-6 group-hover:translate-y-0 transition-transform duration-300">
-                    <h3 className="text-xl font-bold">{category.title}</h3>
-                    <ArrowRight className="mt-2 w-5 h-5" />
-                  </div>
+                  <Link
+                    to={`/events?category=${category.id}`}
+                    className="group relative overflow-hidden rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 block"
+                  >
+                    <div className="aspect-video overflow-hidden">
+                      <img
+                        src={category.image}
+                        alt={category.title}
+                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 text-neutral transform translate-y-6 group-hover:translate-y-0 transition-transform duration-300">
+                      <h3 className="text-xl font-bold">{category.title}</h3>
+                      <ArrowRight className="mt-2 w-5 h-5" />
+                    </div>
+                  </Link>
                 </motion.div>
               ))}
         </div>
       </section>
-
-          {/* DP Generation Tutorial Section */}
-      <DPGenerationTutorial />
     </div>
   );
 };
