@@ -16,6 +16,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useEvents } from "../context/EventContext";
 import { LoadingSpinner } from "../components/LoadingSpinner";
+import { MyEventTableSkeleton } from "../components/MyEventTableSkeleton";
+import { MyEventCardSkeleton } from "../components/MyEventCardSkeleton";
 import { getPlainTextSnippet } from "../lib/utils";
 import { useDebounce } from "../hooks/useDebounce";
 import {
@@ -490,11 +492,10 @@ export const MyEvents: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-4 text-center">
-                      <LoadingSpinner size={24} />
-                    </td>
-                  </tr>
+                  // Show skeleton loaders while loading
+                  Array.from({ length: eventsPerPage }).map((_, index) => (
+                    <MyEventTableSkeleton key={index} />
+                  ))
                 ) : (
                   userEvents.map((event, index) => (
                     <motion.tr
@@ -561,9 +562,10 @@ export const MyEvents: React.FC = () => {
           {/* Mobile Card View */}
           <div className="md:hidden space-y-4 p-4">
             {loading ? (
-              <div className="flex justify-center py-8">
-                <LoadingSpinner size={24} />
-              </div>
+              // Show skeleton loaders for mobile view
+              Array.from({ length: eventsPerPage }).map((_, index) => (
+                <MyEventCardSkeleton key={index} />
+              ))
             ) : (
               userEvents.map((event, index) => (
                 <motion.div
