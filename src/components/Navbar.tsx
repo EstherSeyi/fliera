@@ -111,7 +111,7 @@ export const Navbar: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 md:hidden bg-black/50"
+                className="fixed inset-0 h-screen p-[20px] md:hidden bg-black/50"
               >
                 <motion.div
                   ref={mobileMenuRef}
