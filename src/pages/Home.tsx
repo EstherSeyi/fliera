@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { CategoryCardSkeleton } from "../components/CategoryCardSkeleton";
+import { DPGenerationTutorial } from "../components/DPGenerationTutorial";
 
 export const Home: React.FC = () => {
   const [imagesLoaded, setImagesLoaded] = useState(false);
@@ -100,6 +101,9 @@ export const Home: React.FC = () => {
           </Link>
         </motion.div>
       </section>
+
+      {/* DP Generation Tutorial Section */}
+      <DPGenerationTutorial />
 
       <section className="space-y-8">
         <h2 className="text-3xl font-bold text-primary text-center">
