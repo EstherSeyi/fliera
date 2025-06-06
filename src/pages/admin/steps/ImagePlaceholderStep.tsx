@@ -28,6 +28,7 @@ const SHAPE_OPTIONS = [
 export const ImagePlaceholderStep: React.FC = () => {
   const { watch, setValue, control } = useFormContext<CreateEventFormData>();
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [imageScale, setImageScale] = useState(1);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const transformerRef = useRef<any>(null);
@@ -52,6 +53,7 @@ export const ImagePlaceholderStep: React.FC = () => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.offsetWidth;
         const scale = containerWidth / img.width;
+        setImageScale(scale);
         setStageSize({
           width: containerWidth,
           height: img.height * scale,
@@ -77,11 +79,12 @@ export const ImagePlaceholderStep: React.FC = () => {
       node.scaleX(1);
       node.scaleY(1);
 
+      // Convert scaled coordinates back to original image coordinates
       const newPlaceholder: ImagePlaceholderZone = {
-        x: Math.round(node.x()),
-        y: Math.round(node.y()),
-        width: Math.round(node.width() * scaleX),
-        height: Math.round(node.height() * scaleY),
+        x: Math.round(node.x() / imageScale),
+        y: Math.round(node.y() / imageScale),
+        width: Math.round((node.width() * scaleX) / imageScale),
+        height: Math.round((node.height() * scaleY) / imageScale),
         holeShape: placeholder.holeShape,
       };
 
@@ -90,10 +93,16 @@ export const ImagePlaceholderStep: React.FC = () => {
   };
 
   const renderShape = () => {
+    // Scale coordinates for display on the Konva stage
+    const scaledX = placeholder.x * imageScale;
+    const scaledY = placeholder.y * imageScale;
+    const scaledWidth = placeholder.width * imageScale;
+    const scaledHeight = placeholder.height * imageScale;
+
     const commonProps = {
       ref: shapeRef,
-      x: placeholder.x,
-      y: placeholder.y,
+      x: scaledX,
+      y: scaledY,
       fill: "rgba(0, 123, 255, 0.3)",
       stroke: "rgba(0, 123, 255, 0.8)",
       strokeWidth: 2,
@@ -107,7 +116,7 @@ export const ImagePlaceholderStep: React.FC = () => {
         return (
           <Circle
             {...commonProps}
-            radius={Math.min(placeholder.width, placeholder.height) / 2}
+            radius={Math.min(scaledWidth, scaledHeight) / 2}
             offsetX={0}
             offsetY={0}
           />
@@ -117,16 +126,15 @@ export const ImagePlaceholderStep: React.FC = () => {
           <Shape
             {...commonProps}
             sceneFunc={(context, shape) => {
-              const { width, height } = placeholder;
               context.beginPath();
-              context.moveTo(width / 2, 0);
-              context.lineTo(width, height);
-              context.lineTo(0, height);
+              context.moveTo(scaledWidth / 2, 0);
+              context.lineTo(scaledWidth, scaledHeight);
+              context.lineTo(0, scaledHeight);
               context.closePath();
               context.fillStrokeShape(shape);
             }}
-            width={placeholder.width}
-            height={placeholder.height}
+            width={scaledWidth}
+            height={scaledHeight}
           />
         );
       case 'box':
@@ -134,8 +142,8 @@ export const ImagePlaceholderStep: React.FC = () => {
         return (
           <Rect
             {...commonProps}
-            width={placeholder.width}
-            height={placeholder.height}
+            width={scaledWidth}
+            height={scaledHeight}
           />
         );
     }
@@ -195,8 +203,8 @@ export const ImagePlaceholderStep: React.FC = () => {
                 <Transformer
                   ref={transformerRef}
                   boundBoxFunc={(oldBox, newBox) => {
-                    // Limit resize
-                    const minSize = 20;
+                    // Limit resize (accounting for scale)
+                    const minSize = 20 * imageScale;
                     const maxSize = Math.min(stageSize.width, stageSize.height);
                     if (
                       newBox.width < minSize ||

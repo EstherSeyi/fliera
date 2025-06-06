@@ -7,6 +7,7 @@ import type { CreateEventFormData } from "../../../types";
 export const PreviewStep: React.FC = () => {
   const { watch } = useFormContext<CreateEventFormData>();
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [imageScale, setImageScale] = useState(1);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -27,6 +28,7 @@ export const PreviewStep: React.FC = () => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.offsetWidth;
         const scale = containerWidth / img.width;
+        setImageScale(scale);
         setStageSize({
           width: containerWidth,
           height: img.height * scale,
@@ -36,10 +38,16 @@ export const PreviewStep: React.FC = () => {
   }, [tempFlyerUrl]);
 
   const renderPlaceholderShape = (placeholder: any, index: number) => {
+    // Scale coordinates for display on the Konva stage
+    const scaledX = placeholder.x * imageScale;
+    const scaledY = placeholder.y * imageScale;
+    const scaledWidth = placeholder.width * imageScale;
+    const scaledHeight = placeholder.height * imageScale;
+
     const commonProps = {
       key: index,
-      x: placeholder.x,
-      y: placeholder.y,
+      x: scaledX,
+      y: scaledY,
       fill: "rgba(0, 123, 255, 0.3)",
       stroke: "rgba(0, 123, 255, 0.8)",
       strokeWidth: 2,
@@ -50,7 +58,7 @@ export const PreviewStep: React.FC = () => {
         return (
           <Circle
             {...commonProps}
-            radius={Math.min(placeholder.width, placeholder.height) / 2}
+            radius={Math.min(scaledWidth, scaledHeight) / 2}
             offsetX={0}
             offsetY={0}
           />
@@ -60,16 +68,15 @@ export const PreviewStep: React.FC = () => {
           <Shape
             {...commonProps}
             sceneFunc={(context, shape) => {
-              const { width, height } = placeholder;
               context.beginPath();
-              context.moveTo(width / 2, 0);
-              context.lineTo(width, height);
-              context.lineTo(0, height);
+              context.moveTo(scaledWidth / 2, 0);
+              context.lineTo(scaledWidth, scaledHeight);
+              context.lineTo(0, scaledHeight);
               context.closePath();
               context.fillStrokeShape(shape);
             }}
-            width={placeholder.width}
-            height={placeholder.height}
+            width={scaledWidth}
+            height={scaledHeight}
           />
         );
       case 'box':
@@ -77,8 +84,8 @@ export const PreviewStep: React.FC = () => {
         return (
           <Rect
             {...commonProps}
-            width={placeholder.width}
-            height={placeholder.height}
+            width={scaledWidth}
+            height={scaledHeight}
           />
         );
     }
@@ -115,7 +122,20 @@ export const PreviewStep: React.FC = () => {
                 renderPlaceholderShape(placeholder, index)
               )}
               {text_placeholders.map((placeholder, index) => (
-                <Text key={index} {...placeholder} />
+                <Text 
+                  key={index} 
+                  x={placeholder.x * imageScale}
+                  y={placeholder.y * imageScale}
+                  width={placeholder.width * imageScale}
+                  height={placeholder.height * imageScale}
+                  text={placeholder.text}
+                  fontSize={placeholder.fontSize * imageScale}
+                  fill={placeholder.color}
+                  align={placeholder.textAlign}
+                  fontFamily={placeholder.fontFamily}
+                  fontStyle={placeholder.fontStyle}
+                  fontWeight={placeholder.fontWeight}
+                />
               ))}
             </Layer>
           </Stage>

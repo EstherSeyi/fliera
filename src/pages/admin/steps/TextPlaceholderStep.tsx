@@ -22,6 +22,7 @@ const TEXT_STYLES = {
 export const TextPlaceholderStep: React.FC = () => {
   const { watch, setValue } = useFormContext<CreateEventFormData>();
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [imageScale, setImageScale] = useState(1);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -29,7 +30,6 @@ export const TextPlaceholderStep: React.FC = () => {
   const textRefs = useRef<any[]>([]);
 
   const flyer_file = watch("flyer_file");
-
   const textPlaceholders = watch("text_placeholders");
 
   const tempFlyerUrl = useMemo(
@@ -47,6 +47,7 @@ export const TextPlaceholderStep: React.FC = () => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.offsetWidth;
         const scale = containerWidth / img.width;
+        setImageScale(scale);
         setStageSize({
           width: containerWidth,
           height: img.height * scale,
@@ -71,12 +72,14 @@ export const TextPlaceholderStep: React.FC = () => {
       node.scaleX(1);
       node.scaleY(1);
 
+      // Convert scaled coordinates back to original image coordinates
       const newPlaceholder: TextPlaceholderZone = {
         ...textPlaceholders[index],
-        x: Math.round(node.x()),
-        y: Math.round(node.y()),
-        width: Math.round(node.width() * scaleX),
-        height: Math.round(node.height() * scaleY),
+        x: Math.round(node.x() / imageScale),
+        y: Math.round(node.y() / imageScale),
+        width: Math.round((node.width() * scaleX) / imageScale),
+        height: Math.round((node.height() * scaleY) / imageScale),
+        fontSize: Math.round((node.fontSize() * scaleY) / imageScale),
       };
 
       const newPlaceholders = [...textPlaceholders];
@@ -86,13 +89,14 @@ export const TextPlaceholderStep: React.FC = () => {
   };
 
   const addTextPlaceholder = () => {
+    // Create new placeholder with coordinates relative to original image dimensions
     const newPlaceholder: TextPlaceholderZone = {
-      x: 50,
-      y: 50,
-      width: 200,
-      height: 50,
+      x: Math.round(50 / imageScale),
+      y: Math.round(50 / imageScale),
+      width: Math.round(200 / imageScale),
+      height: Math.round(50 / imageScale),
       text: "Sample Text",
-      fontSize: 24,
+      fontSize: Math.round(24 / imageScale),
       color: "#000000",
       textAlign: "center",
       fontFamily: "Open Sans",
@@ -115,6 +119,12 @@ export const TextPlaceholderStep: React.FC = () => {
     value: any
   ) => {
     const newPlaceholders = [...textPlaceholders];
+    
+    // For fontSize, convert from display value to original image scale
+    if (field === 'fontSize') {
+      value = Math.round(value / imageScale);
+    }
+    
     newPlaceholders[index] = { ...newPlaceholders[index], [field]: value };
     setValue("text_placeholders", newPlaceholders);
   };
@@ -156,7 +166,17 @@ export const TextPlaceholderStep: React.FC = () => {
                   <Text
                     key={index}
                     ref={(el) => (textRefs.current[index] = el)}
-                    {...placeholder}
+                    x={placeholder.x * imageScale}
+                    y={placeholder.y * imageScale}
+                    width={placeholder.width * imageScale}
+                    height={placeholder.height * imageScale}
+                    text={placeholder.text}
+                    fontSize={placeholder.fontSize * imageScale}
+                    fill={placeholder.color}
+                    align={placeholder.textAlign}
+                    fontFamily={placeholder.fontFamily}
+                    fontStyle={placeholder.fontStyle}
+                    fontWeight={placeholder.fontWeight}
                     draggable
                     onClick={() => setSelectedIndex(index)}
                     onTap={() => setSelectedIndex(index)}
@@ -167,7 +187,7 @@ export const TextPlaceholderStep: React.FC = () => {
                 <Transformer
                   ref={transformerRef}
                   boundBoxFunc={(oldBox, newBox) => {
-                    const minSize = 20;
+                    const minSize = 20 * imageScale;
                     return newBox.width < minSize || newBox.height < minSize
                       ? oldBox
                       : newBox;
@@ -221,7 +241,7 @@ export const TextPlaceholderStep: React.FC = () => {
                 </label>
                 <input
                   type="number"
-                  value={textPlaceholders[selectedIndex].fontSize}
+                  value={Math.round(textPlaceholders[selectedIndex].fontSize * imageScale)}
                   onChange={(e) =>
                     updateTextStyle(
                       selectedIndex,
