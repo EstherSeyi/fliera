@@ -3,13 +3,17 @@ import { Layout } from "./components/Layout";
 import { Home } from "./pages/Home";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ToastProvider } from "./context/ToastContext";
+import { ToastContainer } from "./components/Toast";
 
 import { EventProvider } from "./context/EventContext";
 
 export const AppProviders = ({ children }: { children: React.ReactNode }) => (
-  <AuthProvider>
-    <EventProvider>{children}</EventProvider>
-  </AuthProvider>
+  <ToastProvider>
+    <AuthProvider>
+      <EventProvider>{children}</EventProvider>
+    </AuthProvider>
+  </ToastProvider>
 );
 
 const router = createBrowserRouter([
@@ -18,6 +22,7 @@ const router = createBrowserRouter([
     element: (
       <AppProviders>
         <Layout />
+        <ToastContainer />
       </AppProviders>
     ),
     children: [

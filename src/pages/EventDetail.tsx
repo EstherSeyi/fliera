@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Download, Image as ImageIcon, Info, X, File } from "lucide-react";
 import { useEvents } from "../context/EventContext";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { EventDetailsModal } from "../components/EventDetailsModal";
 import { getPlainTextSnippet } from "../lib/utils";
@@ -13,6 +14,7 @@ export const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { getEvent, saveGeneratedDP } = useEvents();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +95,18 @@ export const EventDetail: React.FC = () => {
   const clearPhoto = () => {
     setUserPhoto(null);
     setUserPhotoPreview(null);
+  };
+
+  const resetPageState = () => {
+    setUserPhoto(null);
+    setUserPhotoPreview(null);
+    setUserName("");
+    setHasGeneratedDP(false);
+    
+    // Redraw the initial flyer on canvas
+    if (event && canvasRef.current) {
+      drawInitialFlyer();
+    }
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -285,10 +299,26 @@ export const EventDetail: React.FC = () => {
           user_photo: userPhoto,
           generated_image_data: canvasDataUrl,
         });
+
+        // Show success toast and reset page
+        showToast("Your DP has been successfully saved!", "success");
+        
+        // Reset the page state after a short delay to allow the toast to show
+        setTimeout(() => {
+          resetPageState();
+        }, 500);
+      } else {
+        // For non-logged in users, just show download success
+        showToast("Your DP has been downloaded successfully!", "success");
+        
+        // Reset the page state after a short delay
+        setTimeout(() => {
+          resetPageState();
+        }, 500);
       }
     } catch (err) {
       console.error("Error saving DP:", err);
-      setError("Failed to save DP");
+      showToast("Failed to save your DP. Please try again.", "error");
     } finally {
       setIsSaving(false);
     }
