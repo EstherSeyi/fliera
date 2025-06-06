@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-  Calendar, 
-  Eye, 
-  Edit, 
-  Plus, 
-  ChevronLeft, 
-  ChevronRight, 
+import {
+  Calendar,
+  Eye,
+  Edit,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
   Search,
   Filter,
-  X
+  X,
 } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useEvents } from "../context/EventContext";
-import { LoadingSpinner } from "../components/LoadingSpinner";
 import { MyEventTableSkeleton } from "../components/MyEventTableSkeleton";
 import { MyEventCardSkeleton } from "../components/MyEventCardSkeleton";
 import { getPlainTextSnippet } from "../lib/utils";
@@ -30,19 +29,19 @@ import {
 import type { Event, EventCategory, EventVisibility } from "../types";
 
 const CATEGORY_OPTIONS: { value: EventCategory; label: string }[] = [
-  { value: 'business', label: 'Business' },
-  { value: 'technology', label: 'Technology' },
-  { value: 'music', label: 'Music' },
-  { value: 'social', label: 'Social' },
-  { value: 'sports', label: 'Sports' },
-  { value: 'activism', label: 'Activism' },
-  { value: 'other', label: 'Other' },
+  { value: "business", label: "Business" },
+  { value: "technology", label: "Technology" },
+  { value: "music", label: "Music" },
+  { value: "social", label: "Social" },
+  { value: "sports", label: "Sports" },
+  { value: "activism", label: "Activism" },
+  { value: "other", label: "Other" },
 ];
 
 const VISIBILITY_OPTIONS: { value: EventVisibility; label: string }[] = [
-  { value: 'public', label: 'Public' },
-  { value: 'private', label: 'Private' },
-  { value: 'archived', label: 'Archived' },
+  { value: "public", label: "Public" },
+  { value: "private", label: "Private" },
+  { value: "archived", label: "Archived" },
 ];
 
 export const MyEvents: React.FC = () => {
@@ -50,7 +49,7 @@ export const MyEvents: React.FC = () => {
   const [userEvents, setUserEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalEvents, setTotalEvents] = useState(0);
@@ -58,8 +57,12 @@ export const MyEvents: React.FC = () => {
 
   // Filter state
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<EventCategory | "">("");
-  const [selectedVisibility, setSelectedVisibility] = useState<EventVisibility | "">("");
+  const [selectedCategory, setSelectedCategory] = useState<EventCategory | "">(
+    ""
+  );
+  const [selectedVisibility, setSelectedVisibility] = useState<
+    EventVisibility | ""
+  >("");
   const [dateFrom, setDateFrom] = useState<Date | null>(null);
   const [dateTo, setDateTo] = useState<Date | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -73,23 +76,33 @@ export const MyEvents: React.FC = () => {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchTerm, selectedCategory, selectedVisibility, dateFrom, dateTo]);
+  }, [
+    debouncedSearchTerm,
+    selectedCategory,
+    selectedVisibility,
+    dateFrom,
+    dateTo,
+  ]);
 
   useEffect(() => {
     const loadUserEvents = async () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         const filters = {
           ...(debouncedSearchTerm && { title: debouncedSearchTerm }),
           ...(selectedCategory && { category: selectedCategory }),
           ...(selectedVisibility && { visibility: selectedVisibility }),
-          ...(dateFrom && { dateFrom: dateFrom.toISOString().split('T')[0] }),
-          ...(dateTo && { dateTo: dateTo.toISOString().split('T')[0] }),
+          ...(dateFrom && { dateFrom: dateFrom.toISOString().split("T")[0] }),
+          ...(dateTo && { dateTo: dateTo.toISOString().split("T")[0] }),
         };
 
-        const result = await fetchEventsByUser(currentPage, eventsPerPage, filters);
+        const result = await fetchEventsByUser(
+          currentPage,
+          eventsPerPage,
+          filters
+        );
         setUserEvents(result.events);
         setTotalEvents(result.totalCount);
       } catch (err) {
@@ -101,7 +114,15 @@ export const MyEvents: React.FC = () => {
     };
 
     loadUserEvents();
-  }, [fetchEventsByUser, currentPage, debouncedSearchTerm, selectedCategory, selectedVisibility, dateFrom, dateTo]);
+  }, [
+    fetchEventsByUser,
+    currentPage,
+    debouncedSearchTerm,
+    selectedCategory,
+    selectedVisibility,
+    dateFrom,
+    dateTo,
+  ]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -113,7 +134,7 @@ export const MyEvents: React.FC = () => {
 
   const getVisibilityBadge = (visibility: string) => {
     const safeVisibility = visibility || "public";
-    
+
     const colors = {
       public: "bg-green-100 text-green-800",
       private: "bg-yellow-100 text-yellow-800",
@@ -133,7 +154,7 @@ export const MyEvents: React.FC = () => {
 
   const getCategoryBadge = (category: string) => {
     const safeCategory = category || "other";
-    
+
     const colors = {
       business: "bg-blue-100 text-blue-800",
       technology: "bg-purple-100 text-purple-800",
@@ -169,17 +190,22 @@ export const MyEvents: React.FC = () => {
     setDateTo(null);
   };
 
-  const hasActiveFilters = debouncedSearchTerm || selectedCategory || selectedVisibility || dateFrom || dateTo;
+  const hasActiveFilters =
+    debouncedSearchTerm ||
+    selectedCategory ||
+    selectedVisibility ||
+    dateFrom ||
+    dateTo;
 
   const renderPaginationControls = () => {
     if (totalPages <= 1) return null;
 
     const pageNumbers = [];
     const maxVisiblePages = 5;
-    
+
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    
+
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
@@ -191,9 +217,11 @@ export const MyEvents: React.FC = () => {
     return (
       <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-gray-200">
         <div className="flex items-center text-sm text-gray-500">
-          Showing {((currentPage - 1) * eventsPerPage) + 1} to {Math.min(currentPage * eventsPerPage, totalEvents)} of {totalEvents} events
+          Showing {(currentPage - 1) * eventsPerPage + 1} to{" "}
+          {Math.min(currentPage * eventsPerPage, totalEvents)} of {totalEvents}{" "}
+          events
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
@@ -260,14 +288,6 @@ export const MyEvents: React.FC = () => {
       </div>
     );
   };
-
-  if (loading && currentPage === 1) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <LoadingSpinner size={32} />
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -346,8 +366,17 @@ export const MyEvents: React.FC = () => {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-gray-200"
           >
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Category</label>
-              <Select value={selectedCategory || "all-categories"} onValueChange={(value) => setSelectedCategory(value === "all-categories" ? "" : value as EventCategory)}>
+              <label className="block text-sm font-medium text-gray-700">
+                Category
+              </label>
+              <Select
+                value={selectedCategory || "all-categories"}
+                onValueChange={(value) =>
+                  setSelectedCategory(
+                    value === "all-categories" ? "" : (value as EventCategory)
+                  )
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
@@ -363,8 +392,17 @@ export const MyEvents: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Visibility</label>
-              <Select value={selectedVisibility || "all-visibility"} onValueChange={(value) => setSelectedVisibility(value === "all-visibility" ? "" : value as EventVisibility)}>
+              <label className="block text-sm font-medium text-gray-700">
+                Visibility
+              </label>
+              <Select
+                value={selectedVisibility || "all-visibility"}
+                onValueChange={(value) =>
+                  setSelectedVisibility(
+                    value === "all-visibility" ? "" : (value as EventVisibility)
+                  )
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All visibility" />
                 </SelectTrigger>
@@ -380,7 +418,9 @@ export const MyEvents: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Date From</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Date From
+              </label>
               <DatePicker
                 selected={dateFrom}
                 onChange={(date) => setDateFrom(date)}
@@ -392,7 +432,9 @@ export const MyEvents: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Date To</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Date To
+              </label>
               <DatePicker
                 selected={dateTo}
                 onChange={(date) => setDateTo(date)}
@@ -491,136 +533,132 @@ export const MyEvents: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {loading ? (
-                  // Show skeleton loaders while loading
-                  Array.from({ length: eventsPerPage }).map((_, index) => (
-                    <MyEventTableSkeleton key={index} />
-                  ))
-                ) : (
-                  userEvents.map((event, index) => (
-                    <motion.tr
-                      key={event.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="hover:bg-gray-50"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-12 w-12">
-                            <img
-                              className="h-12 w-12 rounded-lg object-cover"
-                              src={event.flyer_url}
-                              alt={event.title}
-                            />
-                          </div>
-                          <div className="ml-4">
-                            <Link
-                              to={`/events/${event.id}`}
-                              className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                            >
-                              {event.title}
-                            </Link>
-                            <div className="text-sm text-gray-500 truncate max-w-xs">
-                              {getPlainTextSnippet(event.description, 100)}
+                {loading
+                  ? // Show skeleton loaders while loading
+                    Array.from({ length: eventsPerPage }).map((_, index) => (
+                      <MyEventTableSkeleton key={index} />
+                    ))
+                  : userEvents.map((event, index) => (
+                      <motion.tr
+                        key={event.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="hover:bg-gray-50"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-12 w-12">
+                              <img
+                                className="h-12 w-12 rounded-lg object-cover"
+                                src={event.flyer_url}
+                                alt={event.title}
+                              />
+                            </div>
+                            <div className="ml-4">
+                              <Link
+                                to={`/events/${event.id}`}
+                                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                              >
+                                {event.title}
+                              </Link>
+                              <div className="text-sm text-gray-500 truncate max-w-xs">
+                                {getPlainTextSnippet(event.description, 100)}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(event.date)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getCategoryBadge(event.category)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getVisibilityBadge(event.visibility)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <Link
-                          to={`/events/${event.id}`}
-                          className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          View
-                        </Link>
-                        <Link
-                          to={`/admin/edit/${event.id}`}
-                          className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Edit
-                        </Link>
-                      </td>
-                    </motion.tr>
-                  ))
-                )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatDate(event.date)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getCategoryBadge(event.category)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getVisibilityBadge(event.visibility)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          <Link
+                            to={`/events/${event.id}`}
+                            className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            View
+                          </Link>
+                          <Link
+                            to={`/admin/edit/${event.id}`}
+                            className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Edit
+                          </Link>
+                        </td>
+                      </motion.tr>
+                    ))}
               </tbody>
             </table>
           </div>
 
           {/* Mobile Card View */}
           <div className="md:hidden space-y-4 p-4">
-            {loading ? (
-              // Show skeleton loaders for mobile view
-              Array.from({ length: eventsPerPage }).map((_, index) => (
-                <MyEventCardSkeleton key={index} />
-              ))
-            ) : (
-              userEvents.map((event, index) => (
-                <motion.div
-                  key={event.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-gray-50 rounded-lg p-4 space-y-3"
-                >
-                  <div className="flex items-start space-x-3">
-                    <img
-                      className="h-16 w-16 rounded-lg object-cover flex-shrink-0"
-                      src={event.flyer_url}
-                      alt={event.title}
-                    />
-                    <div className="flex-1 min-w-0">
+            {loading
+              ? // Show skeleton loaders for mobile view
+                Array.from({ length: eventsPerPage }).map((_, index) => (
+                  <MyEventCardSkeleton key={index} />
+                ))
+              : userEvents.map((event, index) => (
+                  <motion.div
+                    key={event.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-gray-50 rounded-lg p-4 space-y-3"
+                  >
+                    <div className="flex items-start space-x-3">
+                      <img
+                        className="h-16 w-16 rounded-lg object-cover flex-shrink-0"
+                        src={event.flyer_url}
+                        alt={event.title}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <Link
+                          to={`/events/${event.id}`}
+                          className="text-lg font-medium text-primary hover:text-primary/80 transition-colors block"
+                        >
+                          {event.title}
+                        </Link>
+                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                          {getPlainTextSnippet(event.description, 120)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-sm text-gray-600">
+                        📅 {formatDate(event.date)}
+                      </span>
+                      {getCategoryBadge(event.category)}
+                      {getVisibilityBadge(event.visibility)}
+                    </div>
+
+                    <div className="flex space-x-2 pt-2">
                       <Link
                         to={`/events/${event.id}`}
-                        className="text-lg font-medium text-primary hover:text-primary/80 transition-colors block"
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
                       >
-                        {event.title}
+                        <Eye className="w-4 h-4 mr-1" />
+                        View
                       </Link>
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                        {getPlainTextSnippet(event.description, 120)}
-                      </p>
+                      <Link
+                        to={`/admin/edit/${event.id}`}
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
+                      >
+                        <Edit className="w-4 h-4 mr-1" />
+                        Edit
+                      </Link>
                     </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-sm text-gray-600">
-                      📅 {formatDate(event.date)}
-                    </span>
-                    {getCategoryBadge(event.category)}
-                    {getVisibilityBadge(event.visibility)}
-                  </div>
-
-                  <div className="flex space-x-2 pt-2">
-                    <Link
-                      to={`/events/${event.id}`}
-                      className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
-                    >
-                      <Eye className="w-4 h-4 mr-1" />
-                      View
-                    </Link>
-                    <Link
-                      to={`/admin/edit/${event.id}`}
-                      className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
-                    >
-                      <Edit className="w-4 h-4 mr-1" />
-                      Edit
-                    </Link>
-                  </div>
-                </motion.div>
-              ))
-            )}
+                  </motion.div>
+                ))}
           </div>
 
           {/* Pagination Controls */}
