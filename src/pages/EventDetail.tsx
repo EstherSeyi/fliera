@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { EventDetailsModal } from "../components/EventDetailsModal";
+import { ImageCropperModal } from "../components/ImageCropperModal";
 import { getPlainTextSnippet } from "../lib/utils";
 import type { Event } from "../types";
 
@@ -27,6 +28,11 @@ export const EventDetail: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
   const [hasGeneratedDP, setHasGeneratedDP] = useState(false);
+
+  // Image cropper states
+  const [showImageCropper, setShowImageCropper] = useState(false);
+  const [originalImageSrc, setOriginalImageSrc] = useState<string>("");
+  const [originalFileName, setOriginalFileName] = useState<string>("");
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -82,23 +88,38 @@ export const EventDetail: React.FC = () => {
   };
 
   const handlePhotoUpload = (file: File | null) => {
-    setUserPhoto(file);
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => setUserPhotoPreview(e.target?.result as string);
+      reader.onload = (e) => {
+        const imageSrc = e.target?.result as string;
+        setOriginalImageSrc(imageSrc);
+        setOriginalFileName(file.name);
+        setShowImageCropper(true);
+      };
       reader.readAsDataURL(file);
-    } else {
-      setUserPhotoPreview(null);
     }
+  };
+
+  const handleCropComplete = (croppedFile: File, croppedImageUrl: string) => {
+    setUserPhoto(croppedFile);
+    setUserPhotoPreview(croppedImageUrl);
+    setShowImageCropper(false);
   };
 
   const clearPhoto = () => {
     setUserPhoto(null);
     setUserPhotoPreview(null);
+    // Clean up object URL to prevent memory leaks
+    if (userPhotoPreview) {
+      URL.revokeObjectURL(userPhotoPreview);
+    }
   };
 
   const resetPageState = () => {
     setUserPhoto(null);
+    if (userPhotoPreview) {
+      URL.revokeObjectURL(userPhotoPreview);
+    }
     setUserPhotoPreview(null);
     setUserName("");
     setHasGeneratedDP(false);
@@ -407,6 +428,9 @@ export const EventDetail: React.FC = () => {
                   <span className="text-secondary">
                     Click to upload your photo
                   </span>
+                  <p className="text-xs text-gray-500">
+                    You'll be able to crop and edit your photo before using it
+                  </p>
                 </label>
               </div>
             ) : (
@@ -509,6 +533,14 @@ export const EventDetail: React.FC = () => {
         event={event}
         isOpen={showEventModal}
         onClose={() => setShowEventModal(false)}
+      />
+
+      <ImageCropperModal
+        isOpen={showImageCropper}
+        onClose={() => setShowImageCropper(false)}
+        imageSrc={originalImageSrc}
+        onCropComplete={handleCropComplete}
+        originalFileName={originalFileName}
       />
     </div>
   );
