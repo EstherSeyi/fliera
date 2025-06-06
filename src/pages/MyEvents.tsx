@@ -39,6 +39,9 @@ export const MyEvents: React.FC = () => {
   };
 
   const getVisibilityBadge = (visibility: string) => {
+    // Handle null/undefined visibility with fallback
+    const safeVisibility = visibility || "public";
+    
     const colors = {
       public: "bg-green-100 text-green-800",
       private: "bg-yellow-100 text-yellow-800",
@@ -48,15 +51,18 @@ export const MyEvents: React.FC = () => {
     return (
       <span
         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          colors[visibility as keyof typeof colors] || colors.public
+          colors[safeVisibility as keyof typeof colors] || colors.public
         }`}
       >
-        {visibility.charAt(0).toUpperCase() + visibility.slice(1)}
+        {safeVisibility.charAt(0).toUpperCase() + safeVisibility.slice(1)}
       </span>
     );
   };
 
   const getCategoryBadge = (category: string) => {
+    // Handle null/undefined category with fallback
+    const safeCategory = category || "other";
+    
     const colors = {
       business: "bg-blue-100 text-blue-800",
       technology: "bg-purple-100 text-purple-800",
@@ -70,10 +76,10 @@ export const MyEvents: React.FC = () => {
     return (
       <span
         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          colors[category as keyof typeof colors] || colors.other
+          colors[safeCategory as keyof typeof colors] || colors.other
         }`}
       >
-        {category.charAt(0).toUpperCase() + category.slice(1)}
+        {safeCategory.charAt(0).toUpperCase() + safeCategory.slice(1)}
       </span>
     );
   };
