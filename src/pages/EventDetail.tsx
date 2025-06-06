@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Download, Image as ImageIcon } from "lucide-react";
 import { useEvents } from "../context/EventContext";
@@ -8,7 +8,6 @@ import type { Event } from "../types";
 
 export const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { getEvent } = useEvents();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,19 +59,20 @@ export const EventDetail: React.FC = () => {
     ctx.beginPath();
 
     switch (holeShape) {
-      case 'circle':
+      case "circle": {
         const radius = Math.min(width, height) / 2;
         const centerX = x + radius;
         const centerY = y + radius;
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
         break;
-      case 'triangle':
+      }
+      case "triangle":
         ctx.moveTo(x + width / 2, y);
         ctx.lineTo(x + width, y + height);
         ctx.lineTo(x, y + height);
         ctx.closePath();
         break;
-      case 'box':
+      case "box":
       default:
         ctx.rect(x, y, width, height);
         break;
@@ -102,8 +102,14 @@ export const EventDetail: React.FC = () => {
     // Draw the image with proper scaling and cropping
     ctx.drawImage(
       image,
-      sourceX, sourceY, sourceWidth, sourceHeight, // Source rectangle
-      x, y, width, height // Destination rectangle
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight, // Source rectangle
+      x,
+      y,
+      width,
+      height // Destination rectangle
     );
 
     ctx.restore();
@@ -165,7 +171,7 @@ export const EventDetail: React.FC = () => {
         ctx.textAlign = textAlign;
 
         // Transform the text according to textTransform
-        let displayText = text || userName;
+        let displayText = userName ?? "";
         if (textTransform === "uppercase") {
           displayText = displayText.toUpperCase();
         } else if (textTransform === "lowercase") {
@@ -179,9 +185,9 @@ export const EventDetail: React.FC = () => {
 
         // Calculate proper x position based on textAlign
         let textX = x;
-        if (textAlign === 'center') {
+        if (textAlign === "center") {
           textX = x + width / 2;
-        } else if (textAlign === 'right') {
+        } else if (textAlign === "right") {
           textX = x + width;
         }
 
