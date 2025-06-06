@@ -24,7 +24,7 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string>("");
 
   useEffect(() => {
-    if (value && value instanceof File) {
+    if (value && typeof File === 'function' && value instanceof File) {
       const url = URL.createObjectURL(value);
       setPreviewUrl(url);
       return () => URL.revokeObjectURL(url);
@@ -60,7 +60,7 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
   return (
     <div className="space-y-2">
       {label && (
-        <label htmlFor="file-upload\" className="block text-primary font-medium">
+        <label htmlFor="file-upload" className="block text-primary font-medium">
           {label}
         </label>
       )}
