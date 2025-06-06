@@ -78,9 +78,9 @@ export const TwitterColorPickerInput: React.FC<TwitterColorPickerInputProps> = (
             w-full flex items-center justify-between px-3 py-2 border rounded-lg transition-all
             ${disabled 
               ? "bg-gray-100 cursor-not-allowed opacity-50" 
-              : "bg-white hover:border-primary/40 focus:border-primary focus:ring-1 focus:ring-primary"
+              : "bg-white hover:border-accent/40 focus:border-accent focus:ring-1 focus:ring-accent"
             }
-            ${isOpen ? "border-primary ring-1 ring-primary" : "border-primary/20"}
+            ${isOpen ? "border-accent ring-1 ring-accent" : "border-primary/20"}
           `}
         >
           <div className="flex items-center space-x-3">
