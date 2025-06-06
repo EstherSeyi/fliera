@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useEvents } from "../context/EventContext";
@@ -7,6 +7,37 @@ import { LoadingSpinner } from "../components/LoadingSpinner";
 
 export const EventsList: React.FC = () => {
   const { events, loading, error } = useEvents();
+
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    const container = img.parentElement;
+    
+    // Remove loading animation from container
+    if (container) {
+      container.classList.remove('animate-pulse', 'bg-gray-200');
+    }
+    
+    // Make image visible
+    img.classList.remove('opacity-0');
+    img.classList.add('opacity-100');
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    const container = img.parentElement;
+    
+    // Set fallback image
+    img.src = "https://images.pexels.com/photos/1036936/pexels-photo-1036936.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1";
+    
+    // Remove loading animation from container
+    if (container) {
+      container.classList.remove('animate-pulse', 'bg-gray-200');
+    }
+    
+    // Make image visible
+    img.classList.remove('opacity-0');
+    img.classList.add('opacity-100');
+  };
 
   if (loading) {
     return (
@@ -56,11 +87,13 @@ export const EventsList: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <div className="aspect-video relative overflow-hidden">
+              <div className="aspect-video relative overflow-hidden bg-gray-200 animate-pulse">
                 <img
                   src={event.flyer_url}
                   alt={event.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-opacity duration-300 opacity-0"
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent" />
               </div>

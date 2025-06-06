@@ -73,6 +73,38 @@ export const MyEvents: React.FC = () => {
   // Calculate total pages
   const totalPages = Math.ceil(totalEvents / eventsPerPage);
 
+  // Image loading handlers
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    const container = img.parentElement;
+    
+    // Remove loading animation from container
+    if (container) {
+      container.classList.remove('animate-pulse', 'bg-gray-200');
+    }
+    
+    // Make image visible
+    img.classList.remove('opacity-0');
+    img.classList.add('opacity-100');
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    const container = img.parentElement;
+    
+    // Set fallback image
+    img.src = "https://images.pexels.com/photos/1036936/pexels-photo-1036936.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1";
+    
+    // Remove loading animation from container
+    if (container) {
+      container.classList.remove('animate-pulse', 'bg-gray-200');
+    }
+    
+    // Make image visible
+    img.classList.remove('opacity-0');
+    img.classList.add('opacity-100');
+  };
+
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
@@ -548,11 +580,13 @@ export const MyEvents: React.FC = () => {
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="flex-shrink-0 h-12 w-12">
+                            <div className="flex-shrink-0 h-12 w-12 bg-gray-200 animate-pulse rounded-lg">
                               <img
-                                className="h-12 w-12 rounded-lg object-cover"
+                                className="h-12 w-12 rounded-lg object-cover transition-opacity duration-300 opacity-0"
                                 src={event.flyer_url}
                                 alt={event.title}
+                                onLoad={handleImageLoad}
+                                onError={handleImageError}
                               />
                             </div>
                             <div className="ml-4">
@@ -615,11 +649,15 @@ export const MyEvents: React.FC = () => {
                     className="bg-gray-50 rounded-lg p-4 space-y-3"
                   >
                     <div className="flex items-start space-x-3">
-                      <img
-                        className="h-16 w-16 rounded-lg object-cover flex-shrink-0"
-                        src={event.flyer_url}
-                        alt={event.title}
-                      />
+                      <div className="h-16 w-16 rounded-lg bg-gray-200 animate-pulse flex-shrink-0">
+                        <img
+                          className="h-16 w-16 rounded-lg object-cover transition-opacity duration-300 opacity-0"
+                          src={event.flyer_url}
+                          alt={event.title}
+                          onLoad={handleImageLoad}
+                          onError={handleImageError}
+                        />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <Link
                           to={`/events/${event.id}`}
