@@ -127,7 +127,7 @@ export const Navbar: React.FC = () => {
                     opacity: 0,
                     scale: 0.75,
                   }}
-                  className="absolute right-4 top-4 bottom-4 w-80 max-w-[calc(100vw-2rem)] rounded-xl bg-white shadow-lg overflow-y-auto"
+                  className="relative py-6 rounded-xl bg-white shadow-lg overflow-y-auto"
                 >
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
