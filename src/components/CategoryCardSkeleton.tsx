@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
 
+import { Link, useLocation } from "react-router-dom";
+
 export const CategoryCardSkeleton: React.FC = () => {
   return (
     <Link className="group relative overflow-hidden rounded-xl bg-white shadow-lg">
