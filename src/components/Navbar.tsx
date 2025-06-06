@@ -136,7 +136,7 @@ export const Navbar: React.FC = () => {
                     <X className="w-6 h-6" />
                   </button>
 
-                  <div className="flex flex-col pt-16 px-4 pb-4">
+                  <div className="flex flex-col pt-8 px-4 pb-4">
                     <NavLink
                       to="/events"
                       Icon={Calendar}
