@@ -1,11 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "../lib/supabase";
-import type { Event } from "../types";
+import type { Event, EventCategory, EventVisibility } from "../types";
 
 interface PaginatedEventsResult {
   events: Event[];
   totalCount: number;
+}
+
+interface EventFilters {
+  title?: string;
+  category?: EventCategory;
+  visibility?: EventVisibility;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 interface EventContextType {
@@ -15,7 +23,7 @@ interface EventContextType {
   addEvent: (event: Event) => Promise<void>;
   getEvent: (id: string) => Promise<Event | null>;
   refreshEvents: () => Promise<void>;
-  fetchEventsByUser: (page?: number, limit?: number) => Promise<PaginatedEventsResult>;
+  fetchEventsByUser: (page?: number, limit?: number, filters?: EventFilters) => Promise<PaginatedEventsResult>;
   updateEvent: (id: string, eventData: Partial<Event>) => Promise<void>;
 }
 
@@ -51,7 +59,11 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const fetchEventsByUser = async (page = 1, limit = 10): Promise<PaginatedEventsResult> => {
+  const fetchEventsByUser = async (
+    page = 1, 
+    limit = 10, 
+    filters: EventFilters = {}
+  ): Promise<PaginatedEventsResult> => {
     if (!user) {
       throw new Error("User not authenticated");
     }
@@ -60,19 +72,50 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       // Calculate offset for pagination
       const offset = (page - 1) * limit;
 
-      // First, get the total count
-      const { count, error: countError } = await supabase
+      // Build the base query
+      let countQuery = supabase
         .from("events")
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id);
 
-      if (countError) throw countError;
-
-      // Then get the paginated data
-      const { data, error: fetchError } = await supabase
+      let dataQuery = supabase
         .from("events")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", user.id);
+
+      // Apply filters
+      if (filters.title) {
+        const titleFilter = `%${filters.title}%`;
+        countQuery = countQuery.ilike("title", titleFilter);
+        dataQuery = dataQuery.ilike("title", titleFilter);
+      }
+
+      if (filters.category) {
+        countQuery = countQuery.eq("category", filters.category);
+        dataQuery = dataQuery.eq("category", filters.category);
+      }
+
+      if (filters.visibility) {
+        countQuery = countQuery.eq("visibility", filters.visibility);
+        dataQuery = dataQuery.eq("visibility", filters.visibility);
+      }
+
+      if (filters.dateFrom) {
+        countQuery = countQuery.gte("date", filters.dateFrom);
+        dataQuery = dataQuery.gte("date", filters.dateFrom);
+      }
+
+      if (filters.dateTo) {
+        countQuery = countQuery.lte("date", filters.dateTo);
+        dataQuery = dataQuery.lte("date", filters.dateTo);
+      }
+
+      // Execute count query
+      const { count, error: countError } = await countQuery;
+      if (countError) throw countError;
+
+      // Execute data query with pagination and ordering
+      const { data, error: fetchError } = await dataQuery
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
 
