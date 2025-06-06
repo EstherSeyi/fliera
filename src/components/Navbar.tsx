@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, PlusCircle, LogOut, Menu, X } from "lucide-react";
+import { Calendar, PlusCircle, LogOut, Menu, X, LayoutDashboard, Image as ImageIcon, LogIn } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export const Navbar: React.FC = () => {
@@ -27,17 +27,21 @@ export const Navbar: React.FC = () => {
   const NavLink: React.FC<{
     to: string;
     children: React.ReactNode;
+    Icon?: React.ElementType;
     onClick?: () => void;
-  }> = ({ to, children, onClick }) => {
+  }> = ({ to, children, Icon, onClick }) => {
     const isActive = location.pathname === to;
     return (
       <Link
         to={to}
         onClick={onClick}
-        className={`flex items-center px-4 py-2 transition-all duration-200 hover:bg-primary/10 focus:bg-primary/10 ${
-          isActive ? "text-primary font-semibold" : "text-primary/70"
+        className={`flex items-center px-6 py-4 rounded-lg transition-all duration-200 ${
+          isActive
+            ? "text-gray-900 font-semibold bg-gray-100 md:bg-transparent"
+            : "text-gray-700"
         }`}
       >
+        {Icon && <Icon className="w-5 h-5 mr-3" />}
         {children}
       </Link>
     );
@@ -71,7 +75,7 @@ export const Navbar: React.FC = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={logout}
-                  className="flex items-center px-6 py-2 bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                   className="flex items-center px-6 py-2 bg-primary/10 text-primary hover:bg-primary/20 transition-colors rounded-lg"
                 >
                   <LogOut className="w-5 h-5 mr-2" />
                   Logout
@@ -107,76 +111,83 @@ export const Navbar: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 md:hidden"
+                className="fixed inset-0 h-screen p-[20px] md:hidden bg-black/50"
               >
                 <motion.div
                   ref={mobileMenuRef}
-                  initial={{ x: "100%" }}
-                  animate={{ x: 0 }}
-                  exit={{ x: "100%" }}
-                  transition={{ type: "tween", duration: 0.3 }}
-                  className="absolute right-0 top-0 h-full w-64 bg-neutral shadow-xl"
+                   initial={{
+                    scale: 1.1,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    scale: 1,
+                    opacity: 1,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: 0.75,
+                  }}
+                  className="relative py-6 rounded-xl bg-white shadow-lg overflow-y-auto"
                 >
-                  <div className="flex flex-col h-full shadow-sm pt-2">
-                    <div className="flex justify-end">
-                      <button
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="p-2 text-primary hover:text-accent transition-colors"
-                      >
-                        <X className="w-6 h-6" />
-                      </button>
-                    </div>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="absolute top-4 right-4 p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
 
-                    <div className="flex flex-col space-y-2 bg-white w-full">
-                      <NavLink
-                        to="/events"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        Events
-                      </NavLink>
+                  <div className="flex flex-col pt-8 px-4 pb-4">
+                    <NavLink
+                      to="/events"
+                      Icon={Calendar}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Events
+                    </NavLink>
 
-                      {isLoggedIn ? (
-                        <>
-                          <NavLink
-                            to="/dashboard"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            Dashboard
-                          </NavLink>
-                          <NavLink
-                            to="/my-dps"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            My DPs
-                          </NavLink>
-                          <NavLink
-                            to="/admin/create"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            <PlusCircle className="w-5 h-5 mr-1" />
-                            Create Event
-                          </NavLink>
-                          <button
-                            onClick={() => {
-                              logout();
-                              setIsMobileMenuOpen(false);
-                            }}
-                            className="flex items-center px-4 py-2 text-imperialred hover:bg-imperialred/10  transition-colors"
-                          >
-                            <LogOut className="w-5 h-5 mr-2" />
-                            Logout
-                          </button>
-                        </>
-                      ) : (
-                        <Link
-                          to="/login"
+                    {isLoggedIn ? (
+                      <>
+                        <NavLink
+                          to="/dashboard"
+                          Icon={LayoutDashboard}
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="flex items-center px-4 py-2 bg-accent text-primary hover:bg-accent/90 transition-colors"
                         >
-                          Login
-                        </Link>
-                      )}
-                    </div>
+                          Dashboard
+                        </NavLink>
+                        <NavLink
+                          to="/my-dps"
+                          Icon={ImageIcon}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          My DPs
+                        </NavLink>
+                        <NavLink
+                          to="/admin/create"
+                          Icon={PlusCircle}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Create Event
+                        </NavLink>
+                        <button
+                          onClick={() => {
+                            logout();
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="flex items-center w-full px-6 py-4 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <LogOut className="w-5 h-5 mr-3" />
+                          Logout
+                        </button>
+                      </>
+                    ) : (
+                      <NavLink
+                        to="/login"
+                        Icon={LogIn}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Login
+                      </NavLink>
+                    )}
                   </div>
                 </motion.div>
               </motion.div>
