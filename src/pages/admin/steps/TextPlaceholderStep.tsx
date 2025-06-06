@@ -10,12 +10,68 @@ import {
 import { useFormContext } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
 import type { CreateEventFormData, TextPlaceholderZone } from "../../../types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
 
-const TEXT_STYLES = {
-  fontFamily: ["Open Sans", "Arial", "Times New Roman"],
-  fontStyle: ["normal", "italic", "bold", "italic bold"],
-  textAlign: ["left", "center", "right"] as CanvasTextAlign[],
-};
+const TEXT_STYLE_OPTIONS = [
+  {
+    key: "fontFamily",
+    label: "Font Family",
+    options: [
+      { value: "Open Sans", label: "Open Sans" },
+      { value: "Arial", label: "Arial" },
+      { value: "Times New Roman", label: "Times New Roman" },
+    ],
+  },
+  {
+    key: "fontStyle",
+    label: "Font Style",
+    options: [
+      { value: "normal", label: "Normal" },
+      { value: "italic", label: "Italic" },
+      { value: "bold", label: "Bold" },
+      { value: "italic bold", label: "Italic Bold" },
+    ],
+  },
+  {
+    key: "textAlign",
+    label: "Text Align",
+    options: [
+      { value: "left", label: "Left" },
+      { value: "center", label: "Center" },
+      { value: "right", label: "Right" },
+    ],
+  },
+  {
+    key: "textTransform",
+    label: "Text Transform",
+    options: [
+      { value: "none", label: "None" },
+      { value: "uppercase", label: "Uppercase" },
+      { value: "lowercase", label: "Lowercase" },
+      { value: "capitalize", label: "Capitalize" },
+    ],
+  },
+  {
+    key: "fontWeight",
+    label: "Font Weight",
+    options: [
+      { value: "normal", label: "Normal" },
+      { value: "bold", label: "Bold" },
+      { value: "100", label: "Thin" },
+      { value: "300", label: "Light" },
+      { value: "500", label: "Medium" },
+      { value: "600", label: "Semi Bold" },
+      { value: "700", label: "Bold" },
+      { value: "900", label: "Black" },
+    ],
+  },
+];
 
 export const TextPlaceholderStep: React.FC = () => {
   const { watch, setValue } = useFormContext<CreateEventFormData>();
@@ -266,34 +322,36 @@ export const TextPlaceholderStep: React.FC = () => {
                 />
               </div>
 
-              {Object.entries(TEXT_STYLES).map(([key, values]) => (
+              {TEXT_STYLE_OPTIONS.map(({ key, label, options }) => (
                 <div key={key} className="space-y-2">
                   <label className="block text-sm text-secondary">
-                    {key
-                      .replace(/([A-Z])/g, " $1")
-                      .replace(/^./, (str) => str.toUpperCase())}
+                    {label}
                   </label>
-                  <select
+                  <Select
                     value={
                       textPlaceholders[selectedIndex][
                         key as keyof TextPlaceholderZone
-                      ]
+                      ] as string
                     }
-                    onChange={(e) =>
+                    onValueChange={(value) =>
                       updateTextStyle(
                         selectedIndex,
                         key as keyof TextPlaceholderZone,
-                        e.target.value
+                        value
                       )
                     }
-                    className="w-full px-3 py-2 border rounded"
                   >
-                    {values.map((value) => (
-                      <option key={value} value={value}>
-                        {value.charAt(0).toUpperCase() + value.slice(1)}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {options.map(({ value, label: optionLabel }) => (
+                        <SelectItem key={value} value={value}>
+                          {optionLabel}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               ))}
             </div>
