@@ -60,7 +60,7 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
   return (
     <div className="space-y-2">
       {label && (
-        <label htmlFor="file-upload" className="block text-primary font-medium">
+        <label htmlFor="file-upload\" className="block text-primary font-medium">
           {label}
         </label>
       )}
