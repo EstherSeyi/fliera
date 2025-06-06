@@ -94,12 +94,13 @@ export const ImagePlaceholderStep: React.FC = () => {
       ref: shapeRef,
       x: placeholder.x,
       y: placeholder.y,
-      fill: "rgba(0, 123, 255, 0.3)",
+      fill: "transparent",
       stroke: "rgba(0, 123, 255, 0.8)",
       strokeWidth: 2,
       draggable: true,
       onTransformEnd: handleTransformEnd,
       onDragEnd: handleTransformEnd,
+      globalCompositeOperation: "destination-out" as GlobalCompositeOperation,
     };
 
     switch (placeholder.holeShape) {
@@ -137,6 +138,72 @@ export const ImagePlaceholderStep: React.FC = () => {
             width={placeholder.width}
             height={placeholder.height}
           />
+        );
+    }
+  };
+
+  const renderTintWithHole = () => {
+    const tintProps = {
+      x: 0,
+      y: 0,
+      width: stageSize.width,
+      height: stageSize.height,
+      fill: "rgba(0, 0, 0, 0.5)",
+      listening: false,
+    };
+
+    const holeProps = {
+      x: placeholder.x,
+      y: placeholder.y,
+      fill: "black",
+      globalCompositeOperation: "destination-out" as GlobalCompositeOperation,
+      listening: false,
+    };
+
+    switch (placeholder.holeShape) {
+      case 'circle':
+        return (
+          <>
+            <Rect {...tintProps} />
+            <Circle
+              {...holeProps}
+              radius={Math.min(placeholder.width, placeholder.height) / 2}
+              offsetX={0}
+              offsetY={0}
+            />
+          </>
+        );
+      case 'triangle':
+        return (
+          <>
+            <Rect {...tintProps} />
+            <Shape
+              {...holeProps}
+              sceneFunc={(context, shape) => {
+                const { width, height } = placeholder;
+                context.beginPath();
+                context.moveTo(width / 2, 0);
+                context.lineTo(width, height);
+                context.lineTo(0, height);
+                context.closePath();
+                context.fillStrokeShape(shape);
+              }}
+              width={placeholder.width}
+              height={placeholder.height}
+            />
+          </>
+        );
+      case 'box':
+      default:
+        return (
+          <>
+            <Rect {...tintProps} />
+            <Rect
+              {...holeProps}
+              width={placeholder.width}
+              height={placeholder.height}
+            />
+          </>
         );
     }
   };
@@ -191,6 +258,7 @@ export const ImagePlaceholderStep: React.FC = () => {
                   width={stageSize.width}
                   height={stageSize.height}
                 />
+                {renderTintWithHole()}
                 {renderShape()}
                 <Transformer
                   ref={transformerRef}
