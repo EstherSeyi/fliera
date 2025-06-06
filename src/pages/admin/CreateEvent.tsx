@@ -35,23 +35,10 @@ export const CreateEvent: React.FC = () => {
       date: "",
       description: "",
       flyer_file: null,
-      image_placeholders: [{ x: 50, y: 50, width: 200, height: 200, holeShape: 'box' }],
-      text_placeholders: [
-        {
-          x: 50,
-          y: 270,
-          width: 200,
-          height: 50,
-          text: "",
-          fontSize: 24,
-          color: "#000000",
-          textAlign: "center",
-          fontFamily: "Open Sans",
-          fontStyle: "normal",
-          textTransform: "none",
-          fontWeight: "600",
-        },
+      image_placeholders: [
+        { x: 50, y: 50, width: 200, height: 200, holeShape: "box" },
       ],
+      text_placeholders: [],
     },
     mode: "onChange",
   });
@@ -92,7 +79,7 @@ export const CreateEvent: React.FC = () => {
         image_placeholders: data.image_placeholders,
         text_placeholders: data.text_placeholders,
         category: data?.category,
-        visibility: data?.visibility ?? "public"
+        visibility: data?.visibility ?? "public",
       };
 
       await addEvent(newEvent);
