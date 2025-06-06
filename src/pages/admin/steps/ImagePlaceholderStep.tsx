@@ -67,7 +67,7 @@ export const ImagePlaceholderStep: React.FC = () => {
       transformerRef.current.nodes([shapeRef.current]);
       transformerRef.current.getLayer().batchDraw();
     }
-  }, [placeholder.holeShape]); // Added 'image' to dependencies
+  }, [placeholder.holeShape, transformerRef.current]); // Added 'image' to dependencies
 
   const handleTransformEnd = () => {
     if (shapeRef.current) {
