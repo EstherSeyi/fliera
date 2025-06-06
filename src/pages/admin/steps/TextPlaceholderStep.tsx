@@ -12,11 +12,9 @@ import { Plus, Trash2 } from "lucide-react";
 import type { CreateEventFormData, TextPlaceholderZone } from "../../../types";
 
 const TEXT_STYLES = {
-  fontFamilies: ["Open Sans", "Arial", "Times New Roman"],
-  fontStyles: ["normal", "italic"],
-  fontWeights: ["normal", "bold"],
-  textTransforms: ["none", "uppercase", "lowercase", "capitalize"],
-  textAligns: ["left", "center", "right"] as CanvasTextAlign[],
+  fontFamily: ["Open Sans", "Arial", "Times New Roman"],
+  fontStyle: ["normal", "italic", "bold", "italic bold"],
+  textAlign: ["left", "center", "right"] as CanvasTextAlign[],
 };
 
 export const TextPlaceholderStep: React.FC = () => {
@@ -31,6 +29,7 @@ export const TextPlaceholderStep: React.FC = () => {
 
   const flyer_file = watch("flyer_file");
   const textPlaceholders = watch("text_placeholders");
+  console.log(textPlaceholders, "TEXT PLACEHOLDER");
 
   const tempFlyerUrl = useMemo(
     () => (flyer_file?.name ? URL.createObjectURL(flyer_file) : null),
@@ -119,12 +118,12 @@ export const TextPlaceholderStep: React.FC = () => {
     value: any
   ) => {
     const newPlaceholders = [...textPlaceholders];
-    
+
     // For fontSize, convert from display value to original image scale
-    if (field === 'fontSize') {
+    if (field === "fontSize") {
       value = Math.round(value / imageScale);
     }
-    
+
     newPlaceholders[index] = { ...newPlaceholders[index], [field]: value };
     setValue("text_placeholders", newPlaceholders);
   };
@@ -241,7 +240,9 @@ export const TextPlaceholderStep: React.FC = () => {
                 </label>
                 <input
                   type="number"
-                  value={Math.round(textPlaceholders[selectedIndex].fontSize * imageScale)}
+                  value={Math.round(
+                    textPlaceholders[selectedIndex].fontSize * imageScale
+                  )}
                   onChange={(e) =>
                     updateTextStyle(
                       selectedIndex,
@@ -275,13 +276,13 @@ export const TextPlaceholderStep: React.FC = () => {
                   <select
                     value={
                       textPlaceholders[selectedIndex][
-                        key.replace("ies", "y") as keyof TextPlaceholderZone
+                        key as keyof TextPlaceholderZone
                       ]
                     }
                     onChange={(e) =>
                       updateTextStyle(
                         selectedIndex,
-                        key.replace("ies", "y") as keyof TextPlaceholderZone,
+                        key as keyof TextPlaceholderZone,
                         e.target.value
                       )
                     }
