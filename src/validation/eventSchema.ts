@@ -7,6 +7,7 @@ const imagePlaceholderSchema = z.object({
   y: z.number(),
   width: z.number(),
   height: z.number(),
+  holeShape: z.enum(['box', 'circle', 'triangle', 'trapezium']),
 });
 
 const textPlaceholderSchema = z.object({

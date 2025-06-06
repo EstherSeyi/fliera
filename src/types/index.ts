@@ -3,6 +3,7 @@ export interface ImagePlaceholderZone {
   y: number;
   width: number;
   height: number;
+  holeShape: 'box' | 'circle' | 'triangle' | 'trapezium';
 }
 
 export interface TextPlaceholderZone {

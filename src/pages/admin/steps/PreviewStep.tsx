@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Stage, Layer, Image as KonvaImage, Text, Rect } from "react-konva";
+import { Stage, Layer, Image as KonvaImage, Text, Rect, Circle, Shape } from "react-konva";
 import { useFormContext } from "react-hook-form";
 import type { CreateEventFormData } from "../../../types";
 
@@ -35,6 +35,66 @@ export const PreviewStep: React.FC = () => {
     };
   }, [tempFlyerUrl]);
 
+  const renderHoleShape = (placeholder: any) => {
+    const { x, y, width, height, holeShape } = placeholder;
+
+    switch (holeShape) {
+      case 'circle':
+        return (
+          <Circle
+            x={x + width / 2}
+            y={y + height / 2}
+            radius={Math.min(width, height) / 2}
+            fill="rgba(0, 0, 0, 1)"
+            globalCompositeOperation="destination-out"
+          />
+        );
+      case 'triangle':
+        return (
+          <Shape
+            sceneFunc={(context, shape) => {
+              context.beginPath();
+              context.moveTo(x + width / 2, y);
+              context.lineTo(x + width, y + height);
+              context.lineTo(x, y + height);
+              context.closePath();
+              context.fillStrokeShape(shape);
+            }}
+            fill="rgba(0, 0, 0, 1)"
+            globalCompositeOperation="destination-out"
+          />
+        );
+      case 'trapezium':
+        return (
+          <Shape
+            sceneFunc={(context, shape) => {
+              const offset = width * 0.2;
+              context.beginPath();
+              context.moveTo(x + offset, y);
+              context.lineTo(x + width - offset, y);
+              context.lineTo(x + width, y + height);
+              context.lineTo(x, y + height);
+              context.closePath();
+              context.fillStrokeShape(shape);
+            }}
+            fill="rgba(0, 0, 0, 1)"
+            globalCompositeOperation="destination-out"
+          />
+        );
+      default: // box
+        return (
+          <Rect
+            x={x}
+            y={y}
+            width={width}
+            height={height}
+            fill="rgba(0, 0, 0, 1)"
+            globalCompositeOperation="destination-out"
+          />
+        );
+    }
+  };
+
   if (!tempFlyerUrl) {
     return null;
   }
@@ -57,20 +117,30 @@ export const PreviewStep: React.FC = () => {
         {image && stageSize.width > 0 && (
           <Stage width={stageSize.width} height={stageSize.height}>
             <Layer>
+              {/* Base flyer image */}
               <KonvaImage
                 image={image}
                 width={stageSize.width}
                 height={stageSize.height}
               />
+              
+              {/* Semi-transparent overlay */}
+              <Rect
+                x={0}
+                y={0}
+                width={stageSize.width}
+                height={stageSize.height}
+                fill="rgba(0, 0, 0, 0.5)"
+              />
+              
+              {/* Hole shapes that cut through the overlay */}
               {image_placeholders.map((placeholder, index) => (
-                <Rect
-                  key={index}
-                  {...placeholder}
-                  fill="rgba(0, 123, 255, 0.3)"
-                  stroke="rgba(0, 123, 255, 0.8)"
-                  strokeWidth={2}
-                />
+                <React.Fragment key={index}>
+                  {renderHoleShape(placeholder)}
+                </React.Fragment>
               ))}
+              
+              {/* Text placeholders */}
               {text_placeholders.map((placeholder, index) => (
                 <Text key={index} {...placeholder} />
               ))}
