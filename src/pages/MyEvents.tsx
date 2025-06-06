@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, Eye, Edit, Plus } from "lucide-react";
+import { Calendar, Eye, Edit, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEvents } from "../context/EventContext";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import type { Event } from "../types";
@@ -11,14 +11,23 @@ export const MyEvents: React.FC = () => {
   const [userEvents, setUserEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalEvents, setTotalEvents] = useState(0);
+  const eventsPerPage = 10;
+
+  // Calculate total pages
+  const totalPages = Math.ceil(totalEvents / eventsPerPage);
 
   useEffect(() => {
     const loadUserEvents = async () => {
       try {
         setLoading(true);
         setError(null);
-        const events = await fetchEventsByUser();
-        setUserEvents(events);
+        const result = await fetchEventsByUser(currentPage, eventsPerPage);
+        setUserEvents(result.events);
+        setTotalEvents(result.totalCount);
       } catch (err) {
         console.error("Error loading user events:", err);
         setError("Failed to load your events");
@@ -28,7 +37,7 @@ export const MyEvents: React.FC = () => {
     };
 
     loadUserEvents();
-  }, [fetchEventsByUser]);
+  }, [fetchEventsByUser, currentPage]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -84,6 +93,103 @@ export const MyEvents: React.FC = () => {
     );
   };
 
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationControls = () => {
+    if (totalPages <= 1) return null;
+
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    // Adjust start page if we're near the end
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
+
+    return (
+      <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-gray-200">
+        <div className="flex items-center text-sm text-gray-500">
+          Showing {((currentPage - 1) * eventsPerPage) + 1} to {Math.min(currentPage * eventsPerPage, totalEvents)} of {totalEvents} events
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Previous
+          </button>
+
+          <div className="flex space-x-1">
+            {startPage > 1 && (
+              <>
+                <button
+                  onClick={() => handlePageChange(1)}
+                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  1
+                </button>
+                {startPage > 2 && (
+                  <span className="px-3 py-2 text-sm text-gray-500">...</span>
+                )}
+              </>
+            )}
+
+            {pageNumbers.map((page) => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`px-3 py-2 text-sm font-medium rounded-md ${
+                  page === currentPage
+                    ? "text-primary bg-thistle border border-primary"
+                    : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+
+            {endPage < totalPages && (
+              <>
+                {endPage < totalPages - 1 && (
+                  <span className="px-3 py-2 text-sm text-gray-500">...</span>
+                )}
+                <button
+                  onClick={() => handlePageChange(totalPages)}
+                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  {totalPages}
+                </button>
+              </>
+            )}
+          </div>
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -111,7 +217,7 @@ export const MyEvents: React.FC = () => {
         <div>
           <h1 className="text-4xl font-bold text-primary">My Events</h1>
           <p className="text-secondary mt-2">
-            Manage and view all the events you've created
+            Manage and view all the events you've created ({totalEvents} total)
           </p>
         </div>
         <Link
@@ -123,7 +229,7 @@ export const MyEvents: React.FC = () => {
         </Link>
       </motion.div>
 
-      {userEvents.length === 0 ? (
+      {totalEvents === 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -291,6 +397,9 @@ export const MyEvents: React.FC = () => {
               </motion.div>
             ))}
           </div>
+
+          {/* Pagination Controls */}
+          {renderPaginationControls()}
         </motion.div>
       )}
     </div>

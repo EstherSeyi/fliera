@@ -3,6 +3,11 @@ import { useAuth } from "./AuthContext";
 import { supabase } from "../lib/supabase";
 import type { Event } from "../types";
 
+interface PaginatedEventsResult {
+  events: Event[];
+  totalCount: number;
+}
+
 interface EventContextType {
   events: Event[];
   loading: boolean;
@@ -10,7 +15,7 @@ interface EventContextType {
   addEvent: (event: Event) => Promise<void>;
   getEvent: (id: string) => Promise<Event | null>;
   refreshEvents: () => Promise<void>;
-  fetchEventsByUser: () => Promise<Event[]>;
+  fetchEventsByUser: (page?: number, limit?: number) => Promise<PaginatedEventsResult>;
   updateEvent: (id: string, eventData: Partial<Event>) => Promise<void>;
 }
 
@@ -46,21 +51,37 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const fetchEventsByUser = async (): Promise<Event[]> => {
+  const fetchEventsByUser = async (page = 1, limit = 10): Promise<PaginatedEventsResult> => {
     if (!user) {
       throw new Error("User not authenticated");
     }
 
     try {
+      // Calculate offset for pagination
+      const offset = (page - 1) * limit;
+
+      // First, get the total count
+      const { count, error: countError } = await supabase
+        .from("events")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+
+      if (countError) throw countError;
+
+      // Then get the paginated data
       const { data, error: fetchError } = await supabase
         .from("events")
         .select("*")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
 
       if (fetchError) throw fetchError;
 
-      return data || [];
+      return {
+        events: data || [],
+        totalCount: count || 0,
+      };
     } catch (err) {
       console.error("Error fetching user events:", err);
       throw new Error("Failed to load your events");
