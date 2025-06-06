@@ -109,7 +109,7 @@ export const Navbar: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 md:hidden bg-black/50 flex items-center justify-center"
+                className="fixed inset-0 z-50 md:hidden bg-black/50"
               >
                 <motion.div
                   ref={mobileMenuRef}
@@ -117,7 +117,7 @@ export const Navbar: React.FC = () => {
                   animate={{ x: 0 }}
                   exit={{ x: "100%" }}
                   transition={{ type: "tween", duration: 0.3 }}
-                  className="absolute inset-x-4 top-4 bottom-4 mx-auto max-w-md rounded-xl bg-white shadow-lg overflow-y-auto"
+                  className="absolute right-4 top-4 bottom-4 w-80 max-w-[calc(100vw-2rem)] rounded-xl bg-white shadow-lg overflow-y-auto"
                 >
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
