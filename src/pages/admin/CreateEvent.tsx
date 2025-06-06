@@ -91,6 +91,8 @@ export const CreateEvent: React.FC = () => {
         flyer_url: publicUrl,
         image_placeholders: data.image_placeholders,
         text_placeholders: data.text_placeholders,
+        category: data?.category,
+        visibility: data?.visibility ?? "public"
       };
 
       await addEvent(newEvent);
