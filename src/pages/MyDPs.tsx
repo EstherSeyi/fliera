@@ -4,6 +4,7 @@ import { Download, Trash2, Calendar, ChevronLeft, ChevronRight, Image as ImageIc
 import { useEvents } from '../context/EventContext';
 import { useToast } from '../context/ToastContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import type { GeneratedDP } from '../types';
 
 export const MyDPs: React.FC = () => {
@@ -13,6 +14,10 @@ export const MyDPs: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Confirmation dialog state
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [dpToDelete, setDpToDelete] = useState<GeneratedDP | null>(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -68,17 +73,20 @@ export const MyDPs: React.FC = () => {
     }
   };
 
-  const handleDelete = async (dp: GeneratedDP) => {
-    if (!confirm(`Are you sure you want to delete the DP for "${dp.event?.title || 'this event'}"?`)) {
-      return;
-    }
+  const handleDeleteClick = (dp: GeneratedDP) => {
+    setDpToDelete(dp);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!dpToDelete) return;
 
     try {
-      setDeletingId(dp.id);
-      await deleteGeneratedDP(dp.id);
+      setDeletingId(dpToDelete.id);
+      await deleteGeneratedDP(dpToDelete.id);
       
       // Remove the deleted DP from the local state
-      setDps(prev => prev.filter(item => item.id !== dp.id));
+      setDps(prev => prev.filter(item => item.id !== dpToDelete.id));
       setTotalDPs(prev => prev - 1);
       
       showToast('DP deleted successfully!', 'success');
@@ -92,7 +100,14 @@ export const MyDPs: React.FC = () => {
       showToast('Failed to delete DP', 'error');
     } finally {
       setDeletingId(null);
+      setShowDeleteDialog(false);
+      setDpToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
+    setDpToDelete(null);
   };
 
   const handlePageChange = (page: number) => {
@@ -294,7 +309,7 @@ export const MyDPs: React.FC = () => {
                       <Download className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={() => handleDelete(dp)}
+                      onClick={() => handleDeleteClick(dp)}
                       disabled={deletingId === dp.id}
                       className="p-2 bg-red-500/90 text-white rounded-full hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Delete DP"
@@ -330,7 +345,7 @@ export const MyDPs: React.FC = () => {
                     Download
                   </button>
                   <button
-                    onClick={() => handleDelete(dp)}
+                    onClick={() => handleDeleteClick(dp)}
                     disabled={deletingId === dp.id}
                     className="flex items-center justify-center px-3 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
@@ -349,6 +364,19 @@ export const MyDPs: React.FC = () => {
           {renderPaginationControls()}
         </motion.div>
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete Display Picture"
+        description={`Are you sure you want to delete this DP for "${dpToDelete?.event?.title || 'this event'}"? This action cannot be undone.`}
+        confirmText="Delete DP"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={deletingId === dpToDelete?.id}
+      />
     </div>
   );
 };
