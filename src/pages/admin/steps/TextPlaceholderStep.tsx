@@ -298,7 +298,7 @@ export const TextPlaceholderStep: React.FC = () => {
                   type="text"
                   value={textPlaceholders[selectedIndex].labelText}
                   onChange={(e) =>
-                    updateTextStyle(selectedIndex, "text", e.target.value)
+                    updateTextStyle(selectedIndex, "labelText", e.target.value)
                   }
                   className="w-full px-3 py-2 border rounded"
                 />
