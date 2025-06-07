@@ -158,6 +158,7 @@ export const TextPlaceholderStep: React.FC = () => {
       fontStyle: "normal",
       textTransform: "none",
       fontWeight: "normal",
+      labelText:""
     };
     setValue("text_placeholders", [...textPlaceholders, newPlaceholder]);
   };
