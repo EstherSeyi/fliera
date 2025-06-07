@@ -37,10 +37,7 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > maxSize) {
-        onChange(null);
-        return;
-      }
+      // Always pass the file to onChange - let form validation handle size/type checks
       onChange(file);
     }
   };
