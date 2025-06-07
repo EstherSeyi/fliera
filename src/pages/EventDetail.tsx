@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Download, Image as ImageIcon, Info, X, File } from "lucide-react";
+import { Stage, Layer, Image as KonvaImage, Text, Group, Rect, Circle, Shape } from "react-konva";
 import { useEvents } from "../context/EventContext";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -19,7 +20,7 @@ export const EventDetail: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const stageRef = useRef<any>(null);
 
   const [userPhoto, setUserPhoto] = useState<File | null>(null);
   const [userPhotoPreview, setUserPhotoPreview] = useState<string | null>(null);
@@ -33,6 +34,12 @@ export const EventDetail: React.FC = () => {
   const [showImageCropper, setShowImageCropper] = useState(false);
   const [originalImageSrc, setOriginalImageSrc] = useState<string>("");
   const [originalFileName, setOriginalFileName] = useState<string>("");
+
+  // Konva stage states
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [flyerImage, setFlyerImage] = useState<HTMLImageElement | null>(null);
+  const [userImage, setUserImage] = useState<HTMLImageElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -55,35 +62,90 @@ export const EventDetail: React.FC = () => {
     fetchEvent();
   }, [id, getEvent]);
 
-  // Initialize canvas with flyer when event loads
+  // Load flyer image when event loads
   useEffect(() => {
-    if (event && canvasRef.current) {
-      drawInitialFlyer();
+    if (event && containerRef.current) {
+      loadFlyerImage();
     }
   }, [event]);
 
-  const drawInitialFlyer = async () => {
-    if (!event || !canvasRef.current) return;
+  // Load user image when photo preview changes
+  useEffect(() => {
+    if (userPhotoPreview) {
+      loadUserImage();
+    } else {
+      setUserImage(null);
+    }
+  }, [userPhotoPreview]);
 
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  // Generate DP when user photo or name changes
+  useEffect(() => {
+    if ((userPhotoPreview || userName) && event) {
+      generateDP();
+    }
+  }, [userPhotoPreview, userName, event, flyerImage, userImage]);
+
+  const loadFlyerImage = async () => {
+    if (!event || !containerRef.current) return;
 
     try {
-      const flyerImage = new Image();
-      flyerImage.crossOrigin = "anonymous";
-      flyerImage.src = event.flyer_url;
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = event.flyer_url;
       
       await new Promise((resolve, reject) => {
-        flyerImage.onload = resolve;
-        flyerImage.onerror = reject;
+        img.onload = resolve;
+        img.onerror = reject;
       });
 
-      canvas.width = flyerImage.width;
-      canvas.height = flyerImage.height;
-      ctx.drawImage(flyerImage, 0, 0);
+      setFlyerImage(img);
+      
+      // Set stage size based on container and image dimensions
+      const containerWidth = containerRef.current.offsetWidth;
+      const scale = Math.min(containerWidth / img.width, 600 / img.height);
+      
+      setStageSize({
+        width: img.width * scale,
+        height: img.height * scale,
+      });
     } catch (err) {
-      console.error("Error drawing initial flyer:", err);
+      console.error("Error loading flyer image:", err);
+      setError("Failed to load event flyer");
+    }
+  };
+
+  const loadUserImage = async () => {
+    if (!userPhotoPreview) return;
+
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = userPhotoPreview;
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+
+      setUserImage(img);
+    } catch (err) {
+      console.error("Error loading user image:", err);
+    }
+  };
+
+  const generateDP = async () => {
+    if (!event || !flyerImage || !stageRef.current) return;
+
+    setIsGenerating(true);
+    try {
+      // The Konva stage will automatically render with the current state
+      // We just need to mark that we have a generated DP
+      setHasGeneratedDP(true);
+    } catch (err) {
+      console.error("Error generating DP:", err);
+      setError("Failed to generate DP");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -123,11 +185,7 @@ export const EventDetail: React.FC = () => {
     setUserPhotoPreview(null);
     setUserName("");
     setHasGeneratedDP(false);
-    
-    // Redraw the initial flyer on canvas
-    if (event && canvasRef.current) {
-      drawInitialFlyer();
-    }
+    setUserImage(null);
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -138,187 +196,32 @@ export const EventDetail: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const drawClippedImage = (
-    ctx: CanvasRenderingContext2D,
-    image: HTMLImageElement,
-    placeholder: any
-  ) => {
-    const { x, y, width, height, holeShape } = placeholder;
-
-    ctx.save();
-    ctx.beginPath();
-
-    switch (holeShape) {
-      case "circle": {
-        const radius = Math.min(width, height) / 2;
-        const centerX = x + radius;
-        const centerY = y + radius;
-        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-        break;
-      }
-      case "triangle":
-        ctx.moveTo(x + width / 2, y);
-        ctx.lineTo(x + width, y + height);
-        ctx.lineTo(x, y + height);
-        ctx.closePath();
-        break;
-      case "box":
-      default:
-        ctx.rect(x, y, width, height);
-        break;
-    }
-
-    ctx.clip();
-
-    // Calculate object-fit: cover scaling and positioning
-    const imageAspectRatio = image.width / image.height;
-    const placeholderAspectRatio = width / height;
-
-    let sourceX = 0;
-    let sourceY = 0;
-    let sourceWidth = image.width;
-    let sourceHeight = image.height;
-
-    if (imageAspectRatio > placeholderAspectRatio) {
-      // Image is wider than placeholder - crop horizontally
-      sourceWidth = image.height * placeholderAspectRatio;
-      sourceX = (image.width - sourceWidth) / 2;
-    } else {
-      // Image is taller than placeholder - crop vertically
-      sourceHeight = image.width / placeholderAspectRatio;
-      sourceY = (image.height - sourceHeight) / 2;
-    }
-
-    // Draw the image with proper scaling and cropping
-    ctx.drawImage(
-      image,
-      sourceX,
-      sourceY,
-      sourceWidth,
-      sourceHeight, // Source rectangle
-      x,
-      y,
-      width,
-      height // Destination rectangle
-    );
-
-    ctx.restore();
-  };
-
-  const generateDP = async () => {
-    if (!event || !canvasRef.current) return;
-
-    setIsGenerating(true);
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    try {
-      // Load and draw the flyer template
-      const flyerImage = new Image();
-      flyerImage.crossOrigin = "anonymous";
-      flyerImage.src = event.flyer_url;
-      await new Promise((resolve, reject) => {
-        flyerImage.onload = resolve;
-        flyerImage.onerror = reject;
-      });
-
-      canvas.width = flyerImage.width;
-      canvas.height = flyerImage.height;
-      ctx.drawImage(flyerImage, 0, 0);
-
-      // Draw user's photo if available
-      if (userPhotoPreview) {
-        const userImage = new Image();
-        userImage.src = userPhotoPreview;
-        await new Promise((resolve, reject) => {
-          userImage.onload = resolve;
-          userImage.onerror = reject;
-        });
-
-        const imagePlaceholder = event.image_placeholders[0];
-        if (imagePlaceholder) {
-          drawClippedImage(ctx, userImage, imagePlaceholder);
-        }
-      }
-
-      // Draw all text placeholders with proper positioning
-      event.text_placeholders.forEach((placeholder) => {
-        const {
-          x,
-          y,
-          width,
-          text,
-          fontSize,
-          color,
-          textAlign,
-          fontFamily,
-          fontStyle,
-          fontWeight,
-          textTransform,
-        } = placeholder;
-
-        ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px "${fontFamily}"`;
-        ctx.fillStyle = color;
-        ctx.textAlign = textAlign;
-
-        // Transform the text according to textTransform
-        let displayText = userName ?? "";
-        if (textTransform === "uppercase") {
-          displayText = displayText.toUpperCase();
-        } else if (textTransform === "lowercase") {
-          displayText = displayText.toLowerCase();
-        } else if (textTransform === "capitalize") {
-          displayText = displayText
-            .split(" ")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ");
-        }
-
-        // Calculate proper x position based on textAlign
-        let textX = x;
-        if (textAlign === "center") {
-          textX = x + width / 2;
-        } else if (textAlign === "right") {
-          textX = x + width;
-        }
-
-        // Calculate proper y position (Canvas fillText uses baseline, not top)
-        // Add fontSize to y to account for the difference between Konva.Text (top) and Canvas fillText (baseline)
-        const textY = y + fontSize;
-
-        ctx.fillText(displayText, textX, textY);
-      });
-
-      setHasGeneratedDP(true);
-    } catch (err) {
-      console.error("Error generating DP:", err);
-      setError("Failed to generate DP");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   const downloadDP = async () => {
-    if (!canvasRef.current || !hasGeneratedDP) return;
+    if (!stageRef.current || !hasGeneratedDP) return;
 
     try {
       setIsSaving(true);
       
+      // Export the Konva stage as data URL
+      const dataURL = stageRef.current.toDataURL({
+        mimeType: 'image/png',
+        quality: 1,
+        pixelRatio: 2, // Higher quality export
+      });
+
       // Download the DP
       const link = document.createElement("a");
       link.download = `${event?.title}-dp.png`;
-      link.href = canvasRef.current.toDataURL();
+      link.href = dataURL;
       link.click();
 
       // Save to database if user is logged in
       if (user && userPhoto && userName && event) {
-        const canvasDataUrl = canvasRef.current.toDataURL();
         await saveGeneratedDP({
           event_id: event.id,
           user_name: userName,
           user_photo: userPhoto,
-          generated_image_data: canvasDataUrl,
+          generated_image_data: dataURL,
         });
 
         // Show success toast and reset page
@@ -345,11 +248,121 @@ export const EventDetail: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (userPhotoPreview || userName) {
-      generateDP();
+  const renderImagePlaceholder = () => {
+    if (!event || !userImage) return null;
+
+    const imagePlaceholder = event.image_placeholders[0];
+    if (!imagePlaceholder) return null;
+
+    const { x, y, width, height, holeShape } = imagePlaceholder;
+
+    // Calculate object-fit: cover scaling and positioning
+    const imageAspectRatio = userImage.width / userImage.height;
+    const placeholderAspectRatio = width / height;
+
+    let cropX = 0;
+    let cropY = 0;
+    let cropWidth = userImage.width;
+    let cropHeight = userImage.height;
+
+    if (imageAspectRatio > placeholderAspectRatio) {
+      // Image is wider than placeholder - crop horizontally
+      cropWidth = userImage.height * placeholderAspectRatio;
+      cropX = (userImage.width - cropWidth) / 2;
+    } else {
+      // Image is taller than placeholder - crop vertically
+      cropHeight = userImage.width / placeholderAspectRatio;
+      cropY = (userImage.height - cropHeight) / 2;
     }
-  }, [userPhotoPreview, userName]);
+
+    return (
+      <Group x={x} y={y} clipFunc={(ctx) => {
+        ctx.beginPath();
+        switch (holeShape) {
+          case "circle": {
+            const radius = Math.min(width, height) / 2;
+            const centerX = radius;
+            const centerY = radius;
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            break;
+          }
+          case "triangle":
+            ctx.moveTo(width / 2, 0);
+            ctx.lineTo(width, height);
+            ctx.lineTo(0, height);
+            ctx.closePath();
+            break;
+          case "box":
+          default:
+            ctx.rect(0, 0, width, height);
+            break;
+        }
+      }}>
+        <KonvaImage
+          image={userImage}
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          crop={{
+            x: cropX,
+            y: cropY,
+            width: cropWidth,
+            height: cropHeight,
+          }}
+        />
+      </Group>
+    );
+  };
+
+  const renderTextPlaceholders = () => {
+    if (!event || !userName) return null;
+
+    return event.text_placeholders.map((placeholder, index) => {
+      const {
+        x,
+        y,
+        width,
+        text,
+        fontSize,
+        color,
+        textAlign,
+        fontFamily,
+        fontStyle,
+        fontWeight,
+        textTransform,
+      } = placeholder;
+
+      // Transform the text according to textTransform
+      let displayText = userName;
+      if (textTransform === "uppercase") {
+        displayText = displayText.toUpperCase();
+      } else if (textTransform === "lowercase") {
+        displayText = displayText.toLowerCase();
+      } else if (textTransform === "capitalize") {
+        displayText = displayText
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ");
+      }
+
+      return (
+        <Text
+          key={index}
+          x={x}
+          y={y}
+          width={width}
+          text={displayText}
+          fontSize={fontSize}
+          fill={color}
+          align={textAlign}
+          fontFamily={fontFamily}
+          fontStyle={fontStyle}
+          fontWeight={fontWeight}
+        />
+      );
+    });
+  };
 
   if (loading) {
     return (
@@ -495,7 +508,34 @@ export const EventDetail: React.FC = () => {
         >
           <h3 className="text-xl font-semibold text-primary">Preview</h3>
           <div className="relative bg-white rounded-lg shadow-lg overflow-hidden">
-            <canvas ref={canvasRef} className="w-full h-auto" />
+            <div ref={containerRef} className="w-full">
+              {flyerImage && stageSize.width > 0 && (
+                <Stage
+                  ref={stageRef}
+                  width={stageSize.width}
+                  height={stageSize.height}
+                  scaleX={stageSize.width / flyerImage.width}
+                  scaleY={stageSize.height / flyerImage.height}
+                >
+                  <Layer>
+                    {/* Flyer Background */}
+                    <KonvaImage
+                      image={flyerImage}
+                      x={0}
+                      y={0}
+                      width={flyerImage.width}
+                      height={flyerImage.height}
+                    />
+                    
+                    {/* User Image Placeholder */}
+                    {renderImagePlaceholder()}
+                    
+                    {/* Text Placeholders */}
+                    {renderTextPlaceholders()}
+                  </Layer>
+                </Stage>
+              )}
+            </div>
             {isGenerating && (
               <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
                 <LoadingSpinner size={32} />
