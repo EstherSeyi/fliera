@@ -64,10 +64,14 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(true);
       setError(null);
 
+      // Get current date in YYYY-MM-DD format for comparison
+      const today = new Date().toISOString().split('T')[0];
+
       const { data, error: fetchError } = await supabase
         .from("events")
         .select("*")
         .eq("visibility", "public")
+        .gte("date", today) // Only fetch events that are today or in the future
         .order("created_at", { ascending: false });
 
       if (fetchError) throw fetchError;
@@ -90,16 +94,21 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       // Calculate offset for pagination
       const offset = (page - 1) * limit;
 
-      // Build the base query for public events only
+      // Get current date in YYYY-MM-DD format for comparison
+      const today = new Date().toISOString().split('T')[0];
+
+      // Build the base query for public events only (excluding past events)
       let countQuery = supabase
         .from("events")
         .select("*", { count: "exact", head: true })
-        .eq("visibility", "public");
+        .eq("visibility", "public")
+        .gte("date", today); // Only include events that are today or in the future
 
       let dataQuery = supabase
         .from("events")
         .select("*")
-        .eq("visibility", "public");
+        .eq("visibility", "public")
+        .gte("date", today); // Only include events that are today or in the future
 
       // Apply filters
       if (filters.title) {
