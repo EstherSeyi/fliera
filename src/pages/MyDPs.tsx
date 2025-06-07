@@ -308,9 +308,6 @@ export const MyDPs: React.FC = () => {
                   <h3 className="font-semibold text-primary truncate">
                     {dp.event?.title || 'Unknown Event'}
                   </h3>
-                  <p className="text-sm text-gray-600 truncate">
-                    Name: {dp.user_name}
-                  </p>
                   <div className="flex items-center text-xs text-gray-500">
                     <Calendar className="w-3 h-3 mr-1" />
                     {formatDate(dp.created_at)}
