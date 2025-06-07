@@ -23,6 +23,7 @@ const textPlaceholderSchema = z.object({
   fontStyle: z.string(),
   textTransform: z.string(),
   fontWeight: z.union([z.string(), z.number()]),
+   labelText: z.string().optional()
 });
 
 export const editEventSchema = z.object({
