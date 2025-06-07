@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Stage,
@@ -28,11 +28,13 @@ const SHAPE_OPTIONS = [
 interface EditImagePlaceholderStepProps {
   event: Event;
   isEventPast: boolean;
+  currentFlyerPreviewUrl: string;
 }
 
 export const EditImagePlaceholderStep: React.FC<EditImagePlaceholderStepProps> = ({
   event,
   isEventPast,
+  currentFlyerPreviewUrl,
 }) => {
   const { watch, setValue, control } = useFormContext<EditEventFormData>();
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -42,17 +44,11 @@ export const EditImagePlaceholderStep: React.FC<EditImagePlaceholderStepProps> =
   const transformerRef = useRef<any>(null);
   const shapeRef = useRef<any>(null);
 
-  const flyer_file = watch("flyer_file");
   const imagePlaceholders = watch("image_placeholders");
   const placeholder = imagePlaceholders[0];
 
-  // Use new flyer file if uploaded, otherwise use existing event flyer
-  const flyerUrl = useMemo(() => {
-    if (flyer_file) {
-      return URL.createObjectURL(flyer_file);
-    }
-    return event.flyer_url;
-  }, [flyer_file, event.flyer_url]);
+  // Use new flyer file preview URL if available, otherwise use existing event flyer
+  const flyerUrl = currentFlyerPreviewUrl || event.flyer_url;
 
   useEffect(() => {
     if (!flyerUrl) return;
@@ -71,14 +67,7 @@ export const EditImagePlaceholderStep: React.FC<EditImagePlaceholderStepProps> =
         });
       }
     };
-
-    // Cleanup object URL if it was created from a file
-    return () => {
-      if (flyer_file && flyerUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(flyerUrl);
-      }
-    };
-  }, [flyerUrl, flyer_file]);
+  }, [flyerUrl]);
 
   useEffect(() => {
     if (transformerRef.current && shapeRef.current && !isEventPast) {

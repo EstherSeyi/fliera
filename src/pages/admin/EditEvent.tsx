@@ -33,6 +33,7 @@ export const EditEvent: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
+  const [currentFlyerPreviewUrl, setCurrentFlyerPreviewUrl] = useState<string>("");
 
   const methods = useForm<EditEventFormData>({
     resolver: zodResolver(editEventSchema),
@@ -40,6 +41,39 @@ export const EditEvent: React.FC = () => {
   });
 
   const isEventPast = event ? isPast(new Date(event.date)) : false;
+
+  // Watch for flyer_file changes and manage the blob URL
+  useEffect(() => {
+    const subscription = methods.watch((value, { name }) => {
+      if (name === "flyer_file") {
+        const flyerFile = value.flyer_file;
+        
+        // Clean up previous URL
+        if (currentFlyerPreviewUrl && currentFlyerPreviewUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(currentFlyerPreviewUrl);
+        }
+
+        // Create new URL if file exists
+        if (flyerFile && flyerFile instanceof File) {
+          const newUrl = URL.createObjectURL(flyerFile);
+          setCurrentFlyerPreviewUrl(newUrl);
+        } else {
+          setCurrentFlyerPreviewUrl("");
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [methods, currentFlyerPreviewUrl]);
+
+  // Cleanup blob URL on component unmount
+  useEffect(() => {
+    return () => {
+      if (currentFlyerPreviewUrl && currentFlyerPreviewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(currentFlyerPreviewUrl);
+      }
+    };
+  }, [currentFlyerPreviewUrl]);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -268,25 +302,29 @@ export const EditEvent: React.FC = () => {
                 {currentStep === 0 && (
                   <EditEventDetailsStep 
                     event={event} 
-                    isEventPast={isEventPast} 
+                    isEventPast={isEventPast}
+                    currentFlyerPreviewUrl={currentFlyerPreviewUrl}
                   />
                 )}
                 {currentStep === 1 && (
                   <EditImagePlaceholderStep 
                     event={event} 
-                    isEventPast={isEventPast} 
+                    isEventPast={isEventPast}
+                    currentFlyerPreviewUrl={currentFlyerPreviewUrl}
                   />
                 )}
                 {currentStep === 2 && (
                   <EditTextPlaceholderStep 
                     event={event} 
-                    isEventPast={isEventPast} 
+                    isEventPast={isEventPast}
+                    currentFlyerPreviewUrl={currentFlyerPreviewUrl}
                   />
                 )}
                 {currentStep === 3 && (
                   <EditPreviewStep 
                     event={event} 
-                    isEventPast={isEventPast} 
+                    isEventPast={isEventPast}
+                    currentFlyerPreviewUrl={currentFlyerPreviewUrl}
                   />
                 )}
               </AnimatePresence>

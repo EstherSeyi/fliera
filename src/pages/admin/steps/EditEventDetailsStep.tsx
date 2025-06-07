@@ -34,11 +34,13 @@ const CATEGORY_OPTIONS: { value: EventCategory; label: string }[] = [
 interface EditEventDetailsStepProps {
   event: Event;
   isEventPast: boolean;
+  currentFlyerPreviewUrl: string;
 }
 
 export const EditEventDetailsStep: React.FC<EditEventDetailsStepProps> = ({
   event,
   isEventPast,
+  currentFlyerPreviewUrl,
 }) => {
   const {
     register,
@@ -200,7 +202,7 @@ export const EditEventDetailsStep: React.FC<EditEventDetailsStepProps> = ({
           </label>
           <div className="border rounded-lg p-4 bg-gray-50">
             <img
-              src={event.flyer_url}
+              src={currentFlyerPreviewUrl || event.flyer_url}
               alt={event.title}
               className="max-w-xs h-auto rounded-lg mx-auto"
             />

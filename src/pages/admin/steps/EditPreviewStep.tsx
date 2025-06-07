@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Stage, Layer, Image as KonvaImage, Text, Rect, Circle, Shape } from "react-konva";
 import { useFormContext } from "react-hook-form";
@@ -7,11 +7,13 @@ import type { EditEventFormData, Event } from "../../../types";
 interface EditPreviewStepProps {
   event: Event;
   isEventPast: boolean;
+  currentFlyerPreviewUrl: string;
 }
 
 export const EditPreviewStep: React.FC<EditPreviewStepProps> = ({
   event,
   isEventPast,
+  currentFlyerPreviewUrl,
 }) => {
   const { watch } = useFormContext<EditEventFormData>();
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -19,15 +21,10 @@ export const EditPreviewStep: React.FC<EditPreviewStepProps> = ({
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { image_placeholders, text_placeholders, flyer_file } = watch();
+  const { image_placeholders, text_placeholders } = watch();
 
-  // Use new flyer file if uploaded, otherwise use existing event flyer
-  const flyerUrl = useMemo(() => {
-    if (flyer_file) {
-      return URL.createObjectURL(flyer_file);
-    }
-    return event.flyer_url;
-  }, [flyer_file, event.flyer_url]);
+  // Use new flyer file preview URL if available, otherwise use existing event flyer
+  const flyerUrl = currentFlyerPreviewUrl || event.flyer_url;
 
   useEffect(() => {
     if (!flyerUrl) return;
@@ -46,14 +43,7 @@ export const EditPreviewStep: React.FC<EditPreviewStepProps> = ({
         });
       }
     };
-
-    // Cleanup object URL if it was created from a file
-    return () => {
-      if (flyer_file && flyerUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(flyerUrl);
-      }
-    };
-  }, [flyerUrl, flyer_file]);
+  }, [flyerUrl]);
 
   const renderPlaceholderShape = (placeholder: any, index: number) => {
     // Scale coordinates for display on the Konva stage
