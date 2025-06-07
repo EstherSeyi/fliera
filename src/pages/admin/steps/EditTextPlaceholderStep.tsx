@@ -167,6 +167,7 @@ export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = (
       fontStyle: "normal",
       textTransform: "none",
       fontWeight: "normal",
+      labelText:""
     };
     setValue("text_placeholders", [...textPlaceholders, newPlaceholder]);
   };
