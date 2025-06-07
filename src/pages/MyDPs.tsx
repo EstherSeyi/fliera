@@ -314,15 +314,6 @@ export const MyDPs: React.FC = () => {
                     {dp.event?.title || 'Unknown Event'}
                   </h3>
                   
-                  {/* Display user text inputs */}
-                  {dp.user_text_inputs && dp.user_text_inputs.length > 0 && (
-                    <div className="text-sm text-gray-600">
-                      <p className="truncate">
-                        {dp.user_text_inputs.filter(input => input.trim()).join(', ')}
-                      </p>
-                    </div>
-                  )}
-                  
                   <div className="flex items-center text-xs text-gray-500">
                     <Calendar className="w-3 h-3 mr-1" />
                     {formatDate(dp.created_at)}
