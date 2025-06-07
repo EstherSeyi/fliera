@@ -64,6 +64,7 @@ export interface GeneratedDP {
   generated_image_url: string;
   user_name: string;
   created_at: string;
+  user_text_inputs: string[];
   event?: {
     title: string;
     date: string;
