@@ -18,7 +18,7 @@ interface EventFilters {
 
 interface SaveDPData {
   event_id: string;
-  user_name: string;
+  user_text_inputs: string[];
   user_photo: File;
   generated_image_data: string; // Base64 data URL
 }
@@ -406,7 +406,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
         user_id: user?.id || null,
         event_id: dpData.event_id,
         generated_image_url: generatedImageUrl,
-        user_name: dpData.user_name,
+        user_text_inputs: dpData.user_text_inputs,
       });
 
       if (insertError) throw insertError;

@@ -48,9 +48,14 @@ export const MyDPs: React.FC = () => {
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       
+      // Use the first text input for filename, or fallback to event title
+      const fileName = dp.user_text_inputs && dp.user_text_inputs.length > 0 
+        ? `${dp.event?.title || 'Event'}-DP-${dp.user_text_inputs[0]}.png`
+        : `${dp.event?.title || 'Event'}-DP.png`;
+      
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${dp.event?.title || 'Event'}-DP-${dp.user_name}.png`;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -308,6 +313,16 @@ export const MyDPs: React.FC = () => {
                   <h3 className="font-semibold text-primary truncate">
                     {dp.event?.title || 'Unknown Event'}
                   </h3>
+                  
+                  {/* Display user text inputs */}
+                  {dp.user_text_inputs && dp.user_text_inputs.length > 0 && (
+                    <div className="text-sm text-gray-600">
+                      <p className="truncate">
+                        {dp.user_text_inputs.filter(input => input.trim()).join(', ')}
+                      </p>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center text-xs text-gray-500">
                     <Calendar className="w-3 h-3 mr-1" />
                     {formatDate(dp.created_at)}

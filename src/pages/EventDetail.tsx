@@ -24,7 +24,7 @@ export const EventDetail: React.FC = () => {
 
   const [userPhoto, setUserPhoto] = useState<File | null>(null);
   const [userPhotoPreview, setUserPhotoPreview] = useState<string | null>(null);
-  const [userName, setUserName] = useState("");
+  const [userTextInputs, setUserTextInputs] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
@@ -51,6 +51,10 @@ export const EventDetail: React.FC = () => {
           throw new Error("Event not found");
         }
         setEvent(eventData);
+        
+        // Initialize userTextInputs based on text placeholders
+        const initialTextInputs = eventData.text_placeholders.map(() => "");
+        setUserTextInputs(initialTextInputs);
       } catch (err) {
         console.error("Error fetching event:", err);
         setError("Failed to load event");
@@ -78,12 +82,12 @@ export const EventDetail: React.FC = () => {
     }
   }, [userPhotoPreview]);
 
-  // Generate DP when user photo or name changes
+  // Generate DP when user photo or text inputs change
   useEffect(() => {
-    if ((userPhotoPreview || userName) && event) {
+    if ((userPhotoPreview || userTextInputs.some(input => input.trim())) && event) {
       generateDP();
     }
-  }, [userPhotoPreview, userName, event, flyerImage, userImage]);
+  }, [userPhotoPreview, userTextInputs, event, flyerImage, userImage]);
 
   const loadFlyerImage = async () => {
     if (!event || !containerRef.current) return;
@@ -183,9 +187,15 @@ export const EventDetail: React.FC = () => {
       URL.revokeObjectURL(userPhotoPreview);
     }
     setUserPhotoPreview(null);
-    setUserName("");
+    setUserTextInputs(event?.text_placeholders.map(() => "") || []);
     setHasGeneratedDP(false);
     setUserImage(null);
+  };
+
+  const handleTextInputChange = (index: number, value: string) => {
+    const newInputs = [...userTextInputs];
+    newInputs[index] = value;
+    setUserTextInputs(newInputs);
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -216,10 +226,10 @@ export const EventDetail: React.FC = () => {
       link.click();
 
       // Save to database if user is logged in
-      if (user && userPhoto && userName && event) {
+      if (user && userPhoto && userTextInputs.some(input => input.trim()) && event) {
         await saveGeneratedDP({
           event_id: event.id,
-          user_name: userName,
+          user_text_inputs: userTextInputs,
           user_photo: userPhoto,
           generated_image_data: dataURL,
         });
@@ -316,7 +326,7 @@ export const EventDetail: React.FC = () => {
   };
 
   const renderTextPlaceholders = () => {
-    if (!event || !userName) return null;
+    if (!event || userTextInputs.length === 0) return null;
 
     return event.text_placeholders.map((placeholder, index) => {
       const {
@@ -333,8 +343,12 @@ export const EventDetail: React.FC = () => {
         textTransform,
       } = placeholder;
 
+      // Get the user input for this placeholder
+      const userInput = userTextInputs[index] || "";
+      if (!userInput.trim()) return null;
+
       // Transform the text according to textTransform
-      let displayText = userName;
+      let displayText = userInput;
       if (textTransform === "uppercase") {
         displayText = displayText.toUpperCase();
       } else if (textTransform === "lowercase") {
@@ -379,6 +393,8 @@ export const EventDetail: React.FC = () => {
       </div>
     );
   }
+
+  const hasRequiredInputs = userTextInputs.some(input => input.trim()) || userPhotoPreview;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -485,19 +501,22 @@ export const EventDetail: React.FC = () => {
             )}
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="name" className="block text-primary font-medium">
-              Your Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
-              placeholder="Enter your name"
-            />
-          </div>
+          {/* Dynamic Text Input Fields */}
+          {event.text_placeholders.map((placeholder, index) => (
+            <div key={index} className="space-y-2">
+              <label htmlFor={`text-input-${index}`} className="block text-primary font-medium">
+                {placeholder.labelText || `Text ${index + 1}`}
+              </label>
+              <input
+                type="text"
+                id={`text-input-${index}`}
+                value={userTextInputs[index] || ""}
+                onChange={(e) => handleTextInputChange(index, e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
+                placeholder={`Enter ${placeholder.labelText || `text ${index + 1}`}`}
+              />
+            </div>
+          ))}
         </motion.div>
 
         <motion.div
@@ -545,7 +564,7 @@ export const EventDetail: React.FC = () => {
 
           <button
             onClick={downloadDP}
-            disabled={!hasGeneratedDP || isSaving}
+            disabled={!hasGeneratedDP || !hasRequiredInputs || isSaving}
             className="w-full flex items-center justify-center px-6 py-3 bg-thistle text-primary hover:bg-thistle/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSaving ? (
