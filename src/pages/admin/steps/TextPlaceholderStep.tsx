@@ -259,6 +259,7 @@ export const TextPlaceholderStep: React.FC = () => {
             type="button"
             onClick={addTextPlaceholder}
             className="w-full flex items-center justify-center px-4 py-2 bg-thistle text-primary rounded-lg hover:bg-thistle/90 transition-colors"
+            disabled={text_placeholders.length >= 3}
           >
             <Plus className="w-5 h-5 mr-2" />
             Add Text Placeholder
