@@ -1,7 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Github, Linkedin, X } from "lucide-react";
+import { Linkedin } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import XIcon from "../assets/x-social-media-logo.svg?react";
+import Github from "../assets/github-social-media-logo.svg?react";
 
 export const Footer: React.FC = () => {
   const { isLoggedIn } = useAuth();
@@ -57,7 +59,7 @@ export const Footer: React.FC = () => {
             className="w-8 h-8"
           />
         </div>
-          {/* <nav className="flex flex-wrap gap-6 text-sm">
+        {/* <nav className="flex flex-wrap gap-6 text-sm">
             <Link to="/events" className="hover:text-accent transition-colors">
               Events
             </Link>
@@ -91,7 +93,6 @@ export const Footer: React.FC = () => {
               </Link>
             )}
           </nav> */}
-       
 
         <div className="py-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-hookersgreen">
@@ -100,12 +101,12 @@ export const Footer: React.FC = () => {
 
           <div className="flex items-center space-x-4">
             <a
-              href="https://x.com/seyi_hadas"
+              href="https://www.linkedin.com/in/seyi-ogundijo/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-hookersgreen hover:text-accent transition-colors"
             >
-              <X className="h-4 w-4" />
+              <Linkedin className="h-4 w-4" />
             </a>
             <a
               href="https://github.com/EstherSeyi"
@@ -116,12 +117,12 @@ export const Footer: React.FC = () => {
               <Github className="h-4 w-4" />
             </a>
             <a
-              href="https://www.linkedin.com/in/seyi-ogundijo/"
+              href="https://x.com/seyi_hadas"
               target="_blank"
               rel="noopener noreferrer"
               className="text-hookersgreen hover:text-accent transition-colors"
             >
-              <Linkedin className="h-4 w-4" />
+              <XIcon className="h-3 w-3" />
             </a>
           </div>
         </div>
