@@ -40,7 +40,7 @@ export const createEventSchema = z.object({
       "File must be an image (PNG, JPG)"
     ),
   image_placeholders: z.array(imagePlaceholderSchema),
-  text_placeholders: z.array(textPlaceholderSchema),
+  text_placeholders: z.array(textPlaceholderSchema).max(3, "You can add a maximum of 3 text placeholders."),
   visibility: z.enum(['private', 'public', 'archived']),
   category: z.enum(['business', 'technology', 'music', 'social', 'sports', 'activism', 'other']),
 });
