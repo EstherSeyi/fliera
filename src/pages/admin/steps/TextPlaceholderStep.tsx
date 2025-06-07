@@ -290,6 +290,20 @@ export const TextPlaceholderStep: React.FC = () => {
                 />
               </div>
 
+                <div className="space-y-2">
+                <label className="block text-sm text-secondary">
+                  Label Text
+                </label>
+                <input
+                  type="text"
+                  value={textPlaceholders[selectedIndex].labelText}
+                  onChange={(e) =>
+                    updateTextStyle(selectedIndex, "text", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+
               <div className="space-y-2">
                 <label className="block text-sm text-secondary">
                   Font Size
