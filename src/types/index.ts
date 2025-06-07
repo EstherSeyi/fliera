@@ -19,6 +19,7 @@ export interface TextPlaceholderZone {
   fontStyle: string;
   textTransform: string;
   fontWeight: string | number;
+  labelText?: string;
 }
 
 export type EventVisibility = 'private' | 'public' | 'archived';
