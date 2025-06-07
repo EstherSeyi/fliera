@@ -277,6 +277,7 @@ export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = (
               type="button"
               onClick={addTextPlaceholder}
               className="w-full flex items-center justify-center px-4 py-2 bg-thistle text-primary rounded-lg hover:bg-thistle/90 transition-colors"
+              disabled={textPlaceholders.length >= 3}
             >
               <Plus className="w-5 h-5 mr-2" />
               Add Text Placeholder
@@ -307,6 +308,21 @@ export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = (
                   value={textPlaceholders[selectedIndex].text}
                   onChange={(e) =>
                     updateTextStyle(selectedIndex, "text", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border rounded"
+                  disabled={isEventPast}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm text-secondary">
+                  Label Text
+                </label>
+                <input
+                  type="text"
+                  value={textPlaceholders[selectedIndex].labelText}
+                  onChange={(e) =>
+                    updateTextStyle(selectedIndex, "labelText", e.target.value)
                   }
                   className="w-full px-3 py-2 border rounded"
                   disabled={isEventPast}
