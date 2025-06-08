@@ -67,12 +67,12 @@ export const EventDetail: React.FC = () => {
     fetchEvent();
   }, [id, getEvent]);
 
-  // Load flyer image when event loads
+  // Load flyer image when event loads and container is available
   useEffect(() => {
     if (event && containerRef.current) {
       loadFlyerImage();
     }
-  }, [event]);
+  }, [event, containerRef.current]);
 
   // Load user image when photo preview changes
   useEffect(() => {
