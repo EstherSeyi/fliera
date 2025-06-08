@@ -21,6 +21,7 @@ export const MyEventCardSkeleton: React.FC = () => {
       <div className="flex space-x-2 pt-2">
         <div className="flex-1 h-8 bg-gray-200 rounded"></div>
         <div className="flex-1 h-8 bg-gray-200 rounded"></div>
+        <div className="flex-1 h-8 bg-gray-200 rounded"></div>
       </div>
     </div>
   );

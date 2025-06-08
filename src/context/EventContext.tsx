@@ -41,6 +41,7 @@ interface EventContextType {
     filters?: EventFilters
   ) => Promise<PaginatedEventsResult>;
   updateEvent: (id: string, eventData: Partial<Event>) => Promise<void>;
+  deleteEvent: (id: string) => Promise<void>;
   saveGeneratedDP: (dpData: SaveDPData) => Promise<void>;
   fetchGeneratedDPsByUser: (
     page?: number,
@@ -318,6 +319,60 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const deleteEvent = async (id: string) => {
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    try {
+      // First, get the event to get the flyer URL
+      const { data: eventData, error: fetchError } = await supabase
+        .from("events")
+        .select("flyer_url")
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      if (!eventData) {
+        throw new Error("Event not found or you don't have permission to delete it");
+      }
+
+      // Extract the file path from the flyer URL
+      const url = new URL(eventData.flyer_url);
+      const pathParts = url.pathname.split('/');
+      const fileName = pathParts[pathParts.length - 1];
+      const filePath = `event-flyers/${fileName}`;
+
+      // Delete the flyer image from storage
+      const { error: storageError } = await supabase.storage
+        .from("event-flyers")
+        .remove([filePath]);
+
+      if (storageError) {
+        console.warn("Failed to delete flyer from storage:", storageError);
+        // Continue with database deletion even if storage deletion fails
+      }
+
+      // Delete the event record from the database
+      // Note: Related DPs will be automatically deleted due to CASCADE foreign key constraint
+      const { error: deleteError } = await supabase
+        .from("events")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", user.id);
+
+      if (deleteError) throw deleteError;
+
+      // Update local state if the event is in the current events list
+      setEvents((prev) => prev.filter((event) => event.id !== id));
+    } catch (err) {
+      console.error("Error deleting event:", err);
+      throw new Error("Failed to delete event");
+    }
+  };
+
   useEffect(() => {
     fetchEvents();
   }, []);
@@ -437,6 +492,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
         fetchEventsByUser,
         fetchPublicEvents,
         updateEvent,
+        deleteEvent,
         saveGeneratedDP,
         fetchGeneratedDPsByUser,
         deleteGeneratedDP,

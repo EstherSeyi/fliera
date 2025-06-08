@@ -27,6 +27,7 @@ export const MyEventTableSkeleton: React.FC = () => {
         <div className="flex space-x-2">
           <div className="h-8 bg-gray-200 rounded w-16"></div>
           <div className="h-8 bg-gray-200 rounded w-16"></div>
+          <div className="h-8 bg-gray-200 rounded w-16"></div>
         </div>
       </td>
     </tr>

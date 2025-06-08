@@ -11,13 +11,16 @@ import {
   Search,
   Filter,
   X,
+  Trash2,
 } from "lucide-react";
 import DatePicker from "react-datepicker";
 import { isPast } from "date-fns";
 import "react-datepicker/dist/react-datepicker.css";
 import { useEvents } from "../context/EventContext";
+import { useToast } from "../context/ToastContext";
 import { MyEventTableSkeleton } from "../components/MyEventTableSkeleton";
 import { MyEventCardSkeleton } from "../components/MyEventCardSkeleton";
+import { ConfirmationDialog } from "../components/ConfirmationDialog";
 import { getPlainTextSnippet } from "../lib/utils";
 import { useDebounce } from "../hooks/useDebounce";
 import {
@@ -46,7 +49,8 @@ const VISIBILITY_OPTIONS: { value: EventVisibility; label: string }[] = [
 ];
 
 export const MyEvents: React.FC = () => {
-  const { fetchEventsByUser } = useEvents();
+  const { fetchEventsByUser, deleteEvent } = useEvents();
+  const { showToast } = useToast();
   const [userEvents, setUserEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +71,11 @@ export const MyEvents: React.FC = () => {
   const [dateFrom, setDateFrom] = useState<Date | null>(null);
   const [dateTo, setDateTo] = useState<Date | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Confirmation dialog state
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Debounce search term to avoid excessive API calls
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -234,6 +243,43 @@ export const MyEvents: React.FC = () => {
     selectedVisibility ||
     dateFrom ||
     dateTo;
+
+  const handleDeleteClick = (event: Event) => {
+    setEventToDelete(event);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!eventToDelete) return;
+
+    try {
+      setDeletingId(eventToDelete.id);
+      await deleteEvent(eventToDelete.id);
+      
+      // Remove the deleted event from the local state
+      setUserEvents(prev => prev.filter(event => event.id !== eventToDelete.id));
+      setTotalEvents(prev => prev - 1);
+      
+      showToast("Event deleted successfully!", "success");
+      
+      // If we deleted the last item on the current page and it's not the first page, go back one page
+      if (userEvents.length === 1 && currentPage > 1) {
+        setCurrentPage(prev => prev - 1);
+      }
+    } catch (err) {
+      console.error("Error deleting event:", err);
+      showToast("Failed to delete event", "error");
+    } finally {
+      setDeletingId(null);
+      setShowDeleteDialog(false);
+      setEventToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
+    setEventToDelete(null);
+  };
 
   const renderPaginationControls = () => {
     if (totalPages <= 1) return null;
@@ -649,6 +695,14 @@ export const MyEvents: React.FC = () => {
                               Edit
                             </span>
                           )}
+                          <button
+                            onClick={() => handleDeleteClick(event)}
+                            disabled={deletingId === event.id}
+                            className="inline-flex items-center px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Delete
+                          </button>
                         </td>
                       </motion.tr>
                     ))}
@@ -734,6 +788,14 @@ export const MyEvents: React.FC = () => {
                           Edit
                         </span>
                       )}
+                      <button
+                        onClick={() => handleDeleteClick(event)}
+                        disabled={deletingId === event.id}
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete
+                      </button>
                     </div>
                   </motion.div>
                 ))}
@@ -743,6 +805,19 @@ export const MyEvents: React.FC = () => {
           {renderPaginationControls()}
         </motion.div>
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete Event"
+        description={`Are you sure you want to delete "${eventToDelete?.title}"? This action cannot be undone and will also delete all associated display pictures.`}
+        confirmText="Delete Event"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={deletingId === eventToDelete?.id}
+      />
     </div>
   );
 };
