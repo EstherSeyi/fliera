@@ -291,8 +291,8 @@ export const EventDetail: React.FC = () => {
         switch (holeShape) {
           case "circle": {
             const radius = Math.min(width, height) / 2;
-            const centerX = radius;
-            const centerY = radius;
+            const centerX = width / 2;  // Fixed: Center at middle of width
+            const centerY = height / 2; // Fixed: Center at middle of height
             ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
             break;
           }
