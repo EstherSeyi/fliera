@@ -345,7 +345,6 @@ export const EventDetail: React.FC = () => {
         x,
         y,
         width,
-        text,
         fontSize,
         color,
         textAlign,
