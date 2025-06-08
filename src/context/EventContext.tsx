@@ -119,8 +119,15 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       if (filters.category) {
-        countQuery = countQuery.eq("category", filters.category);
-        dataQuery = dataQuery.eq("category", filters.category);
+        if (filters.category === 'other') {
+          // For "other" category, include events where category is 'other', null, or empty string
+          countQuery = countQuery.or("category.eq.other,category.is.null,category.eq.");
+          dataQuery = dataQuery.or("category.eq.other,category.is.null,category.eq.");
+        } else {
+          // For all other categories, use exact match
+          countQuery = countQuery.eq("category", filters.category);
+          dataQuery = dataQuery.eq("category", filters.category);
+        }
       }
 
       if (filters.dateFrom) {
@@ -186,8 +193,15 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       if (filters.category) {
-        countQuery = countQuery.eq("category", filters.category);
-        dataQuery = dataQuery.eq("category", filters.category);
+        if (filters.category === 'other') {
+          // For "other" category, include events where category is 'other', null, or empty string
+          countQuery = countQuery.or("category.eq.other,category.is.null,category.eq.");
+          dataQuery = dataQuery.or("category.eq.other,category.is.null,category.eq.");
+        } else {
+          // For all other categories, use exact match
+          countQuery = countQuery.eq("category", filters.category);
+          dataQuery = dataQuery.eq("category", filters.category);
+        }
       }
 
       if (filters.visibility) {
