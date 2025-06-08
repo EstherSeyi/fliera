@@ -6,6 +6,9 @@ import {
   Image as KonvaImage,
   Text,
   Transformer,
+  Rect,
+  Circle,
+  Shape,
 } from "react-konva";
 import { useFormContext } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
@@ -86,6 +89,7 @@ export const TextPlaceholderStep: React.FC = () => {
 
   const flyer_file = watch("flyer_file");
   const textPlaceholders = watch("text_placeholders");
+  const imagePlaceholders = watch("image_placeholders");
 
   const tempFlyerUrl = useMemo(
     () => (flyer_file?.name ? URL.createObjectURL(flyer_file) : null),
@@ -185,6 +189,64 @@ export const TextPlaceholderStep: React.FC = () => {
     setValue("text_placeholders", newPlaceholders);
   };
 
+  const renderImagePlaceholderShape = () => {
+    if (!imagePlaceholders || imagePlaceholders.length === 0) return null;
+
+    const placeholder = imagePlaceholders[0];
+    
+    // Scale coordinates for display on the Konva stage
+    const scaledX = placeholder.x * imageScale;
+    const scaledY = placeholder.y * imageScale;
+    const scaledWidth = placeholder.width * imageScale;
+    const scaledHeight = placeholder.height * imageScale;
+
+    const commonProps = {
+      x: scaledX,
+      y: scaledY,
+      fill: "rgba(255, 165, 0, 0.3)", // Orange fill to distinguish from text placeholders
+      stroke: "rgba(255, 165, 0, 0.8)", // Orange stroke
+      strokeWidth: 2,
+      listening: false, // Make it non-interactive
+    };
+
+    switch (placeholder.holeShape) {
+      case 'circle':
+        return (
+          <Circle
+            {...commonProps}
+            radius={Math.min(scaledWidth, scaledHeight) / 2}
+            offsetX={0}
+            offsetY={0}
+          />
+        );
+      case 'triangle':
+        return (
+          <Shape
+            {...commonProps}
+            sceneFunc={(context, shape) => {
+              context.beginPath();
+              context.moveTo(scaledWidth / 2, 0);
+              context.lineTo(scaledWidth, scaledHeight);
+              context.lineTo(0, scaledHeight);
+              context.closePath();
+              context.fillStrokeShape(shape);
+            }}
+            width={scaledWidth}
+            height={scaledHeight}
+          />
+        );
+      case 'box':
+      default:
+        return (
+          <Rect
+            {...commonProps}
+            width={scaledWidth}
+            height={scaledHeight}
+          />
+        );
+    }
+  };
+
   if (!tempFlyerUrl) {
     return null;
   }
@@ -201,7 +263,7 @@ export const TextPlaceholderStep: React.FC = () => {
           Position Text Elements
         </h3>
         <p className="text-secondary">
-          Add and style text placeholders for your event DP
+          Add and style text placeholders for your event DP. The orange area shows where the user's photo will appear.
         </p>
       </div>
 
@@ -218,6 +280,9 @@ export const TextPlaceholderStep: React.FC = () => {
                   width={stageSize.width}
                   height={stageSize.height}
                 />
+                {/* Render image placeholder shape */}
+                {renderImagePlaceholderShape()}
+                {/* Render text placeholders */}
                 {textPlaceholders.map((placeholder, index) => (
                   <Text
                     key={index}
