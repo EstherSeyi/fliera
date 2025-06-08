@@ -10,18 +10,13 @@ export const MyEventCardSkeleton: React.FC = () => {
           <div className="h-3 bg-gray-200 rounded w-full mb-1"></div>
           <div className="h-3 bg-gray-200 rounded w-2/3"></div>
         </div>
+        <div className="h-8 w-8 bg-gray-200 rounded flex-shrink-0"></div>
       </div>
 
       <div className="flex flex-wrap gap-2">
         <div className="h-4 bg-gray-200 rounded w-24"></div>
         <div className="h-6 bg-gray-200 rounded-full w-16"></div>
         <div className="h-6 bg-gray-200 rounded-full w-16"></div>
-      </div>
-
-      <div className="flex space-x-2 pt-2">
-        <div className="flex-1 h-8 bg-gray-200 rounded"></div>
-        <div className="flex-1 h-8 bg-gray-200 rounded"></div>
-        <div className="flex-1 h-8 bg-gray-200 rounded"></div>
       </div>
     </div>
   );

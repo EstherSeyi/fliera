@@ -12,6 +12,7 @@ import {
   Filter,
   X,
   Trash2,
+  MoreHorizontal,
 } from "lucide-react";
 import DatePicker from "react-datepicker";
 import { isPast } from "date-fns";
@@ -30,6 +31,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
 import type { Event, EventCategory, EventVisibility } from "../types";
 
 const CATEGORY_OPTIONS: { value: EventCategory; label: string }[] = [
@@ -670,39 +678,58 @@ export const MyEvents: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getVisibilityBadge(event.visibility)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                          <Link
-                            to={`/events/${event.id}`}
-                            className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            View
-                          </Link>
-                          {!isEventPast(event.date) ? (
-                            <Link
-                              to={`/admin/edit/${event.id}`}
-                              className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-                            >
-                              <Edit className="w-4 h-4 mr-1" />
-                              Edit
-                            </Link>
-                          ) : (
-                            <span
-                              className="inline-flex items-center px-3 py-1 bg-gray-50 text-gray-400 rounded-md cursor-not-allowed"
-                              title="Cannot edit past events"
-                            >
-                              <Edit className="w-4 h-4 mr-1" />
-                              Edit
-                            </span>
-                          )}
-                          <button
-                            onClick={() => handleDeleteClick(event)}
-                            disabled={deletingId === event.id}
-                            className="inline-flex items-center px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <Trash2 className="w-4 h-4 mr-1" />
-                            Delete
-                          </button>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                className="inline-flex items-center justify-center w-8 h-8 text-gray-500 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
+                                disabled={deletingId === event.id}
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                                <span className="sr-only">Open menu</span>
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  to={`/events/${event.id}`}
+                                  className="flex items-center w-full"
+                                >
+                                  <Eye className="w-4 h-4 mr-2" />
+                                  View Event
+                                </Link>
+                              </DropdownMenuItem>
+                              
+                              {!isEventPast(event.date) ? (
+                                <DropdownMenuItem asChild>
+                                  <Link
+                                    to={`/admin/edit/${event.id}`}
+                                    className="flex items-center w-full"
+                                  >
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Edit Event
+                                  </Link>
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem disabled>
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Edit Event
+                                  <span className="ml-auto text-xs text-gray-400">Past event</span>
+                                </DropdownMenuItem>
+                              )}
+                              
+                              <DropdownMenuSeparator />
+                              
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteClick(event)}
+                                disabled={deletingId === event.id}
+                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                {deletingId === event.id ? "Deleting..." : "Delete Event"}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </td>
                       </motion.tr>
                     ))}
@@ -746,6 +773,59 @@ export const MyEvents: React.FC = () => {
                           {getPlainTextSnippet(event.description, 120)}
                         </p>
                       </div>
+                      <div className="flex-shrink-0">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className="inline-flex items-center justify-center w-8 h-8 text-gray-500 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
+                              disabled={deletingId === event.id}
+                            >
+                              <MoreHorizontal className="w-4 h-4" />
+                              <span className="sr-only">Open menu</span>
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem asChild>
+                              <Link
+                                to={`/events/${event.id}`}
+                                className="flex items-center w-full"
+                              >
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Event
+                              </Link>
+                            </DropdownMenuItem>
+                            
+                            {!isEventPast(event.date) ? (
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  to={`/admin/edit/${event.id}`}
+                                  className="flex items-center w-full"
+                                >
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Edit Event
+                                </Link>
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem disabled>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Event
+                                <span className="ml-auto text-xs text-gray-400">Past event</span>
+                              </DropdownMenuItem>
+                            )}
+                            
+                            <DropdownMenuSeparator />
+                            
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteClick(event)}
+                              disabled={deletingId === event.id}
+                              className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              {deletingId === event.id ? "Deleting..." : "Delete Event"}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
@@ -761,41 +841,6 @@ export const MyEvents: React.FC = () => {
                       </div>
                       {getCategoryBadge(event.category)}
                       {getVisibilityBadge(event.visibility)}
-                    </div>
-
-                    <div className="flex space-x-2 pt-2">
-                      <Link
-                        to={`/events/${event.id}`}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        View
-                      </Link>
-                      {!isEventPast(event.date) ? (
-                        <Link
-                          to={`/admin/edit/${event.id}`}
-                          className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Edit
-                        </Link>
-                      ) : (
-                        <span
-                          className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gray-50 text-gray-400 rounded-md cursor-not-allowed text-sm"
-                          title="Cannot edit past events"
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Edit
-                        </span>
-                      )}
-                      <button
-                        onClick={() => handleDeleteClick(event)}
-                        disabled={deletingId === event.id}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
-                      </button>
                     </div>
                   </motion.div>
                 ))}
