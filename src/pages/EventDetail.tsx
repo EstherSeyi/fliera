@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Download, Image as ImageIcon, Info, X, File } from "lucide-react";
-import { Stage, Layer, Image as KonvaImage, Text, Group, Rect, Circle, Shape } from "react-konva";
+import { Stage, Layer, Image as KonvaImage, Text, Group } from "react-konva";
 import { useEvents } from "../context/EventContext";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -37,6 +37,7 @@ export const EventDetail: React.FC = () => {
 
   // Konva stage states
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [imageScale, setImageScale] = useState(1);
   const [flyerImage, setFlyerImage] = useState<HTMLImageElement | null>(null);
   const [userImage, setUserImage] = useState<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -104,9 +105,10 @@ export const EventDetail: React.FC = () => {
 
       setFlyerImage(img);
       
-      // Set stage size based on container and image dimensions
+      // Calculate scale and stage size based on container width
       const containerWidth = containerRef.current.offsetWidth;
       const scale = Math.min(containerWidth / img.width, 600 / img.height);
+      setImageScale(scale);
       
       setStageSize({
         width: img.width * scale,
@@ -266,6 +268,12 @@ export const EventDetail: React.FC = () => {
 
     const { x, y, width, height, holeShape } = imagePlaceholder;
 
+    // Scale coordinates for display on the Konva stage
+    const scaledX = x * imageScale;
+    const scaledY = y * imageScale;
+    const scaledWidth = width * imageScale;
+    const scaledHeight = height * imageScale;
+
     // Calculate object-fit: cover scaling and positioning
     const imageAspectRatio = userImage.width / userImage.height;
     const placeholderAspectRatio = width / height;
@@ -286,34 +294,38 @@ export const EventDetail: React.FC = () => {
     }
 
     return (
-      <Group x={x} y={y} clipFunc={(ctx) => {
-        ctx.beginPath();
-        switch (holeShape) {
-          case "circle": {
-            const radius = Math.min(width, height) / 2;
-            const centerX = width / 2;  // Fixed: Center at middle of width
-            const centerY = height / 2; // Fixed: Center at middle of height
-            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-            break;
+      <Group 
+        x={scaledX} 
+        y={scaledY} 
+        clipFunc={(ctx) => {
+          ctx.beginPath();
+          switch (holeShape) {
+            case "circle": {
+              const radius = Math.min(scaledWidth, scaledHeight) / 2;
+              const centerX = scaledWidth / 2;  // Fixed: Center at middle of width
+              const centerY = scaledHeight / 2; // Fixed: Center at middle of height
+              ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+              break;
+            }
+            case "triangle":
+              ctx.moveTo(scaledWidth / 2, 0);
+              ctx.lineTo(scaledWidth, scaledHeight);
+              ctx.lineTo(0, scaledHeight);
+              ctx.closePath();
+              break;
+            case "box":
+            default:
+              ctx.rect(0, 0, scaledWidth, scaledHeight);
+              break;
           }
-          case "triangle":
-            ctx.moveTo(width / 2, 0);
-            ctx.lineTo(width, height);
-            ctx.lineTo(0, height);
-            ctx.closePath();
-            break;
-          case "box":
-          default:
-            ctx.rect(0, 0, width, height);
-            break;
-        }
-      }}>
+        }}
+      >
         <KonvaImage
           image={userImage}
           x={0}
           y={0}
-          width={width}
-          height={height}
+          width={scaledWidth}
+          height={scaledHeight}
           crop={{
             x: cropX,
             y: cropY,
@@ -363,11 +375,11 @@ export const EventDetail: React.FC = () => {
       return (
         <Text
           key={index}
-          x={x}
-          y={y}
-          width={width}
+          x={x * imageScale}
+          y={y * imageScale}
+          width={width * imageScale}
           text={displayText}
-          fontSize={fontSize}
+          fontSize={fontSize * imageScale}
           fill={color}
           align={textAlign}
           fontFamily={fontFamily}
@@ -533,8 +545,6 @@ export const EventDetail: React.FC = () => {
                   ref={stageRef}
                   width={stageSize.width}
                   height={stageSize.height}
-                  scaleX={stageSize.width / flyerImage.width}
-                  scaleY={stageSize.height / flyerImage.height}
                 >
                   <Layer>
                     {/* Flyer Background */}
@@ -542,8 +552,8 @@ export const EventDetail: React.FC = () => {
                       image={flyerImage}
                       x={0}
                       y={0}
-                      width={flyerImage.width}
-                      height={flyerImage.height}
+                      width={stageSize.width}
+                      height={stageSize.height}
                     />
                     
                     {/* User Image Placeholder */}
