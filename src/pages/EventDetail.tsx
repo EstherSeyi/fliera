@@ -9,6 +9,7 @@ import { useToast } from "../context/ToastContext";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { EventDetailsModal } from "../components/EventDetailsModal";
 import { ImageCropperModal } from "../components/ImageCropperModal";
+import { SocialShareButtons } from "../components/SocialShareButtons";
 import { getPlainTextSnippet } from "../lib/utils";
 import type { Event } from "../types";
 
@@ -29,6 +30,7 @@ export const EventDetail: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
   const [hasGeneratedDP, setHasGeneratedDP] = useState(false);
+  const [generatedDpUrl, setGeneratedDpUrl] = useState<string | null>(null);
 
   // Image cropper states
   const [showImageCropper, setShowImageCropper] = useState(false);
@@ -191,6 +193,7 @@ export const EventDetail: React.FC = () => {
     setUserPhotoPreview(null);
     setUserTextInputs(event?.text_placeholders.map(() => "") || []);
     setHasGeneratedDP(false);
+    setGeneratedDpUrl(null);
     setUserImage(null);
   };
 
@@ -220,6 +223,9 @@ export const EventDetail: React.FC = () => {
         quality: 1,
         pixelRatio: 2, // Higher quality export
       });
+
+      // Set the generated DP URL for sharing
+      setGeneratedDpUrl(dataURL);
 
       // Download the DP
       const link = document.createElement("a");
@@ -598,6 +604,15 @@ export const EventDetail: React.FC = () => {
             <p className="text-xs text-gray-500 text-center">
               Your DP will be saved to your account when downloaded
             </p>
+          )}
+
+          {/* Social Share Buttons - Only show after DP is generated and downloaded */}
+          {hasGeneratedDP && generatedDpUrl && (
+            <SocialShareButtons
+              imageUrl={generatedDpUrl}
+              title={event.title}
+              description={getPlainTextSnippet(event.description || "", 100)}
+            />
           )}
         </motion.div>
       </div>
