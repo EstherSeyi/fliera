@@ -293,6 +293,12 @@ export const EventDetail: React.FC = () => {
       cropY = (userImage.height - cropHeight) / 2;
     }
 
+    
+    const radius = Math.min(scaledWidth, scaledHeight) / 2;
+
+    const groupX = holeShape === "circle" ? scaledX - radius : scaledX;
+    const groupY = holeShape === "circle" ? scaledY - radius : scaledY;
+
     return (
       <Group 
         x={scaledX} 
