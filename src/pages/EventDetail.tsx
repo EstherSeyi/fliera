@@ -301,8 +301,8 @@ export const EventDetail: React.FC = () => {
 
     return (
       <Group 
-        x={scaledX} 
-        y={scaledY} 
+        x={groupX} 
+        y={groupY} 
         clipFunc={(ctx) => {
           ctx.beginPath();
           switch (holeShape) {
