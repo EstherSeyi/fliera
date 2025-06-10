@@ -308,7 +308,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       const url = new URL(dpData.generated_image_url);
       const pathParts = url.pathname.split('/');
       const fileName = pathParts[pathParts.length - 1];
-      const filePath = `generated-dps/${fileName}`;
+      const filePath = `${user.id}/${fileName}`;
 
       // Delete the image file from storage
       const { error: storageError } = await supabase.storage
@@ -457,6 +457,10 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const uploadGeneratedDPImage = async (dataUrl: string): Promise<string> => {
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
     try {
       // Convert base64 data URL to blob
       const response = await fetch(dataUrl);
@@ -465,7 +469,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       const dpFileName = `dp-${Date.now()}-${Math.random()
         .toString(36)
         .substring(2)}.png`;
-      const dpPath = `generated-dps/${dpFileName}`;
+      const dpPath = `${user.id}/${dpFileName}`;
 
       const { error: dpUploadError } = await supabase.storage
         .from("generated-dps")
@@ -488,6 +492,10 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const saveGeneratedDP = async (dpData: SaveDPData) => {
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
     try {
       // If the generated_image_data is a data URL, upload it first
       let generatedImageUrl = dpData.generated_image_data;
@@ -500,7 +508,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
         const dpFileName = `dp-${Date.now()}-${Math.random()
           .toString(36)
           .substring(2)}.png`;
-        const dpPath = `generated-dps/${dpFileName}`;
+        const dpPath = `${user.id}/${dpFileName}`;
 
         const { error: dpUploadError } = await supabase.storage
           .from("generated-dps")
@@ -520,7 +528,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Save DP record to database
       const { error: insertError } = await supabase.from("dps").insert({
-        user_id: user?.id || null,
+        user_id: user.id,
         event_id: dpData.event_id,
         generated_image_url: generatedImageUrl,
         user_text_inputs: dpData.user_text_inputs,
