@@ -146,13 +146,23 @@ export const EventDetail: React.FC = () => {
 
     setIsGenerating(true);
     try {
-      // The Konva stage will automatically render with the current state
-      // We just need to mark that we have a generated DP
-      setHasGeneratedDP(true);
+      // Small delay to ensure the stage is fully rendered
+      setTimeout(() => {
+        if (stageRef.current) {
+          // Generate the DP URL immediately when preview is ready
+          const dataURL = stageRef.current.toDataURL({
+            mimeType: 'image/png',
+            quality: 1,
+            pixelRatio: 2,
+          });
+          setGeneratedDpUrl(dataURL);
+          setHasGeneratedDP(true);
+        }
+        setIsGenerating(false);
+      }, 100);
     } catch (err) {
       console.error("Error generating DP:", err);
       setError("Failed to generate DP");
-    } finally {
       setIsGenerating(false);
     }
   };
@@ -212,25 +222,15 @@ export const EventDetail: React.FC = () => {
   };
 
   const downloadDP = async () => {
-    if (!stageRef.current || !hasGeneratedDP) return;
+    if (!generatedDpUrl || !hasGeneratedDP) return;
 
     try {
       setIsSaving(true);
       
-      // Export the Konva stage as data URL
-      const dataURL = stageRef.current.toDataURL({
-        mimeType: 'image/png',
-        quality: 1,
-        pixelRatio: 2, // Higher quality export
-      });
-
-      // Set the generated DP URL for sharing
-      setGeneratedDpUrl(dataURL);
-
-      // Download the DP
+      // Download the DP using the pre-generated URL
       const link = document.createElement("a");
       link.download = `${event?.title}-dp.png`;
-      link.href = dataURL;
+      link.href = generatedDpUrl;
       link.click();
 
       // Save to database if user is logged in
@@ -239,24 +239,13 @@ export const EventDetail: React.FC = () => {
           event_id: event.id,
           user_text_inputs: userTextInputs,
           user_photo: userPhoto,
-          generated_image_data: dataURL,
+          generated_image_data: generatedDpUrl,
         });
 
-        // Show success toast and reset page
         showToast("Your DP has been successfully saved!", "success");
-        
-        // Reset the page state after a short delay to allow the toast to show
-        setTimeout(() => {
-          resetPageState();
-        }, 500);
       } else {
         // For non-logged in users, just show download success
         showToast("Your DP has been downloaded successfully!", "success");
-        
-        // Reset the page state after a short delay
-        setTimeout(() => {
-          resetPageState();
-        }, 500);
       }
     } catch (err) {
       console.error("Error saving DP:", err);
@@ -606,7 +595,7 @@ export const EventDetail: React.FC = () => {
             </p>
           )}
 
-          {/* Social Share Buttons - Only show after DP is generated and downloaded */}
+          {/* Social Share Buttons - Show as soon as DP is generated */}
           {hasGeneratedDP && generatedDpUrl && (
             <SocialShareButtons
               imageUrl={generatedDpUrl}
