@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -35,8 +35,12 @@ const sideNavItems = [
   },
 ];
 
-export const SideNav: React.FC = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+interface SideNavProps {
+  isCollapsed: boolean;
+  setIsCollapsed: (collapsed: boolean) => void;
+}
+
+export const SideNav: React.FC<SideNavProps> = ({ isCollapsed, setIsCollapsed }) => {
   const location = useLocation();
 
   const isActive = (path: string) => {
