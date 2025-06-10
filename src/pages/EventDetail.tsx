@@ -42,6 +42,7 @@ export const EventDetail: React.FC = () => {
   const [imageScale, setImageScale] = useState(1);
   const [flyerImage, setFlyerImage] = useState<HTMLImageElement | null>(null);
   const [userImage, setUserImage] = useState<HTMLImageElement | null>(null);
+  const [flyerImageLoading, setFlyerImageLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -96,6 +97,7 @@ export const EventDetail: React.FC = () => {
     if (!event || !containerRef.current) return;
 
     try {
+      setFlyerImageLoading(true);
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.src = event.flyer_url;
@@ -119,6 +121,8 @@ export const EventDetail: React.FC = () => {
     } catch (err) {
       console.error("Error loading flyer image:", err);
       setError("Failed to load event flyer");
+    } finally {
+      setFlyerImageLoading(false);
     }
   };
 
@@ -573,7 +577,21 @@ export const EventDetail: React.FC = () => {
           <h3 className="text-xl font-semibold text-primary">Preview</h3>
           <div className="relative bg-white rounded-lg shadow-lg overflow-hidden">
             <div ref={containerRef} className="w-full">
-              {flyerImage && stageSize.width > 0 && (
+              {/* Show skeleton loader while flyer image is loading */}
+              {flyerImageLoading && (
+                <div className="w-full h-96 bg-gray-200 animate-pulse rounded-lg flex items-center justify-center">
+                  <div className="text-center space-y-4">
+                    <div className="w-16 h-16 bg-gray-300 rounded-full animate-pulse mx-auto"></div>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-gray-300 rounded w-32 mx-auto animate-pulse"></div>
+                      <div className="h-3 bg-gray-300 rounded w-24 mx-auto animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Show Konva stage when flyer image is loaded */}
+              {flyerImage && stageSize.width > 0 && !flyerImageLoading && (
                 <Stage
                   ref={stageRef}
                   width={stageSize.width}
