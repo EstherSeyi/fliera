@@ -20,7 +20,7 @@ interface SaveDPData {
   event_id: string;
   user_text_inputs: string[];
   user_photo: File;
-  generated_image_data: string; // Base64 data URL
+  generated_image_data: string; // Base64 data URL or public URL
 }
 
 interface EventContextType {
@@ -489,27 +489,34 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const saveGeneratedDP = async (dpData: SaveDPData) => {
     try {
-      // Convert base64 data URL to blob and upload generated DP
-      const response = await fetch(dpData.generated_image_data);
-      const blob = await response.blob();
+      // If the generated_image_data is a data URL, upload it first
+      let generatedImageUrl = dpData.generated_image_data;
+      
+      if (dpData.generated_image_data.startsWith('data:')) {
+        // Convert base64 data URL to blob and upload generated DP
+        const response = await fetch(dpData.generated_image_data);
+        const blob = await response.blob();
 
-      const dpFileName = `dp-${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(2)}.png`;
-      const dpPath = `generated-dps/${dpFileName}`;
+        const dpFileName = `dp-${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(2)}.png`;
+        const dpPath = `generated-dps/${dpFileName}`;
 
-      const { error: dpUploadError } = await supabase.storage
-        .from("generated-dps")
-        .upload(dpPath, blob, {
-          contentType: "image/png",
-        });
+        const { error: dpUploadError } = await supabase.storage
+          .from("generated-dps")
+          .upload(dpPath, blob, {
+            contentType: "image/png",
+          });
 
-      if (dpUploadError) throw dpUploadError;
+        if (dpUploadError) throw dpUploadError;
 
-      // Get public URL for generated DP
-      const {
-        data: { publicUrl: generatedImageUrl },
-      } = supabase.storage.from("generated-dps").getPublicUrl(dpPath);
+        // Get public URL for generated DP
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("generated-dps").getPublicUrl(dpPath);
+
+        generatedImageUrl = publicUrl;
+      }
 
       // Save DP record to database
       const { error: insertError } = await supabase.from("dps").insert({

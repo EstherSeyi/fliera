@@ -237,11 +237,21 @@ export const EventDetail: React.FC = () => {
     try {
       setIsSaving(true);
       
-      // Download the DP using the pre-generated URL
+      // Fetch the image as blob for forced download
+      const response = await fetch(generatedDpUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      
+      // Download the DP using blob URL
       const link = document.createElement("a");
       link.download = `${event?.title}-dp.png`;
-      link.href = generatedDpUrl;
+      link.href = url;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      
+      // Clean up blob URL
+      URL.revokeObjectURL(url);
 
       // Save to database if user is logged in
       if (user && userPhoto && userTextInputs.some(input => input.trim()) && event) {
@@ -257,6 +267,11 @@ export const EventDetail: React.FC = () => {
         // For non-logged in users, just show download success
         showToast("Your DP has been downloaded successfully!", "success");
       }
+      
+      // Reset the page state after successful download
+      setTimeout(() => {
+        resetPageState();
+      }, 1000);
     } catch (err) {
       console.error("Error saving DP:", err);
       showToast("Failed to save your DP. Please try again.", "error");
@@ -355,6 +370,7 @@ export const EventDetail: React.FC = () => {
         x,
         y,
         width,
+        height,
         fontSize,
         color,
         textAlign,
@@ -387,6 +403,7 @@ export const EventDetail: React.FC = () => {
           x={x * imageScale}
           y={y * imageScale}
           width={width * imageScale}
+          height={height * imageScale}
           text={displayText}
           fontSize={fontSize * imageScale}
           fill={color}
@@ -394,6 +411,8 @@ export const EventDetail: React.FC = () => {
           fontFamily={fontFamily}
           fontStyle={fontStyle}
           fontWeight={fontWeight}
+          wrap="word"
+          ellipsis={true}
         />
       );
     });
@@ -415,7 +434,11 @@ export const EventDetail: React.FC = () => {
     );
   }
 
-  const hasRequiredInputs = userTextInputs.some(input => input.trim()) || userPhotoPreview;
+  // Check if all required inputs are filled
+  const allTextInputsFilled = event.text_placeholders.every((_, index) => 
+    userTextInputs[index] && userTextInputs[index].trim() !== ""
+  );
+  const hasRequiredInputs = userPhotoPreview && allTextInputsFilled;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -458,7 +481,7 @@ export const EventDetail: React.FC = () => {
         >
           <div className="space-y-4">
             <label className="block text-primary font-medium">
-              Upload Your Photo
+              Upload Your Photo *
             </label>
             
             {!userPhoto ? (
@@ -526,7 +549,7 @@ export const EventDetail: React.FC = () => {
           {event.text_placeholders.map((placeholder, index) => (
             <div key={index} className="space-y-2">
               <label htmlFor={`text-input-${index}`} className="block text-primary font-medium">
-                {placeholder.labelText || `Text ${index + 1}`}
+                {placeholder.labelText || `Text ${index + 1}`} *
               </label>
               <input
                 type="text"
@@ -535,6 +558,7 @@ export const EventDetail: React.FC = () => {
                 onChange={(e) => handleTextInputChange(index, e.target.value)}
                 className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
                 placeholder={`Enter ${placeholder.labelText || `text ${index + 1}`}`}
+                required
               />
             </div>
           ))}
@@ -598,6 +622,12 @@ export const EventDetail: React.FC = () => {
               </>
             )}
           </button>
+          
+          {!hasRequiredInputs && (
+            <p className="text-xs text-red-500 text-center">
+              Please upload a photo and fill in all text fields to download your DP
+            </p>
+          )}
           
           {user && hasGeneratedDP && (
             <p className="text-xs text-gray-500 text-center">
