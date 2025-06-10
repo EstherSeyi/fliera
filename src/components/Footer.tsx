@@ -21,13 +21,13 @@ export const Footer: React.FC<FooterProps> = ({ showSimplified = false }) => {
             © {new Date().getFullYear()} EventDP. All rights reserved.
           </p>
         </div>
-         {isLoggedIn && isProtectedRoute && (
+    
     <img
       src="/black_circle_360x360.png"
       alt="EventDP Logo"
       className="fixed bottom-4 right-4 w-8 h-8 z-50"
     />
-  )}
+
       </footer>
     );
   }
