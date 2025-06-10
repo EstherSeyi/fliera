@@ -35,7 +35,7 @@ export const Layout: React.FC = () => {
           </div>
         </main>
       </div>
-      <Footer />
+      <Footer showSimplified={isProtectedRoute} />
     </div>
   );
 };
