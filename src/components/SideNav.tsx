@@ -94,7 +94,7 @@ export const SideNav: React.FC = () => {
       initial={{ width: 256 }}
       animate={{ width: isCollapsed ? 80 : 256 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="bg-white border-r border-gray-200 shadow-sm flex flex-col h-full"
+      className="fixed left-0 top-16 bottom-0 z-40 bg-white border-r border-gray-200 shadow-sm flex flex-col"
     >
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
@@ -129,7 +129,7 @@ export const SideNav: React.FC = () => {
       </div>
 
       {/* Navigation Items */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {sideNavItems.map((item) => (
           <NavItem key={item.path} item={item} isCollapsed={isCollapsed} />
         ))}

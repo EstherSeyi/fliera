@@ -29,7 +29,7 @@ export const Layout: React.FC = () => {
         )}
         
         {/* Main Content */}
-        <main className={`flex-1 ${isProtectedRoute ? 'md:ml-0' : ''}`}>
+        <main className={`flex-1 overflow-y-auto ${isProtectedRoute ? 'md:ml-64' : ''}`}>
           <div className="container mx-auto px-4 py-8">
             <Outlet />
           </div>
