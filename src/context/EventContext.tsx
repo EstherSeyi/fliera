@@ -42,6 +42,7 @@ interface EventContextType {
   ) => Promise<PaginatedEventsResult>;
   updateEvent: (id: string, eventData: Partial<Event>) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
+  uploadGeneratedDPImage: (dataUrl: string) => Promise<string>;
   saveGeneratedDP: (dpData: SaveDPData) => Promise<void>;
   fetchGeneratedDPsByUser: (
     page?: number,
@@ -455,6 +456,37 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const uploadGeneratedDPImage = async (dataUrl: string): Promise<string> => {
+    try {
+      // Convert base64 data URL to blob
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+
+      const dpFileName = `dp-${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2)}.png`;
+      const dpPath = `generated-dps/${dpFileName}`;
+
+      const { error: dpUploadError } = await supabase.storage
+        .from("generated-dps")
+        .upload(dpPath, blob, {
+          contentType: "image/png",
+        });
+
+      if (dpUploadError) throw dpUploadError;
+
+      // Get public URL for generated DP
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("generated-dps").getPublicUrl(dpPath);
+
+      return publicUrl;
+    } catch (err) {
+      console.error("Error uploading DP image:", err);
+      throw new Error("Failed to upload DP image");
+    }
+  };
+
   const saveGeneratedDP = async (dpData: SaveDPData) => {
     try {
       // Convert base64 data URL to blob and upload generated DP
@@ -507,6 +539,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
         fetchPublicEvents,
         updateEvent,
         deleteEvent,
+        uploadGeneratedDPImage,
         saveGeneratedDP,
         fetchGeneratedDPsByUser,
         deleteGeneratedDP,

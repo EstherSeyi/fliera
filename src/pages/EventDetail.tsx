@@ -15,7 +15,7 @@ import type { Event } from "../types";
 
 export const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { getEvent, saveGeneratedDP } = useEvents();
+  const { getEvent, uploadGeneratedDPImage, saveGeneratedDP } = useEvents();
   const { user } = useAuth();
   const { showToast } = useToast();
   const [event, setEvent] = useState<Event | null>(null);
@@ -147,7 +147,7 @@ export const EventDetail: React.FC = () => {
     setIsGenerating(true);
     try {
       // Small delay to ensure the stage is fully rendered
-      setTimeout(() => {
+      setTimeout(async () => {
         if (stageRef.current) {
           // Generate the DP URL immediately when preview is ready
           const dataURL = stageRef.current.toDataURL({
@@ -155,7 +155,17 @@ export const EventDetail: React.FC = () => {
             quality: 1,
             pixelRatio: 2,
           });
-          setGeneratedDpUrl(dataURL);
+          
+          // Upload to Supabase and get public URL for sharing
+          try {
+            const publicUrl = await uploadGeneratedDPImage(dataURL);
+            setGeneratedDpUrl(publicUrl);
+          } catch (uploadError) {
+            console.error("Error uploading DP:", uploadError);
+            // Fallback to data URL if upload fails
+            setGeneratedDpUrl(dataURL);
+          }
+          
           setHasGeneratedDP(true);
         }
         setIsGenerating(false);
