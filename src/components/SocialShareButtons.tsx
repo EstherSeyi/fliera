@@ -28,7 +28,7 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
     {
       name: 'WhatsApp',
       icon: MessageSquare,
-      color: 'bg-green-500 hover:bg-green-600',
+      color: 'bg-[#25D366] hover:bg-[#1DA851]',
       getShareUrl: (imageUrl: string, text: string) => {
         const encodedText = encodeURIComponent(text);
         return `https://wa.me/?text=${encodedText}`;
@@ -37,7 +37,7 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
     {
       name: 'Facebook',
       icon: Facebook,
-      color: 'bg-blue-600 hover:bg-blue-700',
+      color: 'bg-[#1877F2] hover:bg-[#166FE5]',
       getShareUrl: (imageUrl: string, text: string) => {
         const encodedText = encodeURIComponent(text);
         const encodedUrl = encodeURIComponent(window.location.href);
@@ -47,7 +47,7 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
     {
       name: 'Twitter',
       icon: Twitter,
-      color: 'bg-black hover:bg-gray-800',
+      color: 'bg-[#000000] hover:bg-[#1a1a1a]',
       getShareUrl: (imageUrl: string, text: string) => {
         const encodedText = encodeURIComponent(text);
         const encodedUrl = encodeURIComponent(window.location.href);
@@ -57,7 +57,7 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
     {
       name: 'LinkedIn',
       icon: Linkedin,
-      color: 'bg-blue-700 hover:bg-blue-800',
+      color: 'bg-[#0A66C2] hover:bg-[#004182]',
       getShareUrl: (imageUrl: string, text: string) => {
         const encodedTitle = encodeURIComponent(title);
         const encodedText = encodeURIComponent(text);
@@ -108,17 +108,17 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
         <p className="text-secondary text-sm">
           Spread the word! Share your personalized display picture on social media.
         </p>
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex justify-center gap-4">
           {socialPlatforms.map((platform) => (
             <motion.button
               key={platform.name}
               onClick={() => handlePlatformClick(platform)}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              className={`flex items-center px-4 py-2 rounded-lg text-white font-medium transition-colors ${platform.color}`}
+              className={`w-12 h-12 rounded-full flex items-center justify-center text-white transition-all duration-200 shadow-lg hover:shadow-xl ${platform.color}`}
+              title={`Share on ${platform.name}`}
             >
-              <platform.icon className="w-5 h-5 mr-2" />
-              {platform.name}
+              <platform.icon className="w-6 h-6" />
             </motion.button>
           ))}
         </div>
