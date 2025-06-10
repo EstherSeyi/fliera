@@ -9,7 +9,7 @@ import {
   List,
   ChevronLeft,
   ChevronRight,
-  Menu
+  FileImage
 } from 'lucide-react';
 
 const sideNavItems = [
@@ -27,6 +27,11 @@ const sideNavItems = [
     path: '/my-dps',
     label: 'My DPs',
     icon: ImageIcon,
+  },
+  {
+    path: '/templates',
+    label: 'Templates',
+    icon: FileImage,
   },
   {
     path: '/admin/create',

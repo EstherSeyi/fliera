@@ -75,3 +75,31 @@ export interface PaginatedDPsResult {
   dps: GeneratedDP[];
   totalCount: number;
 }
+
+// New interfaces for Flier Templates
+export interface TemplatePlaceholder {
+  type: 'text' | 'image';
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  fontSize?: number;
+  color?: string;
+  fontFamily?: string;
+  textAlign?: CanvasTextAlign;
+  text?: string;
+  labelText?: string;
+  fontStyle?: string;
+}
+
+export interface FlierTemplate {
+  id: string;
+  user_id: string;
+  title: string;
+  createdBy?: string;
+  template_image_url: string;
+  user_image_placeholders: ImagePlaceholderZone[];
+  user_text_placeholders: TextPlaceholderZone[];
+  template_placeholders: TemplatePlaceholder[];
+  created_at: string;
+}
