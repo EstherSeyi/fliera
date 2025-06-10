@@ -25,7 +25,7 @@ export const Footer: React.FC<FooterProps> = ({ showSimplified = false }) => {
     <img
       src="/black_circle_360x360.png"
       alt="EventDP Logo"
-      className="w-8 h-8 z-50"
+      className="fixed bottom-4 right-4 w-6 h-6 z-50"
     />
 
       </footer>
