@@ -137,6 +137,18 @@ export const Navbar: React.FC = () => {
                       Events
                     </NavLink>
 
+                    {
+                      isLoggedIn && (
+                        <NavLink
+                      to="/dashboard"
+                      Icon={Calendar}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Events
+                    </NavLink>
+                      )
+                    }
+
                     {isLoggedIn ? (
                       <button
                         onClick={() => {
