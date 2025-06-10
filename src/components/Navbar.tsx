@@ -149,7 +149,7 @@ export const Navbar: React.FC = () => {
                       Icon={Calendar}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Events
+                      Dashboard
                     </NavLink>
                       )
                     }
