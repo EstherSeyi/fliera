@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Trash2, Calendar, ChevronLeft, ChevronRight, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { Download, Trash2, Calendar, ChevronLeft, ChevronRight, Image as ImageIcon, AlertCircle, Share2 } from 'lucide-react';
 import { useEvents } from '../context/EventContext';
 import { useToast } from '../context/ToastContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
+import { ShareDPModal } from '../components/ShareDPModal';
 import type { GeneratedDP } from '../types';
 
 export const MyDPs: React.FC = () => {
@@ -18,6 +19,10 @@ export const MyDPs: React.FC = () => {
   // Confirmation dialog state
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [dpToDelete, setDpToDelete] = useState<GeneratedDP | null>(null);
+
+  // Share dialog state
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [selectedDpForShare, setSelectedDpForShare] = useState<GeneratedDP | null>(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -71,6 +76,16 @@ export const MyDPs: React.FC = () => {
       console.error('Error downloading DP:', err);
       showToast('Failed to download DP', 'error');
     }
+  };
+
+  const handleShareClick = (dp: GeneratedDP) => {
+    setSelectedDpForShare(dp);
+    setShowShareDialog(true);
+  };
+
+  const handleCloseShareDialog = () => {
+    setShowShareDialog(false);
+    setSelectedDpForShare(null);
   };
 
   const handleDeleteClick = (dp: GeneratedDP) => {
@@ -300,13 +315,20 @@ export const MyDPs: React.FC = () => {
                   />
                   
                   {/* Overlay with actions */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-3">
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-2">
                     <button
                       onClick={() => handleDownload(dp)}
                       className="p-2 bg-white/90 text-gray-800 rounded-full hover:bg-white transition-colors"
                       title="Download DP"
                     >
                       <Download className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => handleShareClick(dp)}
+                      className="p-2 bg-blue-500/90 text-white rounded-full hover:bg-blue-600 transition-colors"
+                      title="Share DP"
+                    >
+                      <Share2 className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => handleDeleteClick(dp)}
@@ -345,6 +367,12 @@ export const MyDPs: React.FC = () => {
                     Download
                   </button>
                   <button
+                    onClick={() => handleShareClick(dp)}
+                    className="flex items-center justify-center px-3 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors text-sm"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                  <button
                     onClick={() => handleDeleteClick(dp)}
                     disabled={deletingId === dp.id}
                     className="flex items-center justify-center px-3 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
@@ -376,6 +404,13 @@ export const MyDPs: React.FC = () => {
         cancelText="Cancel"
         variant="danger"
         isLoading={deletingId === dpToDelete?.id}
+      />
+
+      {/* Share DP Modal */}
+      <ShareDPModal
+        isOpen={showShareDialog}
+        onClose={handleCloseShareDialog}
+        dp={selectedDpForShare}
       />
     </div>
   );
