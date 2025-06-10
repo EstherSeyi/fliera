@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, User, MessageSquare, Check, ArrowRight } from 'lucide-react';
+import { Sparkles, User, MessageSquare, Check, ArrowRight } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -301,15 +301,7 @@ export const AICaptionDialog: React.FC<AICaptionDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Share to {platform}</span>
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
-          </DialogTitle>
+          <DialogTitle>Share to {platform}</DialogTitle>
         </DialogHeader>
 
         <AnimatePresence mode="wait">
