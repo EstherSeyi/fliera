@@ -69,6 +69,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         },
       });
 
+      const { data: user } = await supabase.auth.getUser();
+if (user) {
+  await supabase.from("users").insert({
+    id: user.id,
+    username: user.email,
+    is_creator: true // optional default
+  });
+}
+
+
       if (signUpError) throw signUpError;
       navigate("/dashboard");
     } catch (error) {
