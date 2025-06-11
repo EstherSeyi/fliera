@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const signup = async (email: string, password: string, fullName: string) => {
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -71,20 +71,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (signUpError) throw signUpError;
 
-      const { data: user } = await supabase.auth.getUser();
-if (user) {
- const { error: userProfileError }  = await supabase.from("users").insert({
-    id: user.id,
-    username: user.email,
-  });
+      // Create user profile in the users table
+      if (data.user) {
+        const { error: userProfileError } = await supabase
+          .from("users")
+          .insert({
+            id: data.user.id,
+            username: email, // Use email as username initially
+            is_admin: false,
+            is_premium_user: false,
+            is_creator: false,
+          });
 
-  if(userProfileError) throw userProfileError;
-}
+        if (userProfileError) {
+          console.error("Error creating user profile:", userProfileError);
+          // Don't throw here as the auth user was created successfully
+          // The user can still use the app, just log the error
+        }
+      }
 
- 
-
-
-      
       navigate("/dashboard");
     } catch (error) {
       console.error("Error signing up:", error);
