@@ -549,7 +549,9 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
         .from("flier_templates")
         .select(`
           *,
-          users(full_name)
+          users!flier_templates_user_id_fkey(
+            full_name
+          )
         `)
         .order("created_at", { ascending: false });
 
