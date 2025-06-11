@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { 
-  Image as ImageIcon, 
-  User, 
-  Calendar, 
-  Search, 
-  Filter,
+import {
+  Image as ImageIcon,
+  User,
+  Calendar,
+  Search,
   X,
   Eye,
   Download,
-  Sparkles
 } from "lucide-react";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { TemplateDetailModal } from "../components/TemplateDetailModal";
 import { useEvents } from "../context/EventContext";
 import { useToast } from "../context/ToastContext";
-import { seedTemplates, shouldSeedTemplates, resetSeedingFlag } from "../utils/seedTemplates";
+import { shouldSeedTemplates } from "../utils/seedTemplates";
 import type { FlierTemplate } from "../types";
 
 export const Templates: React.FC = () => {
@@ -23,9 +21,9 @@ export const Templates: React.FC = () => {
   const { showToast } = useToast();
   const [templates, setTemplates] = useState<FlierTemplate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [seeding, setSeeding] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState<FlierTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<FlierTemplate | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showSeedButton, setShowSeedButton] = useState(false);
 
@@ -37,13 +35,13 @@ export const Templates: React.FC = () => {
         // Check if we should show the seed button
         const shouldSeed = await shouldSeedTemplates();
         setShowSeedButton(shouldSeed);
-        
+
         // Fetch templates from Supabase
         const templatesData = await fetchFlierTemplates();
         setTemplates(templatesData);
       } catch (error) {
-        console.error('Error loading templates:', error);
-        showToast('Failed to load templates', 'error');
+        console.error("Error loading templates:", error);
+        showToast("Failed to load templates", "error");
       } finally {
         setLoading(false);
       }
@@ -52,41 +50,12 @@ export const Templates: React.FC = () => {
     loadTemplates();
   }, [fetchFlierTemplates, showToast]);
 
-  // Handle template seeding
-  const handleSeedTemplates = async () => {
-    setSeeding(true);
-    try {
-      await seedTemplates();
-      showToast('Templates seeded successfully!', 'success');
-      setShowSeedButton(false);
-      
-      // Reload templates after seeding
-      const templatesData = await fetchFlierTemplates();
-      setTemplates(templatesData);
-    } catch (error) {
-      console.error('Error seeding templates:', error);
-      showToast('Failed to seed templates. Please try again.', 'error');
-    } finally {
-      setSeeding(false);
-    }
-  };
-
-  // Handle reset seeding flag (for development)
-  const handleResetSeedingFlag = async () => {
-    try {
-      await resetSeedingFlag();
-      setShowSeedButton(true);
-      showToast('Seeding flag reset. You can now seed templates again.', 'info');
-    } catch (error) {
-      console.error('Error resetting seeding flag:', error);
-      showToast('Failed to reset seeding flag', 'error');
-    }
-  };
-
   // Filter templates based on search term
-  const filteredTemplates = templates.filter(template =>
-    template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (template.createdBy && template.createdBy.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredTemplates = templates.filter(
+    (template) =>
+      template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (template.createdBy &&
+        template.createdBy.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleTemplateClick = (template: FlierTemplate) => {
@@ -96,38 +65,42 @@ export const Templates: React.FC = () => {
 
   const handleUseTemplate = (template: FlierTemplate) => {
     // TODO: Implement template usage logic
-    showToast(`Template "${template.title}" selected! This feature will be implemented soon.`, "info");
+    showToast(
+      `Template "${template.title}" selected! This feature will be implemented soon.`,
+      "info"
+    );
   };
 
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     const container = img.parentElement;
-    
+
     // Remove loading animation from container
     if (container) {
-      container.classList.remove('animate-pulse', 'bg-gray-200');
+      container.classList.remove("animate-pulse", "bg-gray-200");
     }
-    
+
     // Make image visible
-    img.classList.remove('opacity-0');
-    img.classList.add('opacity-100');
+    img.classList.remove("opacity-0");
+    img.classList.add("opacity-100");
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     const container = img.parentElement;
-    
+
     // Set fallback image
-    img.src = "https://images.pexels.com/photos/1036936/pexels-photo-1036936.jpeg?auto=compress&cs=tinysrgb&w=800";
-    
+    img.src =
+      "https://images.pexels.com/photos/1036936/pexels-photo-1036936.jpeg?auto=compress&cs=tinysrgb&w=800";
+
     // Remove loading animation from container
     if (container) {
-      container.classList.remove('animate-pulse', 'bg-gray-200');
+      container.classList.remove("animate-pulse", "bg-gray-200");
     }
-    
+
     // Make image visible
-    img.classList.remove('opacity-0');
-    img.classList.add('opacity-100');
+    img.classList.remove("opacity-0");
+    img.classList.add("opacity-100");
   };
 
   const clearSearch = () => {
@@ -144,59 +117,10 @@ export const Templates: React.FC = () => {
       >
         <h1 className="text-4xl font-bold text-primary">Flier Templates</h1>
         <p className="text-secondary max-w-2xl mx-auto">
-          Choose from our collection of professionally designed templates to create stunning event fliers
+          Choose from our collection of professionally designed templates to
+          create stunning event fliers
         </p>
       </motion.div>
-
-      {/* Development Controls */}
-      {(showSeedButton || process.env.NODE_ENV === 'development') && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-yellow-50 border border-yellow-200 rounded-lg p-6"
-        >
-          <h3 className="text-lg font-semibold text-yellow-800 mb-4">
-            Development Tools
-          </h3>
-          <div className="flex flex-wrap gap-3">
-            {showSeedButton && (
-              <button
-                onClick={handleSeedTemplates}
-                disabled={seeding}
-                className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {seeding ? (
-                  <>
-                    <LoadingSpinner className="mr-2" />
-                    Seeding Templates...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Seed Templates
-                  </>
-                )}
-              </button>
-            )}
-            
-            {process.env.NODE_ENV === 'development' && (
-              <button
-                onClick={handleResetSeedingFlag}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                Reset Seeding Flag
-              </button>
-            )}
-          </div>
-          <p className="text-sm text-yellow-700 mt-3">
-            {showSeedButton 
-              ? "Click 'Seed Templates' to add sample templates to your account."
-              : "Templates have been seeded for your account."
-            }
-          </p>
-        </motion.div>
-      )}
 
       {/* Search and Filter Controls */}
       <motion.div
@@ -228,7 +152,8 @@ export const Templates: React.FC = () => {
 
         {searchTerm && (
           <div className="mt-4 text-sm text-gray-600">
-            Found {filteredTemplates.length} template{filteredTemplates.length !== 1 ? 's' : ''} 
+            Found {filteredTemplates.length} template
+            {filteredTemplates.length !== 1 ? "s" : ""}
             {searchTerm && ` matching "${searchTerm}"`}
           </div>
         )}
@@ -249,12 +174,11 @@ export const Templates: React.FC = () => {
             {searchTerm ? "No templates found" : "No templates available"}
           </h3>
           <p className="text-gray-500 mb-6">
-            {searchTerm 
-              ? "Try adjusting your search criteria" 
-              : showSeedButton 
-                ? "Click 'Seed Templates' above to add sample templates"
-                : "Templates will be available soon"
-            }
+            {searchTerm
+              ? "Try adjusting your search criteria"
+              : showSeedButton
+              ? "Click 'Seed Templates' above to add sample templates"
+              : "Templates will be available soon"}
           </p>
           {searchTerm && (
             <button
@@ -292,7 +216,7 @@ export const Templates: React.FC = () => {
                   onError={handleImageError}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
+
                 {/* Hover Actions */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div className="flex space-x-3">
@@ -339,10 +263,12 @@ export const Templates: React.FC = () => {
                   <div className="flex items-center space-x-4">
                     <span className="flex items-center">
                       <ImageIcon className="w-4 h-4 mr-1" />
-                      {template.user_image_placeholders.length} image{template.user_image_placeholders.length !== 1 ? 's' : ''}
+                      {template.user_image_placeholders.length} image
+                      {template.user_image_placeholders.length !== 1 ? "s" : ""}
                     </span>
                     <span className="flex items-center">
-                      📝 {template.user_text_placeholders.length} text{template.user_text_placeholders.length !== 1 ? 's' : ''}
+                      📝 {template.user_text_placeholders.length} text
+                      {template.user_text_placeholders.length !== 1 ? "s" : ""}
                     </span>
                   </div>
                 </div>
