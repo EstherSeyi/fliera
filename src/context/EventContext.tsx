@@ -1,7 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "../lib/supabase";
-import type { Event, EventCategory, EventVisibility, GeneratedDP, PaginatedDPsResult, FlierTemplate } from "../types";
+import type {
+  Event,
+  EventCategory,
+  EventVisibility,
+  GeneratedDP,
+  PaginatedDPsResult,
+  FlierTemplate,
+} from "../types";
 
 interface PaginatedEventsResult {
   events: Event[];
@@ -68,7 +75,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       setError(null);
 
       // Get current date in YYYY-MM-DD format for comparison
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
 
       const { data, error: fetchError } = await supabase
         .from("events")
@@ -98,7 +105,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       const offset = (page - 1) * limit;
 
       // Get current date in YYYY-MM-DD format for comparison
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
 
       // Build the base query for public events only (excluding past events)
       let countQuery = supabase
@@ -121,10 +128,14 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       if (filters.category) {
-        if (filters.category === 'other') {
+        if (filters.category === "other") {
           // For "other" category, include events where category is 'other', null, or empty string
-          countQuery = countQuery.or("category.eq.other,category.is.null,category.eq.");
-          dataQuery = dataQuery.or("category.eq.other,category.is.null,category.eq.");
+          countQuery = countQuery.or(
+            "category.eq.other,category.is.null,category.eq."
+          );
+          dataQuery = dataQuery.or(
+            "category.eq.other,category.is.null,category.eq."
+          );
         } else {
           // For all other categories, use exact match
           countQuery = countQuery.eq("category", filters.category);
@@ -195,10 +206,14 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       if (filters.category) {
-        if (filters.category === 'other') {
+        if (filters.category === "other") {
           // For "other" category, include events where category is 'other', null, or empty string
-          countQuery = countQuery.or("category.eq.other,category.is.null,category.eq.");
-          dataQuery = dataQuery.or("category.eq.other,category.is.null,category.eq.");
+          countQuery = countQuery.or(
+            "category.eq.other,category.is.null,category.eq."
+          );
+          dataQuery = dataQuery.or(
+            "category.eq.other,category.is.null,category.eq."
+          );
         } else {
           // For all other categories, use exact match
           countQuery = countQuery.eq("category", filters.category);
@@ -265,10 +280,12 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       // Get paginated data with event details
       const { data, error: fetchError } = await supabase
         .from("dps")
-        .select(`
+        .select(
+          `
           *,
           event:events(title, date)
-        `)
+        `
+        )
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
@@ -302,12 +319,14 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       if (fetchError) throw fetchError;
 
       if (!dpData) {
-        throw new Error("DP not found or you don't have permission to delete it");
+        throw new Error(
+          "DP not found or you don't have permission to delete it"
+        );
       }
 
       // Extract the file path from the URL
       const url = new URL(dpData.generated_image_url);
-      const pathParts = url.pathname.split('/');
+      const pathParts = url.pathname.split("/");
       const fileName = pathParts[pathParts.length - 1];
       const filePath = `${user.id}/${fileName}`;
 
@@ -352,12 +371,14 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       if (fetchError) throw fetchError;
 
       if (!eventData) {
-        throw new Error("Event not found or you don't have permission to delete it");
+        throw new Error(
+          "Event not found or you don't have permission to delete it"
+        );
       }
 
       // Extract the file path from the flyer URL
       const url = new URL(eventData.flyer_url);
-      const pathParts = url.pathname.split('/');
+      const pathParts = url.pathname.split("/");
       const fileName = pathParts[pathParts.length - 1];
       const filePath = `event-flyers/${fileName}`;
 
@@ -500,8 +521,8 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       // If the generated_image_data is a data URL, upload it first
       let generatedImageUrl = dpData.generated_image_data;
-      
-      if (dpData.generated_image_data.startsWith('data:')) {
+
+      if (dpData.generated_image_data.startsWith("data:")) {
         // Convert base64 data URL to blob and upload generated DP
         const response = await fetch(dpData.generated_image_data);
         const blob = await response.blob();
@@ -547,23 +568,11 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       // Fetch flier templates with user information
       const { data, error } = await supabase
         .from("flier_templates")
-        .select(`
-          *,
-          users!flier_templates_user_id_fkey(
-            full_name
-          )
-        `)
-        .order("created_at", { ascending: false });
+        .select(`*`);
 
       if (error) throw error;
 
-      // Map the data to include createdBy field from the joined user data
-      const templatesWithCreator = data?.map(template => ({
-        ...template,
-        createdBy: template.users?.full_name || undefined
-      })) || [];
-
-      return templatesWithCreator;
+      return data;
     } catch (err) {
       console.error("Error fetching flier templates:", err);
       throw new Error("Failed to load flier templates");
