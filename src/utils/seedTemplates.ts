@@ -54,7 +54,7 @@ const DUMMY_TEMPLATES = [
   },
   {
     id: "tech_summit_2025",
-    user_id: "00000000-0000-0000-0000-000000000001", // Placeholder UUID - replace with actual user UUID
+    user_id: "5acc278d-d82d-4709-a91d-fd2c32f60272", // Placeholder UUID - replace with actual user UUID
     title: "Tech Summit 2025",
     template_image_url: "https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=800",
     user_image_placeholders: [{
@@ -113,7 +113,7 @@ const DUMMY_TEMPLATES = [
   },
   {
     id: "music_fest_2025",
-    user_id: "00000000-0000-0000-0000-000000000001", // Placeholder UUID - replace with actual user UUID
+    user_id: "5acc278d-d82d-4709-a91d-fd2c32f60272", // Placeholder UUID - replace with actual user UUID
     title: "Summer Music Festival",
     template_image_url: "https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=800",
     user_image_placeholders: [{
