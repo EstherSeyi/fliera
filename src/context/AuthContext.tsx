@@ -74,7 +74,6 @@ if (user) {
   await supabase.from("users").insert({
     id: user.id,
     username: user.email,
-    is_creator: true // optional default
   });
 }
 
