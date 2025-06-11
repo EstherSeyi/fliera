@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase';
 const DUMMY_TEMPLATES = [
   {
     id: "witc_2025_01",
-    user_id: "00000000-0000-0000-0000-000000000001", // Placeholder UUID - replace with actual user UUID
     title: "Women In Tech Conference",
     template_image_url: "https://pdpwpmavkqbeypdnxvef.supabase.co/storage/v1/object/public/template-images/pinkish_template.png",
     user_image_placeholders: [{
@@ -54,7 +53,6 @@ const DUMMY_TEMPLATES = [
   },
   {
     id: "tech_summit_2025",
-    user_id: "5acc278d-d82d-4709-a91d-fd2c32f60272", // Placeholder UUID - replace with actual user UUID
     title: "Tech Summit 2025",
     template_image_url: "https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=800",
     user_image_placeholders: [{
@@ -113,7 +111,6 @@ const DUMMY_TEMPLATES = [
   },
   {
     id: "music_fest_2025",
-    user_id: "5acc278d-d82d-4709-a91d-fd2c32f60272", // Placeholder UUID - replace with actual user UUID
     title: "Summer Music Festival",
     template_image_url: "https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=800",
     user_image_placeholders: [{
@@ -159,10 +156,26 @@ export const seedTemplates = async (): Promise<void> => {
   try {
     console.log('🌱 Starting template seeding...');
 
-    // Check if templates already exist to prevent duplicate seeding
+    // Get the currently authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError) {
+      console.error('❌ Authentication error:', authError);
+      throw new Error('Failed to get authenticated user');
+    }
+
+    if (!user) {
+      console.log('ℹ️ No authenticated user found. Skipping template seeding.');
+      return;
+    }
+
+    console.log('👤 Authenticated user found:', user.id);
+
+    // Check if templates already exist for this user to prevent duplicate seeding
     const { data: existingTemplates, error: checkError } = await supabase
       .from('flier_templates')
       .select('id')
+      .eq('user_id', user.id)
       .limit(1);
 
     if (checkError) {
@@ -171,14 +184,20 @@ export const seedTemplates = async (): Promise<void> => {
     }
 
     if (existingTemplates && existingTemplates.length > 0) {
-      console.log('ℹ️ Templates already exist in database. Skipping seeding.');
+      console.log('ℹ️ Templates already exist for this user. Skipping seeding.');
       return;
     }
+
+    // Prepare templates with the authenticated user's ID
+    const templatesWithUserId = DUMMY_TEMPLATES.map(template => ({
+      ...template,
+      user_id: user.id // Set the user_id to the authenticated user's ID
+    }));
 
     // Insert dummy templates
     const { data, error } = await supabase
       .from('flier_templates')
-      .insert(DUMMY_TEMPLATES)
+      .insert(templatesWithUserId)
       .select();
 
     if (error) {
@@ -189,8 +208,8 @@ export const seedTemplates = async (): Promise<void> => {
     console.log('✅ Successfully seeded templates:', data);
     console.log(`🎉 Added ${data?.length || 0} templates to the database`);
 
-    // Store seeding flag in localStorage to prevent re-seeding
-    localStorage.setItem('templates_seeded', 'true');
+    // Store seeding flag in localStorage with user ID to prevent re-seeding for this user
+    localStorage.setItem(`templates_seeded_${user.id}`, 'true');
 
   } catch (error) {
     console.error('💥 Failed to seed templates:', error);
@@ -198,13 +217,28 @@ export const seedTemplates = async (): Promise<void> => {
   }
 };
 
-// Function to check if seeding has already been done
-export const shouldSeedTemplates = (): boolean => {
-  return !localStorage.getItem('templates_seeded');
+// Function to check if seeding has already been done for the current user
+export const shouldSeedTemplates = async (): Promise<boolean> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    
+    return !localStorage.getItem(`templates_seeded_${user.id}`);
+  } catch (error) {
+    console.error('Error checking if should seed templates:', error);
+    return false;
+  }
 };
 
 // Function to reset seeding flag (for development purposes)
-export const resetSeedingFlag = (): void => {
-  localStorage.removeItem('templates_seeded');
-  console.log('🔄 Seeding flag reset. Templates will be seeded on next app load.');
+export const resetSeedingFlag = async (): Promise<void> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      localStorage.removeItem(`templates_seeded_${user.id}`);
+      console.log('🔄 Seeding flag reset. Templates will be seeded on next manual trigger.');
+    }
+  } catch (error) {
+    console.error('Error resetting seeding flag:', error);
+  }
 };

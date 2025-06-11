@@ -8,14 +8,16 @@ import {
   Filter,
   X,
   Eye,
-  Download
+  Download,
+  Sparkles
 } from "lucide-react";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { TemplateDetailModal } from "../components/TemplateDetailModal";
 import { useToast } from "../context/ToastContext";
+import { seedTemplates, shouldSeedTemplates, resetSeedingFlag } from "../utils/seedTemplates";
 import type { FlierTemplate } from "../types";
 
-// Dummy templates data
+// Dummy templates data for display when no database templates exist
 const DUMMY_TEMPLATES: FlierTemplate[] = [
   {
     id: "witc_2025_01",
@@ -180,22 +182,66 @@ export const Templates: React.FC = () => {
   const { showToast } = useToast();
   const [templates, setTemplates] = useState<FlierTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<FlierTemplate | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showSeedButton, setShowSeedButton] = useState(false);
 
-  // Simulate loading templates
+  // Load templates and check if seeding is needed
   useEffect(() => {
     const loadTemplates = async () => {
       setLoading(true);
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setTemplates(DUMMY_TEMPLATES);
-      setLoading(false);
+      try {
+        // Check if we should show the seed button
+        const shouldSeed = await shouldSeedTemplates();
+        setShowSeedButton(shouldSeed);
+        
+        // For now, use dummy templates for display
+        // In a real implementation, you would fetch from the database here
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setTemplates(DUMMY_TEMPLATES);
+      } catch (error) {
+        console.error('Error loading templates:', error);
+        showToast('Failed to load templates', 'error');
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadTemplates();
-  }, []);
+  }, [showToast]);
+
+  // Handle template seeding
+  const handleSeedTemplates = async () => {
+    setSeeding(true);
+    try {
+      await seedTemplates();
+      showToast('Templates seeded successfully!', 'success');
+      setShowSeedButton(false);
+      
+      // Reload templates after seeding
+      // In a real implementation, you would fetch from the database here
+      setTemplates(DUMMY_TEMPLATES);
+    } catch (error) {
+      console.error('Error seeding templates:', error);
+      showToast('Failed to seed templates. Please try again.', 'error');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  // Handle reset seeding flag (for development)
+  const handleResetSeedingFlag = async () => {
+    try {
+      await resetSeedingFlag();
+      setShowSeedButton(true);
+      showToast('Seeding flag reset. You can now seed templates again.', 'info');
+    } catch (error) {
+      console.error('Error resetting seeding flag:', error);
+      showToast('Failed to reset seeding flag', 'error');
+    }
+  };
 
   // Filter templates based on search term
   const filteredTemplates = templates.filter(template =>
@@ -261,6 +307,56 @@ export const Templates: React.FC = () => {
           Choose from our collection of professionally designed templates to create stunning event fliers
         </p>
       </motion.div>
+
+      {/* Development Controls */}
+      {(showSeedButton || process.env.NODE_ENV === 'development') && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-yellow-50 border border-yellow-200 rounded-lg p-6"
+        >
+          <h3 className="text-lg font-semibold text-yellow-800 mb-4">
+            Development Tools
+          </h3>
+          <div className="flex flex-wrap gap-3">
+            {showSeedButton && (
+              <button
+                onClick={handleSeedTemplates}
+                disabled={seeding}
+                className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {seeding ? (
+                  <>
+                    <LoadingSpinner className="mr-2" />
+                    Seeding Templates...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Seed Templates
+                  </>
+                )}
+              </button>
+            )}
+            
+            {process.env.NODE_ENV === 'development' && (
+              <button
+                onClick={handleResetSeedingFlag}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Reset Seeding Flag
+              </button>
+            )}
+          </div>
+          <p className="text-sm text-yellow-700 mt-3">
+            {showSeedButton 
+              ? "Click 'Seed Templates' to add sample templates to your account."
+              : "Templates have been seeded for your account."
+            }
+          </p>
+        </motion.div>
+      )}
 
       {/* Search and Filter Controls */}
       <motion.div
