@@ -78,7 +78,7 @@ if (user) {
 }
 
 
-      if (signUpError) throw signUpError;
+      
       navigate("/dashboard");
     } catch (error) {
       console.error("Error signing up:", error);
