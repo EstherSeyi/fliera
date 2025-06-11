@@ -71,13 +71,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (signUpError) throw signUpError;
 
-      const { data: user } = await supabase.auth.getUser();
+      const { data: user, error:userProfileError } = await supabase.auth.getUser();
 if (user) {
   await supabase.from("users").insert({
     id: user.id,
     username: user.email,
   });
 }
+
+ 
 
 
       
