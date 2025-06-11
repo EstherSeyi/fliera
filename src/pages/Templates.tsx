@@ -13,172 +13,13 @@ import {
 } from "lucide-react";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { TemplateDetailModal } from "../components/TemplateDetailModal";
+import { useEvents } from "../context/EventContext";
 import { useToast } from "../context/ToastContext";
 import { seedTemplates, shouldSeedTemplates, resetSeedingFlag } from "../utils/seedTemplates";
 import type { FlierTemplate } from "../types";
 
-// Dummy templates data for display when no database templates exist
-const DUMMY_TEMPLATES: FlierTemplate[] = [
-  {
-    id: "witc_2025_01",
-    user_id: "dummy-user-1",
-    title: "Women In Tech Conference",
-    createdBy: "Judith",
-    template_image_url: "https://pdpwpmavkqbeypdnxvef.supabase.co/storage/v1/object/public/template-images/pinkish_template.png",
-    user_image_placeholders: [{
-      x: 190,
-      y: 130,
-      width: 220,
-      height: 220,
-      holeShape: "circle"
-    }],
-    user_text_placeholders: [{
-      x: 140,
-      y: 400,
-      width: 100,
-      height: 100,
-      fontSize: 22,
-      color: "#000000",
-      fontFamily: "Poppins",
-      textAlign: "center",
-      labelText: "Your Name",
-      text: "Sample Text",
-      fontStyle: "normal",
-      textTransform: "none",
-      fontWeight: "normal"
-    }],
-    template_placeholders: [
-      {
-        type: "text",
-        x: 140,
-        y: 440,
-        fontSize: 20,
-        color: "#000000",
-        fontFamily: "Poppins",
-        textAlign: "left",
-        text: "I'll be attending WITC 2025",
-        labelText: "Bottom Quote",
-        fontStyle: "normal"
-      },
-      {
-        type: "image",
-        x: 190,
-        y: 130,
-        width: 220,
-        height: 220,
-        labelText: "Logo Image"
-      }
-    ],
-    created_at: "2024-12-01T10:00:00Z"
-  },
-  {
-    id: "tech_summit_2025",
-    user_id: "dummy-user-2",
-    title: "Tech Summit 2025",
-    createdBy: "Alex Chen",
-    template_image_url: "https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=800",
-    user_image_placeholders: [{
-      x: 150,
-      y: 100,
-      width: 200,
-      height: 200,
-      holeShape: "box"
-    }],
-    user_text_placeholders: [
-      {
-        x: 100,
-        y: 350,
-        width: 300,
-        height: 50,
-        fontSize: 24,
-        color: "#FFFFFF",
-        fontFamily: "Arial",
-        textAlign: "center",
-        labelText: "Your Name",
-        text: "John Doe",
-        fontStyle: "bold",
-        textTransform: "uppercase",
-        fontWeight: "bold"
-      },
-      {
-        x: 100,
-        y: 400,
-        width: 300,
-        height: 30,
-        fontSize: 16,
-        color: "#CCCCCC",
-        fontFamily: "Arial",
-        textAlign: "center",
-        labelText: "Your Title",
-        text: "Software Engineer",
-        fontStyle: "normal",
-        textTransform: "none",
-        fontWeight: "normal"
-      }
-    ],
-    template_placeholders: [
-      {
-        type: "text",
-        x: 50,
-        y: 50,
-        fontSize: 32,
-        color: "#FFFFFF",
-        fontFamily: "Arial",
-        textAlign: "left",
-        text: "TECH SUMMIT 2025",
-        labelText: "Event Title",
-        fontStyle: "bold"
-      }
-    ],
-    created_at: "2024-11-15T14:30:00Z"
-  },
-  {
-    id: "music_fest_2025",
-    user_id: "dummy-user-3",
-    title: "Summer Music Festival",
-    createdBy: "Maria Rodriguez",
-    template_image_url: "https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=800",
-    user_image_placeholders: [{
-      x: 200,
-      y: 150,
-      width: 180,
-      height: 180,
-      holeShape: "circle"
-    }],
-    user_text_placeholders: [{
-      x: 120,
-      y: 380,
-      width: 260,
-      height: 40,
-      fontSize: 20,
-      color: "#FF6B6B",
-      fontFamily: "Open Sans",
-      textAlign: "center",
-      labelText: "Your Name",
-      text: "Music Lover",
-      fontStyle: "normal",
-      textTransform: "none",
-      fontWeight: "600"
-    }],
-    template_placeholders: [
-      {
-        type: "text",
-        x: 50,
-        y: 450,
-        fontSize: 18,
-        color: "#FFFFFF",
-        fontFamily: "Open Sans",
-        textAlign: "center",
-        text: "🎵 Ready to rock the festival! 🎵",
-        labelText: "Festival Message",
-        fontStyle: "normal"
-      }
-    ],
-    created_at: "2024-10-20T09:15:00Z"
-  }
-];
-
 export const Templates: React.FC = () => {
+  const { fetchFlierTemplates } = useEvents();
   const { showToast } = useToast();
   const [templates, setTemplates] = useState<FlierTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -197,10 +38,9 @@ export const Templates: React.FC = () => {
         const shouldSeed = await shouldSeedTemplates();
         setShowSeedButton(shouldSeed);
         
-        // For now, use dummy templates for display
-        // In a real implementation, you would fetch from the database here
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setTemplates(DUMMY_TEMPLATES);
+        // Fetch templates from Supabase
+        const templatesData = await fetchFlierTemplates();
+        setTemplates(templatesData);
       } catch (error) {
         console.error('Error loading templates:', error);
         showToast('Failed to load templates', 'error');
@@ -210,7 +50,7 @@ export const Templates: React.FC = () => {
     };
 
     loadTemplates();
-  }, [showToast]);
+  }, [fetchFlierTemplates, showToast]);
 
   // Handle template seeding
   const handleSeedTemplates = async () => {
@@ -221,8 +61,8 @@ export const Templates: React.FC = () => {
       setShowSeedButton(false);
       
       // Reload templates after seeding
-      // In a real implementation, you would fetch from the database here
-      setTemplates(DUMMY_TEMPLATES);
+      const templatesData = await fetchFlierTemplates();
+      setTemplates(templatesData);
     } catch (error) {
       console.error('Error seeding templates:', error);
       showToast('Failed to seed templates. Please try again.', 'error');
@@ -411,7 +251,9 @@ export const Templates: React.FC = () => {
           <p className="text-gray-500 mb-6">
             {searchTerm 
               ? "Try adjusting your search criteria" 
-              : "Templates will be available soon"
+              : showSeedButton 
+                ? "Click 'Seed Templates' above to add sample templates"
+                : "Templates will be available soon"
             }
           </p>
           {searchTerm && (

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "../lib/supabase";
-import type { Event, EventCategory, EventVisibility, GeneratedDP, PaginatedDPsResult } from "../types";
+import type { Event, EventCategory, EventVisibility, GeneratedDP, PaginatedDPsResult, FlierTemplate } from "../types";
 
 interface PaginatedEventsResult {
   events: Event[];
@@ -49,6 +49,7 @@ interface EventContextType {
     limit?: number
   ) => Promise<PaginatedDPsResult>;
   deleteGeneratedDP: (dpId: string) => Promise<void>;
+  fetchFlierTemplates: () => Promise<FlierTemplate[]>;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
@@ -541,6 +542,34 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const fetchFlierTemplates = async (): Promise<FlierTemplate[]> => {
+    try {
+      // Fetch flier templates with user information
+      const { data, error } = await supabase
+        .from("flier_templates")
+        .select(`
+          *,
+          users!flier_templates_user_id_fkey(
+            full_name
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Map the data to include createdBy field from the joined user data
+      const templatesWithCreator = data?.map(template => ({
+        ...template,
+        createdBy: template.users?.full_name || undefined
+      })) || [];
+
+      return templatesWithCreator;
+    } catch (err) {
+      console.error("Error fetching flier templates:", err);
+      throw new Error("Failed to load flier templates");
+    }
+  };
+
   return (
     <EventContext.Provider
       value={{
@@ -558,6 +587,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
         saveGeneratedDP,
         fetchGeneratedDPsByUser,
         deleteGeneratedDP,
+        fetchFlierTemplates,
       }}
     >
       {children}
