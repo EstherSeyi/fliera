@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from './ui/select';
 import { LoadingSpinner } from './LoadingSpinner';
+import { supabase } from '../lib/supabase';
+import { useToast } from '../context/ToastContext';
 
 interface AICaptionDialogProps {
   isOpen: boolean;
@@ -49,6 +51,7 @@ export const AICaptionDialog: React.FC<AICaptionDialogProps> = ({
   eventTitle,
   platform,
 }) => {
+  const { showToast } = useToast();
   const [currentStage, setCurrentStage] = useState<DialogStage>('prompt');
   const [formData, setFormData] = useState<CaptionFormData>({
     role: '',
@@ -67,20 +70,6 @@ export const AICaptionDialog: React.FC<AICaptionDialogProps> = ({
     }
   }, [isOpen]);
 
-  const generateDummyCaption = async (data: CaptionFormData): Promise<string> => {
-    // Simulate AI processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const roleText = data.role === 'other' ? 'participant' : data.role;
-    const baseCaption = `Excited to be ${data.role === 'attendee' ? 'attending' : `participating as a ${roleText} in`} ${eventTitle}! 🎉`;
-    
-    const additionalText = data.note 
-      ? ` ${data.note}` 
-      : ` Looking forward to an amazing experience! #${eventTitle.replace(/\s+/g, '')} #EventDP`;
-
-    return baseCaption + additionalText;
-  };
-
   const handleYesCaption = () => {
     setCurrentStage('form');
   };
@@ -96,12 +85,37 @@ export const AICaptionDialog: React.FC<AICaptionDialogProps> = ({
 
     setIsGenerating(true);
     try {
-      const caption = await generateDummyCaption(formData);
-      setGeneratedCaption(caption);
-      setCurrentStage('preview');
+      // Call the Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('generate-caption', {
+        body: {
+          role: formData.role,
+          note: formData.note,
+          eventTitle: eventTitle,
+          platform: platform,
+        },
+      });
+
+      if (error) {
+        console.error('Error invoking Edge Function:', error);
+        throw new Error(error.message || 'Failed to generate caption');
+      }
+
+      if (data && data.caption) {
+        setGeneratedCaption(data.caption);
+        setCurrentStage('preview');
+      } else {
+        throw new Error('No caption received from AI');
+      }
     } catch (error) {
       console.error('Error generating caption:', error);
-      // Handle error - maybe show a toast or fallback
+      showToast('Failed to generate caption. Please try again.', 'error');
+      
+      // Create a fallback caption
+      const roleText = formData.role === 'other' ? 'participant' : formData.role;
+      const fallbackCaption = `Excited to be ${formData.role === 'attendee' ? 'attending' : `participating as a ${roleText} in`} ${eventTitle}! 🎉 ${formData.note || `Looking forward to an amazing experience! #${eventTitle.replace(/\s+/g, '')} #EventDP`}`;
+      
+      setGeneratedCaption(fallbackCaption);
+      setCurrentStage('preview');
     } finally {
       setIsGenerating(false);
     }
