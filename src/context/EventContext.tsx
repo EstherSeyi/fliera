@@ -5,9 +5,7 @@ import type {
   Event,
   EventCategory,
   EventVisibility,
-  GeneratedDP,
   PaginatedDPsResult,
-  FlierTemplate,
 } from "../types";
 
 interface PaginatedEventsResult {
@@ -56,7 +54,6 @@ interface EventContextType {
     limit?: number
   ) => Promise<PaginatedDPsResult>;
   deleteGeneratedDP: (dpId: string) => Promise<void>;
-  fetchFlierTemplates: () => Promise<FlierTemplate[]>;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
@@ -563,22 +560,6 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const fetchFlierTemplates = async (): Promise<FlierTemplate[]> => {
-    try {
-      // Fetch flier templates with user information
-      const { data, error } = await supabase
-        .from("flier_templates")
-        .select(`*`);
-
-      if (error) throw error;
-
-      return data;
-    } catch (err) {
-      console.error("Error fetching flier templates:", err);
-      throw new Error("Failed to load flier templates");
-    }
-  };
-
   return (
     <EventContext.Provider
       value={{
@@ -596,7 +577,6 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
         saveGeneratedDP,
         fetchGeneratedDPsByUser,
         deleteGeneratedDP,
-        fetchFlierTemplates,
       }}
     >
       {children}

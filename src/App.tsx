@@ -46,19 +46,6 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: "templates",
-        async lazy() {
-          const { Templates } = await import("./pages/Templates");
-          return {
-            Component: () => (
-              <ProtectedRoute>
-                <Templates />
-              </ProtectedRoute>
-            ),
-          };
-        },
-      },
-      {
         path: "admin/create",
         async lazy() {
           const { CreateEvent } = await import("./pages/admin/CreateEvent");

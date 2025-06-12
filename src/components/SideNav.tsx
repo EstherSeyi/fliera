@@ -1,41 +1,36 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  Image as ImageIcon, 
-  PlusCircle, 
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  LayoutDashboard,
+  Calendar,
+  Image as ImageIcon,
+  PlusCircle,
   List,
   ChevronLeft,
   ChevronRight,
-  FileImage
-} from 'lucide-react';
+} from "lucide-react";
 
 const sideNavItems = [
   {
-    path: '/dashboard',
-    label: 'Dashboard',
+    path: "/dashboard",
+    label: "Dashboard",
     icon: LayoutDashboard,
   },
   {
-    path: '/my-events',
-    label: 'My Events',
+    path: "/my-events",
+    label: "My Events",
     icon: List,
   },
   {
-    path: '/my-dps',
-    label: 'My DPs',
+    path: "/my-dps",
+    label: "My DPs",
     icon: ImageIcon,
   },
+
   {
-    path: '/templates',
-    label: 'Templates',
-    icon: FileImage,
-  },
-  {
-    path: '/admin/create',
-    label: 'Create Event',
+    path: "/admin/create",
+    label: "Create Event",
     icon: PlusCircle,
   },
 ];
@@ -45,47 +40,56 @@ interface SideNavProps {
   setIsCollapsed: (collapsed: boolean) => void;
 }
 
-export const SideNav: React.FC<SideNavProps> = ({ isCollapsed, setIsCollapsed }) => {
+export const SideNav: React.FC<SideNavProps> = ({
+  isCollapsed,
+  setIsCollapsed,
+}) => {
   const location = useLocation();
 
   const isActive = (path: string) => {
-    if (path === '/admin/create') {
+    if (path === "/admin/create") {
       // Special handling for create/edit routes
-      return location.pathname === '/admin/create' || location.pathname.startsWith('/admin/edit/');
+      return (
+        location.pathname === "/admin/create" ||
+        location.pathname.startsWith("/admin/edit/")
+      );
     }
     return location.pathname === path;
   };
 
   const NavItem: React.FC<{
-    item: typeof sideNavItems[0];
+    item: (typeof sideNavItems)[0];
     isCollapsed: boolean;
   }> = ({ item, isCollapsed }) => {
     const active = isActive(item.path);
-    
+
     return (
       <Link
         to={item.path}
         className={`
           flex items-center px-4 py-3 rounded-lg transition-all duration-200 group
-          ${active 
-            ? 'bg-thistle text-primary shadow-sm' 
-            : 'text-gray-600 hover:bg-gray-100 hover:text-primary'
+          ${
+            active
+              ? "bg-thistle text-primary shadow-sm"
+              : "text-gray-600 hover:bg-gray-100 hover:text-primary"
           }
-          ${isCollapsed ? 'justify-center' : 'justify-start'}
+          ${isCollapsed ? "justify-center" : "justify-start"}
         `}
       >
-        <item.icon 
+        <item.icon
           className={`
             w-5 h-5 flex-shrink-0
-            ${active ? 'text-primary' : 'text-gray-500 group-hover:text-primary'}
-            ${isCollapsed ? '' : 'mr-3'}
-          `} 
+            ${
+              active ? "text-primary" : "text-gray-500 group-hover:text-primary"
+            }
+            ${isCollapsed ? "" : "mr-3"}
+          `}
         />
         <AnimatePresence>
           {!isCollapsed && (
             <motion.span
               initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: 'auto' }}
+              animate={{ opacity: 1, width: "auto" }}
               exit={{ opacity: 0, width: 0 }}
               transition={{ duration: 0.2 }}
               className="font-medium whitespace-nowrap overflow-hidden"
@@ -102,7 +106,7 @@ export const SideNav: React.FC<SideNavProps> = ({ isCollapsed, setIsCollapsed })
     <motion.div
       initial={{ width: 256 }}
       animate={{ width: isCollapsed ? 80 : 256 }}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       className="fixed left-0 top-16 bottom-0 z-40 bg-white border-r border-gray-200 shadow-sm flex flex-col"
     >
       {/* Header */}
@@ -122,11 +126,11 @@ export const SideNav: React.FC<SideNavProps> = ({ isCollapsed, setIsCollapsed })
               </motion.div>
             )}
           </AnimatePresence>
-          
+
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
               <ChevronRight className="w-4 h-4 text-gray-500" />
