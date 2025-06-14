@@ -3,7 +3,7 @@ export interface ImagePlaceholderZone {
   y: number;
   width: number;
   height: number;
-  holeShape: 'box' | 'circle' | 'triangle';
+  holeShape: "box" | "circle" | "triangle";
 }
 
 export interface TextPlaceholderZone {
@@ -17,21 +17,20 @@ export interface TextPlaceholderZone {
   textAlign: CanvasTextAlign;
   fontFamily: string;
   fontStyle: string;
-  textTransform: string;
-  fontWeight: string | number;
+  textTransform?: string;
   labelText?: string;
 }
 
-export type EventVisibility = 'private' | 'public' | 'archived';
+export type EventVisibility = "private" | "public" | "archived";
 
-export type EventCategory = 
-  | 'business'
-  | 'technology'
-  | 'music'
-  | 'social'
-  | 'sports'
-  | 'activism'
-  | 'other';
+export type EventCategory =
+  | "business"
+  | "technology"
+  | "music"
+  | "social"
+  | "sports"
+  | "activism"
+  | "other";
 
 export interface Event {
   id: string;
@@ -81,7 +80,7 @@ export interface PaginatedDPsResult {
 // New interfaces for Flier Templates
 export interface TemplatePlaceholder {
   id: string;
-  type: 'text' | 'image';
+  type: "text" | "image";
   x: number;
   y: number;
   width: number;
@@ -94,10 +93,10 @@ export interface TemplatePlaceholder {
   fontFamily?: string;
   textAlign?: CanvasTextAlign;
   fontStyle?: string;
-  fontWeight?: string | number;
+  // fontWeight?: string | number;
   textTransform?: string;
   // Image-specific properties
-  holeShape?: 'box' | 'circle' | 'triangle';
+  holeShape?: "box" | "circle" | "triangle";
 }
 
 export interface FlierTemplate {

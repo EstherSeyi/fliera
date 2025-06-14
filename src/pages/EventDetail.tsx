@@ -10,7 +10,7 @@ import { LoadingSpinner } from "../components/LoadingSpinner";
 import { EventDetailsModal } from "../components/EventDetailsModal";
 import { ImageCropperModal } from "../components/ImageCropperModal";
 import { SocialShareButtons } from "../components/SocialShareButtons";
-import { getPlainTextSnippet } from "../lib/utils";
+import { getPlainTextSnippet, transformText } from "../lib/utils";
 import type { Event } from "../types";
 
 export const EventDetail: React.FC = () => {
@@ -55,7 +55,7 @@ export const EventDetail: React.FC = () => {
           throw new Error("Event not found");
         }
         setEvent(eventData);
-        
+
         // Initialize userTextInputs based on text placeholders
         const initialTextInputs = eventData.text_placeholders.map(() => "");
         setUserTextInputs(initialTextInputs);
@@ -88,7 +88,10 @@ export const EventDetail: React.FC = () => {
 
   // Generate DP when user photo or text inputs change
   useEffect(() => {
-    if ((userPhotoPreview || userTextInputs.some(input => input.trim())) && event) {
+    if (
+      (userPhotoPreview || userTextInputs.some((input) => input.trim())) &&
+      event
+    ) {
       generateDP();
     }
   }, [userPhotoPreview, userTextInputs, event, flyerImage, userImage]);
@@ -101,19 +104,19 @@ export const EventDetail: React.FC = () => {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.src = event.flyer_url;
-      
+
       await new Promise((resolve, reject) => {
         img.onload = resolve;
         img.onerror = reject;
       });
 
       setFlyerImage(img);
-      
+
       // Calculate scale and stage size based on container width
       const containerWidth = containerRef.current.offsetWidth;
       const scale = Math.min(containerWidth / img.width, 600 / img.height);
       setImageScale(scale);
-      
+
       setStageSize({
         width: img.width * scale,
         height: img.height * scale,
@@ -133,7 +136,7 @@ export const EventDetail: React.FC = () => {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.src = userPhotoPreview;
-      
+
       await new Promise((resolve, reject) => {
         img.onload = resolve;
         img.onerror = reject;
@@ -155,11 +158,11 @@ export const EventDetail: React.FC = () => {
         if (stageRef.current) {
           // Generate the DP URL immediately when preview is ready
           const dataURL = stageRef.current.toDataURL({
-            mimeType: 'image/png',
+            mimeType: "image/png",
             quality: 1,
             pixelRatio: 2,
           });
-          
+
           // Upload to Supabase and get public URL for sharing
           try {
             const publicUrl = await uploadGeneratedDPImage(dataURL);
@@ -169,7 +172,7 @@ export const EventDetail: React.FC = () => {
             // Fallback to data URL if upload fails
             setGeneratedDpUrl(dataURL);
           }
-          
+
           setHasGeneratedDP(true);
         }
         setIsGenerating(false);
@@ -240,12 +243,12 @@ export const EventDetail: React.FC = () => {
 
     try {
       setIsSaving(true);
-      
+
       // Fetch the image as blob for forced download
       const response = await fetch(generatedDpUrl);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      
+
       // Download the DP using blob URL
       const link = document.createElement("a");
       link.download = `${event?.title}-dp.png`;
@@ -253,12 +256,17 @@ export const EventDetail: React.FC = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up blob URL
       URL.revokeObjectURL(url);
 
       // Save to database if user is logged in
-      if (user && userPhoto && userTextInputs.some(input => input.trim()) && event) {
+      if (
+        user &&
+        userPhoto &&
+        userTextInputs.some((input) => input.trim()) &&
+        event
+      ) {
         await saveGeneratedDP({
           event_id: event.id,
           user_text_inputs: userTextInputs,
@@ -271,7 +279,7 @@ export const EventDetail: React.FC = () => {
         // For non-logged in users, just show download success
         showToast("Your DP has been downloaded successfully!", "success");
       }
-      
+
       // Reset the page state after successful download
       setTimeout(() => {
         resetPageState();
@@ -317,21 +325,20 @@ export const EventDetail: React.FC = () => {
       cropY = (userImage.height - cropHeight) / 2;
     }
 
-    
     const radius = Math.min(scaledWidth, scaledHeight) / 2;
 
     const groupX = holeShape === "circle" ? scaledX - radius : scaledX;
     const groupY = holeShape === "circle" ? scaledY - radius : scaledY;
 
     return (
-      <Group 
-        x={groupX} 
-        y={groupY} 
+      <Group
+        x={groupX}
+        y={groupY}
         clipFunc={(ctx) => {
           ctx.beginPath();
           switch (holeShape) {
             case "circle": {
-              const centerX = scaledWidth / 2;  // Fixed: Center at middle of width
+              const centerX = scaledWidth / 2; // Fixed: Center at middle of width
               const centerY = scaledHeight / 2; // Fixed: Center at middle of height
               ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
               break;
@@ -380,7 +387,7 @@ export const EventDetail: React.FC = () => {
         textAlign,
         fontFamily,
         fontStyle,
-        fontWeight,
+        // fontWeight,
         textTransform,
       } = placeholder;
 
@@ -389,17 +396,7 @@ export const EventDetail: React.FC = () => {
       if (!userInput.trim()) return null;
 
       // Transform the text according to textTransform
-      let displayText = userInput;
-      if (textTransform === "uppercase") {
-        displayText = displayText.toUpperCase();
-      } else if (textTransform === "lowercase") {
-        displayText = displayText.toLowerCase();
-      } else if (textTransform === "capitalize") {
-        displayText = displayText
-          .split(" ")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ");
-      }
+      const displayText = transformText(userInput, textTransform ?? "");
 
       return (
         <Text
@@ -414,7 +411,6 @@ export const EventDetail: React.FC = () => {
           align={textAlign}
           fontFamily={fontFamily}
           fontStyle={fontStyle}
-          fontWeight={fontWeight}
           wrap="word"
           ellipsis={true}
         />
@@ -439,8 +435,8 @@ export const EventDetail: React.FC = () => {
   }
 
   // Check if all required inputs are filled
-  const allTextInputsFilled = event.text_placeholders.every((_, index) => 
-    userTextInputs[index] && userTextInputs[index].trim() !== ""
+  const allTextInputsFilled = event.text_placeholders.every(
+    (_, index) => userTextInputs[index] && userTextInputs[index].trim() !== ""
   );
   const hasRequiredInputs = userPhotoPreview && allTextInputsFilled;
 
@@ -487,13 +483,15 @@ export const EventDetail: React.FC = () => {
             <label className="block text-primary font-medium">
               Upload Your Photo *
             </label>
-            
+
             {!userPhoto ? (
               <div className="border-2 border-dashed border-primary/20 rounded-lg p-8 text-center hover:border-primary/40 transition-colors">
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handlePhotoUpload(e.target.files?.[0] || null)}
+                  onChange={(e) =>
+                    handlePhotoUpload(e.target.files?.[0] || null)
+                  }
                   className="hidden"
                   id="photo-upload"
                 />
@@ -527,12 +525,14 @@ export const EventDetail: React.FC = () => {
                     </button>
                   </div>
                 )}
-                
+
                 <div className="bg-gray-50 rounded-lg p-3">
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center space-x-2">
                       <File className="w-4 h-4 text-gray-500" />
-                      <span className="text-primary font-medium">{userPhoto.name}</span>
+                      <span className="text-primary font-medium">
+                        {userPhoto.name}
+                      </span>
                     </div>
                     <button
                       onClick={clearPhoto}
@@ -552,7 +552,10 @@ export const EventDetail: React.FC = () => {
           {/* Dynamic Text Input Fields */}
           {event.text_placeholders.map((placeholder, index) => (
             <div key={index} className="space-y-2">
-              <label htmlFor={`text-input-${index}`} className="block text-primary font-medium">
+              <label
+                htmlFor={`text-input-${index}`}
+                className="block text-primary font-medium"
+              >
                 {placeholder.labelText || `Text ${index + 1}`} *
               </label>
               <input
@@ -561,7 +564,9 @@ export const EventDetail: React.FC = () => {
                 value={userTextInputs[index] || ""}
                 onChange={(e) => handleTextInputChange(index, e.target.value)}
                 className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
-                placeholder={`Enter ${placeholder.labelText || `text ${index + 1}`}`}
+                placeholder={`Enter ${
+                  placeholder.labelText || `text ${index + 1}`
+                }`}
                 required
               />
             </div>
@@ -589,7 +594,7 @@ export const EventDetail: React.FC = () => {
                   </div>
                 </div>
               )}
-              
+
               {/* Show Konva stage when flyer image is loaded */}
               {flyerImage && stageSize.width > 0 && !flyerImageLoading && (
                 <Stage
@@ -606,10 +611,10 @@ export const EventDetail: React.FC = () => {
                       width={stageSize.width}
                       height={stageSize.height}
                     />
-                    
+
                     {/* User Image Placeholder */}
                     {renderImagePlaceholder()}
-                    
+
                     {/* Text Placeholders */}
                     {renderTextPlaceholders()}
                   </Layer>
@@ -640,13 +645,14 @@ export const EventDetail: React.FC = () => {
               </>
             )}
           </button>
-          
+
           {!hasRequiredInputs && (
             <p className="text-xs text-red-500 text-center">
-              Please upload a photo and fill in all text fields to download your DP
+              Please upload a photo and fill in all text fields to download your
+              DP
             </p>
           )}
-          
+
           {user && hasGeneratedDP && (
             <p className="text-xs text-gray-500 text-center">
               Your DP will be saved to your account when downloaded

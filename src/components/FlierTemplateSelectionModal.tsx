@@ -1,17 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search, Upload, Eye, Check, ArrowLeft, ArrowRight } from 'lucide-react';
-import { Stage, Layer, Image as KonvaImage, Text } from 'react-konva';
-import { supabase } from '../lib/supabase';
-import { LoadingSpinner } from './LoadingSpinner';
-import { FileUploadInput } from './FileUploadInput';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from './ui/dialog';
-import type { FlierTemplate, TemplatePlaceholder, TemplateInputValues, ImagePlaceholderZone, TextPlaceholderZone } from '../types';
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Eye, Check, ArrowLeft } from "lucide-react";
+import { Stage, Layer, Image as KonvaImage, Text } from "react-konva";
+import { supabase } from "../lib/supabase";
+import { LoadingSpinner } from "./LoadingSpinner";
+import { FileUploadInput } from "./FileUploadInput";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import type {
+  FlierTemplate,
+  TemplatePlaceholder,
+  TemplateInputValues,
+  ImagePlaceholderZone,
+  TextPlaceholderZone,
+} from "../types";
+import { transformText } from "../lib/utils";
 
 interface FlierTemplateSelectionModalProps {
   isOpen: boolean;
@@ -23,28 +25,33 @@ interface FlierTemplateSelectionModalProps {
   ) => void;
 }
 
-type ModalStep = 'selection' | 'input' | 'preview';
+type ModalStep = "selection" | "input" | "preview";
 
-export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalProps> = ({
-  isOpen,
-  onClose,
-  onTemplateSelected,
-}) => {
+export const FlierTemplateSelectionModal: React.FC<
+  FlierTemplateSelectionModalProps
+> = ({ isOpen, onClose, onTemplateSelected }) => {
   const [templates, setTemplates] = useState<FlierTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentStep, setCurrentStep] = useState<ModalStep>('selection');
-  const [selectedTemplate, setSelectedTemplate] = useState<FlierTemplate | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentStep, setCurrentStep] = useState<ModalStep>("selection");
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<FlierTemplate | null>(null);
   const [inputValues, setInputValues] = useState<TemplateInputValues>({});
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(
+    null
+  );
 
   // Konva stage states
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [imageScale, setImageScale] = useState(1);
-  const [templateImage, setTemplateImage] = useState<HTMLImageElement | null>(null);
-  const [userImages, setUserImages] = useState<{ [key: string]: HTMLImageElement }>({});
+  const [templateImage, setTemplateImage] = useState<HTMLImageElement | null>(
+    null
+  );
+  const [userImages, setUserImages] = useState<{
+    [key: string]: HTMLImageElement;
+  }>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
 
@@ -53,7 +60,7 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
       fetchTemplates();
     } else {
       // Reset state when modal closes
-      setCurrentStep('selection');
+      setCurrentStep("selection");
       setSelectedTemplate(null);
       setInputValues({});
       setGeneratedImageUrl(null);
@@ -81,16 +88,16 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
       setError(null);
 
       const { data, error: fetchError } = await supabase
-        .from('flier_templates')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("flier_templates")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (fetchError) throw fetchError;
 
       setTemplates(data || []);
     } catch (err) {
-      console.error('Error fetching templates:', err);
-      setError('Failed to load templates');
+      console.error("Error fetching templates:", err);
+      setError("Failed to load templates");
     } finally {
       setLoading(false);
     }
@@ -101,28 +108,28 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
 
     try {
       const img = new Image();
-      img.crossOrigin = 'anonymous';
+      img.crossOrigin = "anonymous";
       img.src = selectedTemplate.template_image_url;
-      
+
       await new Promise((resolve, reject) => {
         img.onload = resolve;
         img.onerror = reject;
       });
 
       setTemplateImage(img);
-      
+
       // Calculate scale and stage size
       const containerWidth = containerRef.current.offsetWidth;
       const scale = Math.min(containerWidth / img.width, 400 / img.height);
       setImageScale(scale);
-      
+
       setStageSize({
         width: img.width * scale,
         height: img.height * scale,
       });
     } catch (err) {
-      console.error('Error loading template image:', err);
-      setError('Failed to load template image');
+      console.error("Error loading template image:", err);
+      setError("Failed to load template image");
     }
   };
 
@@ -130,17 +137,20 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
     if (!selectedTemplate) return;
 
     const newUserImages: { [key: string]: HTMLImageElement } = {};
-    
+
     for (const placeholder of selectedTemplate.template_placeholders) {
-      if (placeholder.type === 'image' && inputValues[placeholder.id] instanceof File) {
+      if (
+        placeholder.type === "image" &&
+        inputValues[placeholder.id] instanceof File
+      ) {
         const file = inputValues[placeholder.id] as File;
         const imageUrl = URL.createObjectURL(file);
-        
+
         try {
           const img = new Image();
-          img.crossOrigin = 'anonymous';
+          img.crossOrigin = "anonymous";
           img.src = imageUrl;
-          
+
           await new Promise((resolve, reject) => {
             img.onload = resolve;
             img.onerror = reject;
@@ -148,32 +158,36 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
 
           newUserImages[placeholder.id] = img;
         } catch (err) {
-          console.error('Error loading user image:', err);
+          console.error("Error loading user image:", err);
         }
       }
     }
-    
+
     setUserImages(newUserImages);
   };
 
-  const filteredTemplates = templates.filter(template =>
-    template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    template.created_by?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTemplates = templates.filter(
+    (template) =>
+      template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      template.created_by?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleTemplateSelect = (template: FlierTemplate) => {
     setSelectedTemplate(template);
     // Initialize input values
     const initialValues: TemplateInputValues = {};
-    template.template_placeholders.forEach(placeholder => {
-      initialValues[placeholder.id] = placeholder.type === 'text' ? '' : null;
+    template.template_placeholders.forEach((placeholder) => {
+      initialValues[placeholder.id] = placeholder.type === "text" ? "" : null;
     });
     setInputValues(initialValues);
-    setCurrentStep('input');
+    setCurrentStep("input");
   };
 
-  const handleInputChange = (placeholderId: string, value: string | File | null) => {
-    setInputValues(prev => ({
+  const handleInputChange = (
+    placeholderId: string,
+    value: string | File | null
+  ) => {
+    setInputValues((prev) => ({
       ...prev,
       [placeholderId]: value,
     }));
@@ -181,13 +195,13 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
 
   const isFormValid = () => {
     if (!selectedTemplate) return false;
-    
-    return selectedTemplate.template_placeholders.every(placeholder => {
+
+    return selectedTemplate.template_placeholders.every((placeholder) => {
       if (!placeholder.required) return true;
-      
+
       const value = inputValues[placeholder.id];
-      if (placeholder.type === 'text') {
-        return typeof value === 'string' && value.trim() !== '';
+      if (placeholder.type === "text") {
+        return typeof value === "string" && value.trim() !== "";
       } else {
         return value instanceof File;
       }
@@ -203,19 +217,19 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
       setTimeout(async () => {
         if (stageRef.current) {
           const dataURL = stageRef.current.toDataURL({
-            mimeType: 'image/png',
+            mimeType: "image/png",
             quality: 1,
             pixelRatio: 2,
           });
-          
+
           setGeneratedImageUrl(dataURL);
-          setCurrentStep('preview');
+          setCurrentStep("preview");
         }
         setIsGenerating(false);
       }, 100);
     } catch (err) {
-      console.error('Error generating preview:', err);
-      setError('Failed to generate preview');
+      console.error("Error generating preview:", err);
+      setError("Failed to generate preview");
       setIsGenerating(false);
     }
   };
@@ -232,12 +246,13 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
   };
 
   const renderTemplatePlaceholder = (placeholder: TemplatePlaceholder) => {
+    console.log(placeholder);
     const scaledX = placeholder.x * imageScale;
     const scaledY = placeholder.y * imageScale;
     const scaledWidth = placeholder.width * imageScale;
     const scaledHeight = placeholder.height * imageScale;
 
-    if (placeholder.type === 'image') {
+    if (placeholder.type === "image") {
       const userImage = userImages[placeholder.id];
       if (!userImage) return null;
 
@@ -279,17 +294,10 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
       if (!textValue) return null;
 
       // Apply text transform
-      let displayText = textValue;
-      if (placeholder.textTransform === 'uppercase') {
-        displayText = displayText.toUpperCase();
-      } else if (placeholder.textTransform === 'lowercase') {
-        displayText = displayText.toLowerCase();
-      } else if (placeholder.textTransform === 'capitalize') {
-        displayText = displayText
-          .split(' ')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-      }
+      const displayText = transformText(
+        textValue,
+        placeholder.textTransform ?? ""
+      );
 
       return (
         <Text
@@ -300,11 +308,11 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
           height={scaledHeight}
           text={displayText}
           fontSize={(placeholder.fontSize || 24) * imageScale}
-          fill={placeholder.color || '#000000'}
-          align={placeholder.textAlign || 'center'}
-          fontFamily={placeholder.fontFamily || 'Open Sans'}
-          fontStyle={placeholder.fontStyle || 'normal'}
-          fontWeight={placeholder.fontWeight || 'normal'}
+          fill={placeholder.color || "#000000"}
+          align={placeholder.textAlign || "center"}
+          fontFamily={placeholder.fontFamily || "Open Sans"}
+          fontStyle={placeholder.fontStyle || "normal"}
+          // fontWeight={placeholder.fontWeight || "normal"}
           wrap="word"
           ellipsis={true}
         />
@@ -396,7 +404,7 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
     >
       <div className="flex items-center space-x-4">
         <button
-          onClick={() => setCurrentStep('selection')}
+          onClick={() => setCurrentStep("selection")}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -417,14 +425,18 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
             <div key={placeholder.id} className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
                 {placeholder?.labelText}
-                {placeholder.required && <span className="text-red-500 ml-1">*</span>}
+                {placeholder.required && (
+                  <span className="text-red-500 ml-1">*</span>
+                )}
               </label>
-              
-              {placeholder.type === 'text' ? (
+
+              {placeholder.type === "text" ? (
                 <input
                   type="text"
-                  value={(inputValues[placeholder.id] as string) || ''}
-                  onChange={(e) => handleInputChange(placeholder.id, e.target.value)}
+                  value={(inputValues[placeholder.id] as string) || ""}
+                  onChange={(e) =>
+                    handleInputChange(placeholder.id, e.target.value)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary"
                   placeholder={`Enter ${placeholder?.labelText?.toLowerCase()}`}
                   required={placeholder.required}
@@ -443,7 +455,10 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
 
         <div className="space-y-4">
           <h4 className="font-medium text-primary">Live Preview</h4>
-          <div ref={containerRef} className="border rounded-lg overflow-hidden bg-gray-50">
+          <div
+            ref={containerRef}
+            className="border rounded-lg overflow-hidden bg-gray-50"
+          >
             {templateImage && stageSize.width > 0 && (
               <Stage
                 ref={stageRef}
@@ -458,7 +473,9 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
                     width={stageSize.width}
                     height={stageSize.height}
                   />
-                  {selectedTemplate?.template_placeholders.map(renderTemplatePlaceholder)}
+                  {selectedTemplate?.template_placeholders.map(
+                    renderTemplatePlaceholder
+                  )}
                 </Layer>
               </Stage>
             )}
@@ -497,7 +514,7 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
     >
       <div className="flex items-center space-x-4">
         <button
-          onClick={() => setCurrentStep('input')}
+          onClick={() => setCurrentStep("input")}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -526,7 +543,7 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
 
       <div className="flex justify-between">
         <button
-          onClick={() => setCurrentStep('input')}
+          onClick={() => setCurrentStep("input")}
           className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
@@ -551,9 +568,9 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
         </DialogHeader>
 
         <AnimatePresence mode="wait">
-          {currentStep === 'selection' && renderSelectionStep()}
-          {currentStep === 'input' && renderInputStep()}
-          {currentStep === 'preview' && renderPreviewStep()}
+          {currentStep === "selection" && renderSelectionStep()}
+          {currentStep === "input" && renderInputStep()}
+          {currentStep === "preview" && renderPreviewStep()}
         </AnimatePresence>
       </DialogContent>
     </Dialog>

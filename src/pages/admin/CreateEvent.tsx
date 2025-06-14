@@ -65,7 +65,7 @@ export const CreateEvent: React.FC = () => {
       if (data.use_template) {
         // If using template, the flyer_file is already the generated image
         // We need to upload it to the event-flyers bucket
-        const fileExt = 'png'; // Template generated images are PNG
+        const fileExt = "png"; // Template generated images are PNG
         const fileName = `template-${Date.now()}.${fileExt}`;
         const filePath = `event-flyers/${fileName}`;
 

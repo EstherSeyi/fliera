@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import { TwitterColorPickerInput } from "../../../components/TwitterColorPickerInput";
+import { transformText } from "../../../lib/utils";
 
 const TEXT_STYLE_OPTIONS = [
   {
@@ -59,20 +60,6 @@ const TEXT_STYLE_OPTIONS = [
       { value: "uppercase", label: "Uppercase" },
       { value: "lowercase", label: "Lowercase" },
       { value: "capitalize", label: "Capitalize" },
-    ],
-  },
-  {
-    key: "fontWeight",
-    label: "Font Weight",
-    options: [
-      { value: "normal", label: "Normal" },
-      { value: "bold", label: "Bold" },
-      { value: "100", label: "Thin" },
-      { value: "300", label: "Light" },
-      { value: "500", label: "Medium" },
-      { value: "600", label: "Semi Bold" },
-      { value: "700", label: "Bold" },
-      { value: "900", label: "Black" },
     ],
   },
 ];
@@ -161,8 +148,8 @@ export const TextPlaceholderStep: React.FC = () => {
       fontFamily: "Open Sans",
       fontStyle: "normal",
       textTransform: "none",
-      fontWeight: "normal",
-      labelText:""
+      // fontWeight: "normal",
+      labelText: "",
     };
     setValue("text_placeholders", [...textPlaceholders, newPlaceholder]);
   };
@@ -193,7 +180,7 @@ export const TextPlaceholderStep: React.FC = () => {
     if (!imagePlaceholders || imagePlaceholders.length === 0) return null;
 
     const placeholder = imagePlaceholders[0];
-    
+
     // Scale coordinates for display on the Konva stage
     const scaledX = placeholder.x * imageScale;
     const scaledY = placeholder.y * imageScale;
@@ -210,7 +197,7 @@ export const TextPlaceholderStep: React.FC = () => {
     };
 
     switch (placeholder.holeShape) {
-      case 'circle':
+      case "circle":
         return (
           <Circle
             {...commonProps}
@@ -219,7 +206,7 @@ export const TextPlaceholderStep: React.FC = () => {
             offsetY={0}
           />
         );
-      case 'triangle':
+      case "triangle":
         return (
           <Shape
             {...commonProps}
@@ -235,14 +222,10 @@ export const TextPlaceholderStep: React.FC = () => {
             height={scaledHeight}
           />
         );
-      case 'box':
+      case "box":
       default:
         return (
-          <Rect
-            {...commonProps}
-            width={scaledWidth}
-            height={scaledHeight}
-          />
+          <Rect {...commonProps} width={scaledWidth} height={scaledHeight} />
         );
     }
   };
@@ -263,7 +246,8 @@ export const TextPlaceholderStep: React.FC = () => {
           Position Text Elements
         </h3>
         <p className="text-secondary">
-          Add and style text placeholders for your event DP. The orange area shows where the user's photo will appear.
+          Add and style text placeholders for your event DP. The orange area
+          shows where the user's photo will appear.
         </p>
       </div>
 
@@ -283,28 +267,36 @@ export const TextPlaceholderStep: React.FC = () => {
                 {/* Render image placeholder shape */}
                 {renderImagePlaceholderShape()}
                 {/* Render text placeholders */}
-                {textPlaceholders.map((placeholder, index) => (
-                  <Text
-                    key={index}
-                    ref={(el) => (textRefs.current[index] = el)}
-                    x={placeholder.x * imageScale}
-                    y={placeholder.y * imageScale}
-                    width={placeholder.width * imageScale}
-                    height={placeholder.height * imageScale}
-                    text={placeholder.text}
-                    fontSize={placeholder.fontSize * imageScale}
-                    fill={placeholder.color}
-                    align={placeholder.textAlign}
-                    fontFamily={placeholder.fontFamily}
-                    fontStyle={placeholder.fontStyle}
-                    fontWeight={placeholder.fontWeight}
-                    draggable
-                    onClick={() => setSelectedIndex(index)}
-                    onTap={() => setSelectedIndex(index)}
-                    onDragEnd={() => handleTransformEnd(index)}
-                    onTransformEnd={() => handleTransformEnd(index)}
-                  />
-                ))}
+                {textPlaceholders.map((placeholder, index) => {
+                  // Apply text transform
+                  const displayText = transformText(
+                    placeholder.text,
+                    placeholder.textTransform ?? ""
+                  );
+
+                  return (
+                    <Text
+                      key={index}
+                      ref={(el) => (textRefs.current[index] = el)}
+                      x={placeholder.x * imageScale}
+                      y={placeholder.y * imageScale}
+                      width={placeholder.width * imageScale}
+                      height={placeholder.height * imageScale}
+                      text={displayText}
+                      fontSize={placeholder.fontSize * imageScale}
+                      fill={placeholder.color}
+                      align={placeholder.textAlign}
+                      fontFamily={placeholder.fontFamily}
+                      fontStyle={placeholder.fontStyle}
+                      // fontWeight={placeholder.fontWeight}
+                      draggable
+                      onClick={() => setSelectedIndex(index)}
+                      onTap={() => setSelectedIndex(index)}
+                      onDragEnd={() => handleTransformEnd(index)}
+                      onTransformEnd={() => handleTransformEnd(index)}
+                    />
+                  );
+                })}
                 <Transformer
                   ref={transformerRef}
                   boundBoxFunc={(oldBox, newBox) => {
@@ -357,7 +349,7 @@ export const TextPlaceholderStep: React.FC = () => {
                 />
               </div>
 
-                <div className="space-y-2">
+              <div className="space-y-2">
                 <label className="block text-sm text-secondary">
                   Label Text
                 </label>
@@ -419,7 +411,9 @@ export const TextPlaceholderStep: React.FC = () => {
                     }
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
+                      <SelectValue
+                        placeholder={`Select ${label.toLowerCase()}`}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {options.map(({ value, label: optionLabel }) => (

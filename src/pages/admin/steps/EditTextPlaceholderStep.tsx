@@ -12,7 +12,11 @@ import {
 } from "react-konva";
 import { useFormContext } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
-import type { EditEventFormData, TextPlaceholderZone, Event } from "../../../types";
+import type {
+  EditEventFormData,
+  TextPlaceholderZone,
+  Event,
+} from "../../../types";
 import {
   Select,
   SelectContent,
@@ -21,6 +25,7 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import { TwitterColorPickerInput } from "../../../components/TwitterColorPickerInput";
+import { transformText } from "../../../lib/utils";
 
 const TEXT_STYLE_OPTIONS = [
   {
@@ -61,20 +66,6 @@ const TEXT_STYLE_OPTIONS = [
       { value: "capitalize", label: "Capitalize" },
     ],
   },
-  {
-    key: "fontWeight",
-    label: "Font Weight",
-    options: [
-      { value: "normal", label: "Normal" },
-      { value: "bold", label: "Bold" },
-      { value: "100", label: "Thin" },
-      { value: "300", label: "Light" },
-      { value: "500", label: "Medium" },
-      { value: "600", label: "Semi Bold" },
-      { value: "700", label: "Bold" },
-      { value: "900", label: "Black" },
-    ],
-  },
 ];
 
 interface EditTextPlaceholderStepProps {
@@ -83,11 +74,9 @@ interface EditTextPlaceholderStepProps {
   currentFlyerPreviewUrl: string;
 }
 
-export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = ({
-  event,
-  isEventPast,
-  currentFlyerPreviewUrl,
-}) => {
+export const EditTextPlaceholderStep: React.FC<
+  EditTextPlaceholderStepProps
+> = ({ event, isEventPast, currentFlyerPreviewUrl }) => {
   const { watch, setValue } = useFormContext<EditEventFormData>();
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [imageScale, setImageScale] = useState(1);
@@ -156,7 +145,7 @@ export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = (
 
   const addTextPlaceholder = () => {
     if (isEventPast) return;
-    
+
     // Create new placeholder with coordinates relative to original image dimensions
     const newPlaceholder: TextPlaceholderZone = {
       x: Math.round(50 / imageScale),
@@ -170,15 +159,14 @@ export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = (
       fontFamily: "Open Sans",
       fontStyle: "normal",
       textTransform: "none",
-      fontWeight: "normal",
-      labelText:""
+      labelText: "",
     };
     setValue("text_placeholders", [...textPlaceholders, newPlaceholder]);
   };
 
   const removeTextPlaceholder = (index: number) => {
     if (isEventPast) return;
-    
+
     const newPlaceholders = textPlaceholders.filter((_, i) => i !== index);
     setValue("text_placeholders", newPlaceholders);
     setSelectedIndex(-1);
@@ -190,7 +178,7 @@ export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = (
     value: any
   ) => {
     if (isEventPast) return;
-    
+
     const newPlaceholders = [...textPlaceholders];
 
     // For fontSize, convert from display value to original image scale
@@ -206,7 +194,7 @@ export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = (
     if (!imagePlaceholders || imagePlaceholders.length === 0) return null;
 
     const placeholder = imagePlaceholders[0];
-    
+
     // Scale coordinates for display on the Konva stage
     const scaledX = placeholder.x * imageScale;
     const scaledY = placeholder.y * imageScale;
@@ -223,7 +211,7 @@ export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = (
     };
 
     switch (placeholder.holeShape) {
-      case 'circle':
+      case "circle":
         return (
           <Circle
             {...commonProps}
@@ -232,7 +220,7 @@ export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = (
             offsetY={0}
           />
         );
-      case 'triangle':
+      case "triangle":
         return (
           <Shape
             {...commonProps}
@@ -248,14 +236,10 @@ export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = (
             height={scaledHeight}
           />
         );
-      case 'box':
+      case "box":
       default:
         return (
-          <Rect
-            {...commonProps}
-            width={scaledWidth}
-            height={scaledHeight}
-          />
+          <Rect {...commonProps} width={scaledWidth} height={scaledHeight} />
         );
     }
   };
@@ -276,10 +260,9 @@ export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = (
           Edit Text Elements
         </h3>
         <p className="text-secondary">
-          {isEventPast 
+          {isEventPast
             ? "View text placeholders for your event DP (editing disabled for past events). The orange area shows where the user's photo will appear."
-            : "Add and style text placeholders for your event DP. The orange area shows where the user's photo will appear."
-          }
+            : "Add and style text placeholders for your event DP. The orange area shows where the user's photo will appear."}
         </p>
       </div>
 
@@ -299,28 +282,36 @@ export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = (
                 {/* Render image placeholder shape */}
                 {renderImagePlaceholderShape()}
                 {/* Render text placeholders */}
-                {textPlaceholders.map((placeholder, index) => (
-                  <Text
-                    key={index}
-                    ref={(el) => (textRefs.current[index] = el)}
-                    x={placeholder.x * imageScale}
-                    y={placeholder.y * imageScale}
-                    width={placeholder.width * imageScale}
-                    height={placeholder.height * imageScale}
-                    text={placeholder.text}
-                    fontSize={placeholder.fontSize * imageScale}
-                    fill={placeholder.color}
-                    align={placeholder.textAlign}
-                    fontFamily={placeholder.fontFamily}
-                    fontStyle={placeholder.fontStyle}
-                    fontWeight={placeholder.fontWeight}
-                    draggable={!isEventPast}
-                    onClick={() => !isEventPast && setSelectedIndex(index)}
-                    onTap={() => !isEventPast && setSelectedIndex(index)}
-                    onDragEnd={() => handleTransformEnd(index)}
-                    onTransformEnd={() => handleTransformEnd(index)}
-                  />
-                ))}
+                {textPlaceholders.map((placeholder, index) => {
+                  // Apply text transform
+                  const displayText = transformText(
+                    placeholder.text,
+                    placeholder.textTransform ?? ""
+                  );
+
+                  return (
+                    <Text
+                      key={index}
+                      ref={(el) => (textRefs.current[index] = el)}
+                      x={placeholder.x * imageScale}
+                      y={placeholder.y * imageScale}
+                      width={placeholder.width * imageScale}
+                      height={placeholder.height * imageScale}
+                      text={displayText}
+                      fontSize={placeholder.fontSize * imageScale}
+                      fill={placeholder.color}
+                      align={placeholder.textAlign}
+                      fontFamily={placeholder.fontFamily}
+                      fontStyle={placeholder.fontStyle}
+                      // fontWeight={placeholder.fontWeight}
+                      draggable={!isEventPast}
+                      onClick={() => !isEventPast && setSelectedIndex(index)}
+                      onTap={() => !isEventPast && setSelectedIndex(index)}
+                      onDragEnd={() => handleTransformEnd(index)}
+                      onTransformEnd={() => handleTransformEnd(index)}
+                    />
+                  );
+                })}
                 {!isEventPast && (
                   <Transformer
                     ref={transformerRef}
@@ -446,7 +437,9 @@ export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = (
                     disabled={isEventPast}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
+                      <SelectValue
+                        placeholder={`Select ${label.toLowerCase()}`}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {options.map(({ value, label: optionLabel }) => (
@@ -464,7 +457,8 @@ export const EditTextPlaceholderStep: React.FC<EditTextPlaceholderStepProps> = (
           {isEventPast && (
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-yellow-700 text-sm">
-                Text editing is disabled for past events. You can view the current configuration but cannot make changes.
+                Text editing is disabled for past events. You can view the
+                current configuration but cannot make changes.
               </p>
             </div>
           )}
