@@ -86,7 +86,7 @@ export interface TemplatePlaceholder {
   y: number;
   width: number;
   height: number;
-  label: string;
+  labelText: string;
   required: boolean;
   // Text-specific properties
   fontSize?: number;
