@@ -3,9 +3,11 @@ import { motion } from "framer-motion";
 import { useFormContext, Controller } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { Upload, FileImage } from "lucide-react";
 import type { CreateEventFormData, EventVisibility, EventCategory } from "../../../types";
 import { FileUploadInput } from "../../../components/FileUploadInput";
 import { RichTextEditor } from "../../../components/RichTextEditor";
+import { FlierTemplateSelectionModal } from "../../../components/FlierTemplateSelectionModal";
 import { Eye, EyeOff, Archive } from "lucide-react";
 import {
   Select,
@@ -37,9 +39,39 @@ export const EventDetailsStep: React.FC = () => {
     formState: { errors },
     control,
     watch,
+    setValue,
   } = useFormContext<CreateEventFormData>();
 
   const selectedVisibility = watch("visibility");
+  const useTemplate = watch("use_template");
+  const flyerFile = watch("flyer_file");
+  const [showTemplateModal, setShowTemplateModal] = React.useState(false);
+  const [generatedFlyerUrl, setGeneratedFlyerUrl] = React.useState<string | null>(null);
+
+  const handleTemplateSelected = (
+    generatedImageUrl: string,
+    imagePlaceholders: any[],
+    textPlaceholders: any[]
+  ) => {
+    // Convert the data URL to a File object
+    fetch(generatedImageUrl)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], 'template-flyer.png', { type: 'image/png' });
+        setValue('flyer_file', file);
+        setValue('image_placeholders', imagePlaceholders);
+        setValue('text_placeholders', textPlaceholders);
+        setGeneratedFlyerUrl(generatedImageUrl);
+      });
+  };
+
+  const handleFlyerMethodChange = (method: 'upload' | 'template') => {
+    setValue('use_template', method === 'template');
+    if (method === 'upload') {
+      setValue('flyer_file', null);
+      setGeneratedFlyerUrl(null);
+    }
+  };
 
   return (
     <motion.div
@@ -177,19 +209,97 @@ export const EventDetailsStep: React.FC = () => {
         />
       </div>
 
-      <Controller
-        name="flyer_file"
-        control={control}
-        render={({ field: { onChange, value }, fieldState: { error } }) => (
-          <FileUploadInput
-            label="Flyer Image"
-            value={value}
-            onChange={onChange}
-            error={error?.message}
-            accept="image/*"
-            maxSize={2 * 1024 * 1024}
+      {/* Flyer Selection Method */}
+      <div className="space-y-4">
+        <label className="block text-primary font-medium">
+          Event Flyer
+        </label>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            type="button"
+            onClick={() => handleFlyerMethodChange('upload')}
+            className={`p-4 border-2 rounded-lg transition-all ${
+              !useTemplate
+                ? 'border-primary bg-primary/5 text-primary'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <Upload className="w-8 h-8 mx-auto mb-2" />
+            <div className="text-sm font-medium">Upload Custom Flyer</div>
+            <div className="text-xs text-gray-500 mt-1">
+              Upload your own flyer image
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleFlyerMethodChange('template')}
+            className={`p-4 border-2 rounded-lg transition-all ${
+              useTemplate
+                ? 'border-primary bg-primary/5 text-primary'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <FileImage className="w-8 h-8 mx-auto mb-2" />
+            <div className="text-sm font-medium">Use Template</div>
+            <div className="text-xs text-gray-500 mt-1">
+              Choose from pre-made templates
+            </div>
+          </button>
+        </div>
+
+        {useTemplate ? (
+          <div className="space-y-4">
+            {generatedFlyerUrl ? (
+              <div className="space-y-3">
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <img
+                    src={generatedFlyerUrl}
+                    alt="Generated flyer"
+                    className="max-w-xs h-auto rounded-lg mx-auto"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTemplateModal(true)}
+                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Choose Different Template
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowTemplateModal(true)}
+                className="w-full px-4 py-2 bg-thistle text-primary rounded-lg hover:bg-thistle/90 transition-colors"
+              >
+                Choose Template
+              </button>
+            )}
+          </div>
+        ) : (
+          <Controller
+            name="flyer_file"
+            control={control}
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <FileUploadInput
+                label=""
+                value={value}
+                onChange={onChange}
+                error={error?.message}
+                accept="image/*"
+                maxSize={2 * 1024 * 1024}
+              />
+            )}
           />
         )}
+      </div>
+
+      <FlierTemplateSelectionModal
+        isOpen={showTemplateModal}
+        onClose={() => setShowTemplateModal(false)}
+        onTemplateSelected={handleTemplateSelected}
       />
     </motion.div>
   );

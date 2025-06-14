@@ -50,6 +50,8 @@ export interface Event {
 export interface CreateEventFormData
   extends Omit<Event, "id" | "user_id" | "created_at" | "flyer_url"> {
   flyer_file: File | null;
+  use_template?: boolean;
+  template_id?: string;
 }
 
 export interface EditEventFormData
@@ -78,28 +80,38 @@ export interface PaginatedDPsResult {
 
 // New interfaces for Flier Templates
 export interface TemplatePlaceholder {
+  id: string;
   type: 'text' | 'image';
   x: number;
   y: number;
-  width?: number;
-  height?: number;
+  width: number;
+  height: number;
+  label: string;
+  required: boolean;
+  // Text-specific properties
   fontSize?: number;
   color?: string;
   fontFamily?: string;
   textAlign?: CanvasTextAlign;
-  text?: string;
-  labelText?: string;
   fontStyle?: string;
+  fontWeight?: string | number;
+  textTransform?: string;
+  // Image-specific properties
+  holeShape?: 'box' | 'circle' | 'triangle';
 }
 
 export interface FlierTemplate {
   id: string;
   user_id: string;
   title: string;
-  createdBy?: string;
+  created_by?: string;
   template_image_url: string;
   user_image_placeholders: ImagePlaceholderZone[];
   user_text_placeholders: TextPlaceholderZone[];
   template_placeholders: TemplatePlaceholder[];
   created_at: string;
+}
+
+export interface TemplateInputValues {
+  [placeholderId: string]: string | File | null;
 }
