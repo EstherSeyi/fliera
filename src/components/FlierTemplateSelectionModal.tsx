@@ -416,7 +416,7 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
           {selectedTemplate?.template_placeholders.map((placeholder) => (
             <div key={placeholder.id} className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                {placeholder.label}
+                {placeholder?.labelText}
                 {placeholder.required && <span className="text-red-500 ml-1">*</span>}
               </label>
               
@@ -426,7 +426,7 @@ export const FlierTemplateSelectionModal: React.FC<FlierTemplateSelectionModalPr
                   value={(inputValues[placeholder.id] as string) || ''}
                   onChange={(e) => handleInputChange(placeholder.id, e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary"
-                  placeholder={`Enter ${placeholder.label.toLowerCase()}`}
+                  placeholder={`Enter ${placeholder?.labelText?.toLowerCase()}`}
                   required={placeholder.required}
                 />
               ) : (
