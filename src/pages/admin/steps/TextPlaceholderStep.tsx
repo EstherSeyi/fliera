@@ -288,7 +288,6 @@ export const TextPlaceholderStep: React.FC = () => {
                       align={placeholder.textAlign}
                       fontFamily={placeholder.fontFamily}
                       fontStyle={placeholder.fontStyle}
-                      // fontWeight={placeholder.fontWeight}
                       draggable
                       onClick={() => setSelectedIndex(index)}
                       onTap={() => setSelectedIndex(index)}
