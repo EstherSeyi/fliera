@@ -73,6 +73,17 @@ export const TextPlaceholderStep: React.FC = () => {
   // Google Fonts integration
   const { fonts, loading: fontsLoading, error: fontsError, loadFont } = useGoogleFonts();
 
+  // Load fonts for existing text placeholders when component mounts
+  useEffect(() => {
+    if (textPlaceholders && textPlaceholders.length > 0) {
+      textPlaceholders.forEach((placeholder) => {
+        if (placeholder.fontFamily) {
+          loadFont(placeholder.fontFamily);
+        }
+      });
+    }
+  }, [textPlaceholders, loadFont]);
+
   const tempFlyerUrl = useMemo(
     () => (flyer_file?.name ? URL.createObjectURL(flyer_file) : null),
     [flyer_file]
