@@ -22,7 +22,6 @@ const textPlaceholderSchema = z.object({
   fontFamily: z.string(),
   fontStyle: z.string(),
   textTransform: z.string().optional(),
-  // fontWeight: z.union([z.string(), z.number()]),
   labelText: z.string().optional(),
 });
 
