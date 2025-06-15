@@ -4,7 +4,7 @@ import { ArrowLeft, Eye } from "lucide-react";
 import { Dispatch, RefObject, SetStateAction, useRef, useState } from "react";
 
 import { FileUploadInput } from "../FileUploadInput";
-import { TemplatePlaceholderRender } from "../TemplatePlaceholder";
+import { TemplatePlaceholderRender } from "./TemplatePlaceholderRender";
 import { LoadingSpinner } from "../LoadingSpinner";
 import { ModalStep } from "../FlierTemplateSelectionModal";
 import { FlierTemplate, TemplateInputValues } from "../../types";
