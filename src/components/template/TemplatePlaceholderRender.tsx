@@ -75,14 +75,14 @@ export const TemplatePlaceholderRender = ({
         x={placeholder.x}
         y={placeholder.y}
         width={placeholder.width}
-        height={placeholder.height}
+        {/* height={placeholder.height} */}
         text={displayText}
         fontSize={placeholder.fontSize || 24}
         fill={placeholder.color || "#ff0000"}
         align={placeholder.textAlign || "center"}
         fontFamily={placeholder.fontFamily || "Open Sans"}
         fontStyle={placeholder.fontStyle || "normal"}
-        wrap="char"
+        wrap="word"
         ellipsis={true}
       />
     );
