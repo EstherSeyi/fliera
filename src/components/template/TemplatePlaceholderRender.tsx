@@ -75,7 +75,6 @@ export const TemplatePlaceholderRender = ({
         x={placeholder.x}
         y={placeholder.y}
         width={placeholder.width}
-        {/* height={placeholder.height} */}
         text={displayText}
         fontSize={placeholder.fontSize || 24}
         fill={placeholder.color || "#ff0000"}
