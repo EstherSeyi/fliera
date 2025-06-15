@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 import { Dispatch, SetStateAction, useState } from "react";
 
-import { LoadingSpinner } from "./LoadingSpinner";
+import { LoadingSpinner } from "../LoadingSpinner";
 import { FlierTemplate, TemplateInputValues } from "../../types";
 import { ModalStep } from "../FlierTemplateSelectionModal";
 
