@@ -93,7 +93,6 @@ export interface TemplatePlaceholder {
   fontFamily?: string;
   textAlign?: CanvasTextAlign;
   fontStyle?: string;
-  // fontWeight?: string | number;
   textTransform?: string;
   // Image-specific properties
   holeShape?: "box" | "circle" | "triangle";
