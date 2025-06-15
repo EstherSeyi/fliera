@@ -9,9 +9,9 @@ import type {
   TextPlaceholderZone,
 } from "../types";
 
-import { TemplatePreviewStep } from "./TemplatePreviewStep";
-import { TemplateSelectionStep } from "./TemplateSelectionStep";
-import { TemplateInputStep } from "./TemplateInputStep";
+import { TemplatePreviewStep } from "./template/TemplatePreviewStep";
+import { TemplateSelectionStep } from "./template/TemplateSelectionStep";
+import { TemplateInputStep } from "./template/TemplateInputStep";
 
 interface FlierTemplateSelectionModalProps {
   isOpen: boolean;
