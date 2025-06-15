@@ -5,8 +5,8 @@ import {
   FlierTemplate,
   ImagePlaceholderZone,
   TextPlaceholderZone,
-} from "../types";
-import { ModalStep } from "./FlierTemplateSelectionModal";
+} from "../../types";
+import { ModalStep } from "../FlierTemplateSelectionModal";
 
 interface Props {
   setCurrentStep: Dispatch<SetStateAction<ModalStep>>;
