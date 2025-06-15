@@ -113,3 +113,11 @@ export interface FlierTemplate {
 export interface TemplateInputValues {
   [placeholderId: string]: string | File | null;
 }
+
+// Google Fonts API interface
+export interface GoogleFont {
+  family: string;
+  category: string;
+  variants: string[];
+  files: Record<string, string>; // variant => font file URL
+}

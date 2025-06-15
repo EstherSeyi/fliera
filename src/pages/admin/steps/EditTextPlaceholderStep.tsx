@@ -26,17 +26,9 @@ import {
 } from "../../../components/ui/select";
 import { TwitterColorPickerInput } from "../../../components/TwitterColorPickerInput";
 import { transformText } from "../../../lib/utils";
+import { useGoogleFonts } from "../../../hooks/useGoogleFonts";
 
 const TEXT_STYLE_OPTIONS = [
-  {
-    key: "fontFamily",
-    label: "Font Family",
-    options: [
-      { value: "Open Sans", label: "Open Sans" },
-      { value: "Arial", label: "Arial" },
-      { value: "Times New Roman", label: "Times New Roman" },
-    ],
-  },
   {
     key: "fontStyle",
     label: "Font Style",
@@ -88,6 +80,9 @@ export const EditTextPlaceholderStep: React.FC<
 
   const textPlaceholders = watch("text_placeholders");
   const imagePlaceholders = watch("image_placeholders");
+
+  // Google Fonts integration
+  const { fonts, loading: fontsLoading, error: fontsError, loadFont } = useGoogleFonts();
 
   // Use new flyer file preview URL if available, otherwise use existing event flyer
   const flyerUrl = currentFlyerPreviewUrl || event.flyer_url;
@@ -184,6 +179,11 @@ export const EditTextPlaceholderStep: React.FC<
     // For fontSize, convert from display value to original image scale
     if (field === "fontSize") {
       value = Math.round(value / imageScale);
+    }
+
+    // Load font if fontFamily is being changed
+    if (field === "fontFamily") {
+      loadFont(value);
     }
 
     newPlaceholders[index] = { ...newPlaceholders[index], [field]: value };
@@ -414,6 +414,50 @@ export const EditTextPlaceholderStep: React.FC<
                 }
                 disabled={isEventPast}
               />
+
+              {/* Font Family Selection with Google Fonts */}
+              <div className="space-y-2">
+                <label className="block text-sm text-secondary">
+                  Font Family
+                </label>
+                <Select
+                  value={textPlaceholders[selectedIndex].fontFamily}
+                  onValueChange={(value) => {
+                    updateTextStyle(selectedIndex, "fontFamily", value);
+                  }}
+                  disabled={isEventPast || fontsLoading}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select font family" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {fontsLoading ? (
+                      <SelectItem value="loading" disabled>
+                        Loading fonts...
+                      </SelectItem>
+                    ) : fontsError ? (
+                      <SelectItem value="error" disabled>
+                        Error loading fonts
+                      </SelectItem>
+                    ) : (
+                      fonts.map((font) => (
+                        <SelectItem 
+                          key={font.family} 
+                          value={font.family}
+                          style={{ fontFamily: font.family }}
+                        >
+                          {font.family}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                {fontsError && (
+                  <p className="text-xs text-red-500">
+                    {fontsError}. Using fallback fonts.
+                  </p>
+                )}
+              </div>
 
               {TEXT_STYLE_OPTIONS.map(({ key, label, options }) => (
                 <div key={key} className="space-y-2">
