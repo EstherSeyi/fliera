@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Share2, Facebook, Twitter, Linkedin, MessageSquare } from 'lucide-react';
-import { AICaptionDialog } from './AICaptionDialog';
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { Share2, Linkedin } from "lucide-react";
+import { AICaptionDialog } from "./AICaptionDialog";
+
+import WhatsApp from "../assets/whatsapp-symbol-logo-svgrepo-com.svg?react";
+import XIcon from "../assets/x-social-media-logo.svg?react";
+import Facebook from "../assets/facebook-3-logo-svgrepo-com.svg?react";
 
 interface SocialShareButtonsProps {
   imageUrl: string;
@@ -22,22 +26,23 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
   description,
 }) => {
   const [showCaptionDialog, setShowCaptionDialog] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState<SocialPlatform | null>(null);
+  const [selectedPlatform, setSelectedPlatform] =
+    useState<SocialPlatform | null>(null);
 
   const socialPlatforms: SocialPlatform[] = [
     {
-      name: 'WhatsApp',
-      icon: MessageSquare,
-      color: 'bg-[#25D366] hover:bg-[#1DA851]',
+      name: "WhatsApp",
+      icon: WhatsApp,
+      color: "bg-[#25D366] hover:bg-[#1DA851]",
       getShareUrl: (imageUrl: string, text: string) => {
         const encodedText = encodeURIComponent(text);
         return `https://wa.me/?text=${encodedText}`;
       },
     },
     {
-      name: 'Facebook',
+      name: "Facebook",
       icon: Facebook,
-      color: 'bg-[#1877F2] hover:bg-[#166FE5]',
+      color: "bg-[#3d5a9a]",
       getShareUrl: (imageUrl: string, text: string) => {
         const encodedText = encodeURIComponent(text);
         const encodedUrl = encodeURIComponent(window.location.href);
@@ -45,9 +50,9 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
       },
     },
     {
-      name: 'Twitter',
-      icon: Twitter,
-      color: 'bg-[#000000] hover:bg-[#1a1a1a]',
+      name: "X",
+      icon: XIcon,
+      color: "bg-black",
       getShareUrl: (imageUrl: string, text: string) => {
         const encodedText = encodeURIComponent(text);
         const encodedUrl = encodeURIComponent(window.location.href);
@@ -55,9 +60,9 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
       },
     },
     {
-      name: 'LinkedIn',
+      name: "LinkedIn",
       icon: Linkedin,
-      color: 'bg-[#0A66C2] hover:bg-[#004182]',
+      color: "bg-[#0A66C2] hover:bg-[#004182]",
       getShareUrl: (imageUrl: string, text: string) => {
         const encodedTitle = encodeURIComponent(title);
         const encodedText = encodeURIComponent(text);
@@ -76,7 +81,7 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
     if (!selectedPlatform) return;
 
     const shareUrl = selectedPlatform.getShareUrl(imageUrl, caption);
-    window.open(shareUrl, '_blank', 'width=600,height=400');
+    window.open(shareUrl, "_blank", "width=600,height=400");
   };
 
   const handleSkipCaption = () => {
@@ -85,7 +90,7 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
     // Create default text without AI caption
     const defaultText = `Check out my personalized DP for ${title}! ${description}`;
     const shareUrl = selectedPlatform.getShareUrl(imageUrl, defaultText);
-    window.open(shareUrl, '_blank', 'width=600,height=400');
+    window.open(shareUrl, "_blank", "width=600,height=400");
   };
 
   const handleDialogClose = () => {
@@ -106,7 +111,8 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
           Share Your DP
         </h3>
         <p className="text-secondary text-sm">
-          Spread the word! Share your personalized display picture on social media.
+          Spread the word! Share your personalized display picture on social
+          media.
         </p>
         <div className="flex justify-center gap-4">
           {socialPlatforms.map((platform) => (
@@ -133,7 +139,7 @@ export const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
         onApproveCaption={handleApproveCaption}
         onSkipCaption={handleSkipCaption}
         eventTitle={title}
-        platform={selectedPlatform?.name || ''}
+        platform={selectedPlatform?.name || ""}
       />
     </>
   );
