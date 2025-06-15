@@ -1,6 +1,6 @@
 import { Image as KonvaImage, Text } from "react-konva";
-import { transformText } from "../lib/utils";
-import { TemplateInputValues, TemplatePlaceholder } from "../types";
+import { transformText } from "../../lib/utils";
+import { TemplateInputValues, TemplatePlaceholder } from "../../types";
 
 interface Props {
   placeholder: TemplatePlaceholder;
