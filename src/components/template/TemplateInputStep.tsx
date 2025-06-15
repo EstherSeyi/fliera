@@ -1,13 +1,13 @@
 import { Stage, Layer, Image as KonvaImage } from "react-konva";
 import { motion } from "framer-motion";
 import { ArrowLeft, Eye } from "lucide-react";
-
-import { FileUploadInput } from "./FileUploadInput";
-import { TemplatePlaceholderRender } from "./TemplatePlaceholder";
-import { LoadingSpinner } from "./LoadingSpinner";
 import { Dispatch, RefObject, SetStateAction, useRef, useState } from "react";
-import { ModalStep } from "./FlierTemplateSelectionModal";
-import { FlierTemplate, TemplateInputValues } from "../types";
+
+import { FileUploadInput } from "../FileUploadInput";
+import { TemplatePlaceholderRender } from "../TemplatePlaceholder";
+import { LoadingSpinner } from "../LoadingSpinner";
+import { ModalStep } from "../FlierTemplateSelectionModal";
+import { FlierTemplate, TemplateInputValues } from "../../types";
 
 interface Props {
   setCurrentStep: Dispatch<SetStateAction<ModalStep>>;
