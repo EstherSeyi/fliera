@@ -303,7 +303,6 @@ export const EditTextPlaceholderStep: React.FC<
                       align={placeholder.textAlign}
                       fontFamily={placeholder.fontFamily}
                       fontStyle={placeholder.fontStyle}
-                      // fontWeight={placeholder.fontWeight}
                       draggable={!isEventPast}
                       onClick={() => !isEventPast && setSelectedIndex(index)}
                       onTap={() => !isEventPast && setSelectedIndex(index)}
