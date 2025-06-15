@@ -387,7 +387,6 @@ export const EventDetail: React.FC = () => {
         textAlign,
         fontFamily,
         fontStyle,
-        // fontWeight,
         textTransform,
       } = placeholder;
 
