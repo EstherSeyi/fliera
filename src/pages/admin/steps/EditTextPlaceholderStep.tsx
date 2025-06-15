@@ -84,17 +84,6 @@ export const EditTextPlaceholderStep: React.FC<
   // Google Fonts integration
   const { fonts, loading: fontsLoading, error: fontsError, loadFont } = useGoogleFonts();
 
-  // Load fonts for existing text placeholders when component mounts
-  useEffect(() => {
-    if (textPlaceholders && textPlaceholders.length > 0) {
-      textPlaceholders.forEach((placeholder) => {
-        if (placeholder.fontFamily) {
-          loadFont(placeholder.fontFamily);
-        }
-      });
-    }
-  }, [textPlaceholders, loadFont]);
-
   // Use new flyer file preview URL if available, otherwise use existing event flyer
   const flyerUrl = currentFlyerPreviewUrl || event.flyer_url;
 
