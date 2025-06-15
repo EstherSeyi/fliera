@@ -1,14 +1,9 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Share2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from './ui/dialog';
-import { SocialShareButtons } from './SocialShareButtons';
-import type { GeneratedDP } from '../types';
+import React from "react";
+import { Share2 } from "lucide-react";
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { SocialShareButtons } from "./SocialShareButtons";
+import type { GeneratedDP } from "../types";
 
 interface ShareDPModalProps {
   isOpen: boolean;
@@ -39,13 +34,13 @@ export const ShareDPModal: React.FC<ShareDPModalProps> = ({
             <div className="inline-block rounded-lg overflow-hidden shadow-lg">
               <img
                 src={dp.generated_image_url}
-                alt={`DP for ${dp.event?.title || 'event'}`}
+                alt={`DP for ${dp.event?.title || "event"}`}
                 className="w-48 h-48 object-cover"
               />
             </div>
             <div className="mt-3">
               <h3 className="font-semibold text-primary">
-                {dp.event?.title || 'Event DP'}
+                {dp.event?.title || "Event DP"}
               </h3>
               <p className="text-sm text-secondary">
                 Created on {new Date(dp.created_at).toLocaleDateString()}
@@ -56,8 +51,11 @@ export const ShareDPModal: React.FC<ShareDPModalProps> = ({
           {/* Social Share Buttons */}
           <SocialShareButtons
             imageUrl={dp.generated_image_url}
-            title={dp.event?.title || 'Event DP'}
-            description={dp.user_text_inputs?.join(', ') || 'Check out my personalized event DP!'}
+            title={dp.event?.title || "Event DP"}
+            description={
+              dp.user_text_inputs?.join(", ") ||
+              "Check out my personalized event DP!"
+            }
           />
         </div>
       </DialogContent>
