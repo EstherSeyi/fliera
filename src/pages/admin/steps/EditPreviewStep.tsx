@@ -147,7 +147,6 @@ export const EditPreviewStep: React.FC<EditPreviewStepProps> = ({
                   align={placeholder.textAlign}
                   fontFamily={placeholder.fontFamily}
                   fontStyle={placeholder.fontStyle}
-                  fontWeight={placeholder.fontWeight}
                 />
               ))}
             </Layer>
