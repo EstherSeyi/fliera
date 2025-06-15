@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 import { LoadingSpinner } from "./LoadingSpinner";
-import { FlierTemplate, TemplateInputValues } from "../types";
+import { FlierTemplate, TemplateInputValues } from "../../types";
 import { Dispatch, SetStateAction, useState } from "react";
-import { ModalStep } from "./FlierTemplateSelectionModal";
+import { ModalStep } from "../FlierTemplateSelectionModal";
 
 interface Props {
   loading: boolean;
