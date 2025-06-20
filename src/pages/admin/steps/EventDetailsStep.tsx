@@ -4,9 +4,12 @@ import { useFormContext, Controller } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Upload, FileImage, Sparkles } from "lucide-react";
-import type { CreateEventFormData, EventVisibility, EventCategory } from "../../../types";
+import type {
+  CreateEventFormData,
+  EventVisibility,
+  EventCategory,
+} from "../../../types";
 import { FileUploadInput } from "../../../components/FileUploadInput";
-import { RichTextEditor } from "../../../components/RichTextEditor";
 import { FlierTemplateSelectionModal } from "../../../components/FlierTemplateSelectionModal";
 import { AIDescriptionGeneratorDialog } from "../../../components/AIDescriptionGeneratorDialog";
 import { Eye, EyeOff, Archive } from "lucide-react";
@@ -17,21 +20,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
+import clsx from "clsx";
 
-const VISIBILITY_OPTIONS: { value: EventVisibility; label: string; icon: React.FC }[] = [
-  { value: 'public', label: 'Public', icon: Eye },
-  { value: 'private', label: 'Private', icon: EyeOff },
-  { value: 'archived', label: 'Archived', icon: Archive },
+const VISIBILITY_OPTIONS: {
+  value: EventVisibility;
+  label: string;
+  icon: React.FC;
+}[] = [
+  { value: "public", label: "Public", icon: Eye },
+  { value: "private", label: "Private", icon: EyeOff },
+  { value: "archived", label: "Archived", icon: Archive },
 ];
 
 const CATEGORY_OPTIONS: { value: EventCategory; label: string }[] = [
-  { value: 'business', label: 'Business' },
-  { value: 'technology', label: 'Technology' },
-  { value: 'music', label: 'Music' },
-  { value: 'social', label: 'Social' },
-  { value: 'sports', label: 'Sports' },
-  { value: 'activism', label: 'Activism' },
-  { value: 'other', label: 'Other' },
+  { value: "business", label: "Business" },
+  { value: "technology", label: "Technology" },
+  { value: "music", label: "Music" },
+  { value: "social", label: "Social" },
+  { value: "sports", label: "Sports" },
+  { value: "activism", label: "Activism" },
+  { value: "other", label: "Other" },
 ];
 
 export const EventDetailsStep: React.FC = () => {
@@ -45,14 +53,15 @@ export const EventDetailsStep: React.FC = () => {
 
   const selectedVisibility = watch("visibility");
   const useTemplate = watch("use_template");
-  const flyerFile = watch("flyer_file");
   const currentTitle = watch("title");
   const currentDate = watch("date");
-  const currentDescription = watch("description");
+  const currentDescriptionLength = watch("description")?.length ?? 0;
 
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showAIDialog, setShowAIDialog] = useState(false);
-  const [generatedFlyerUrl, setGeneratedFlyerUrl] = useState<string | null>(null);
+  const [generatedFlyerUrl, setGeneratedFlyerUrl] = useState<string | null>(
+    null
+  );
 
   const handleTemplateSelected = (
     generatedImageUrl: string,
@@ -61,26 +70,28 @@ export const EventDetailsStep: React.FC = () => {
   ) => {
     // Convert the data URL to a File object
     fetch(generatedImageUrl)
-      .then(res => res.blob())
-      .then(blob => {
-        const file = new File([blob], 'template-flyer.png', { type: 'image/png' });
-        setValue('flyer_file', file);
-        setValue('image_placeholders', imagePlaceholders);
-        setValue('text_placeholders', textPlaceholders);
+      .then((res) => res.blob())
+      .then((blob) => {
+        const file = new File([blob], "template-flyer.png", {
+          type: "image/png",
+        });
+        setValue("flyer_file", file);
+        setValue("image_placeholders", imagePlaceholders);
+        setValue("text_placeholders", textPlaceholders);
         setGeneratedFlyerUrl(generatedImageUrl);
       });
   };
 
-  const handleFlyerMethodChange = (method: 'upload' | 'template') => {
-    setValue('use_template', method === 'template');
-    if (method === 'upload') {
-      setValue('flyer_file', null);
+  const handleFlyerMethodChange = (method: "upload" | "template") => {
+    setValue("use_template", method === "template");
+    if (method === "upload") {
+      setValue("flyer_file", null);
       setGeneratedFlyerUrl(null);
     }
   };
 
   const handleAIDescriptionGenerated = (description: string) => {
-    setValue('description', description);
+    setValue("description", description);
   };
 
   return (
@@ -125,14 +136,16 @@ export const EventDetailsStep: React.FC = () => {
               className="w-full"
               placeholderText="Select date and time"
               filterTime={(time) => {
-                const selectedDate = field.value ? new Date(field.value) : new Date();
+                const selectedDate = field.value
+                  ? new Date(field.value)
+                  : new Date();
                 const now = new Date();
-                
+
                 // If the selected date is today, disable past times
                 if (selectedDate.toDateString() === now.toDateString()) {
                   return time.getTime() > now.getTime();
                 }
-                
+
                 // For future dates, all times are allowed
                 return true;
               }}
@@ -204,7 +217,10 @@ export const EventDetailsStep: React.FC = () => {
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label htmlFor="description" className="block text-primary font-medium">
+          <label
+            htmlFor="description"
+            className="block text-primary font-medium"
+          >
             Description
           </label>
           <button
@@ -216,33 +232,44 @@ export const EventDetailsStep: React.FC = () => {
             Generate with AI
           </button>
         </div>
-        <Controller
-          name="description"
-          control={control}
-          render={({ field }) => (
-            <RichTextEditor
-              value={field.value || ""}
-              onChange={field.onChange}
-              placeholder="Briefly describe the purpose, theme, or mood of this event..."
-            />
-          )}
-        />
+
+        <div className="relative">
+          <textarea
+            {...register("description")}
+            id="description"
+            placeholder="Briefly describe the purpose, theme, or mood of this event..."
+            className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
+            rows={8}
+            maxLength={1000}
+          ></textarea>
+          <span
+            className={clsx(
+              "absolute right-2 bottom-2 text-xs text-black bg-white",
+              currentDescriptionLength >= 1000
+                ? "text-red-500"
+                : "text-gray-500"
+            )}
+          >
+            {currentDescriptionLength}/1000
+          </span>
+        </div>
+        {errors.description && (
+          <p className="text-red-500 text-sm">{errors.description.message}</p>
+        )}
       </div>
 
       {/* Flyer Selection Method */}
       <div className="space-y-4">
-        <label className="block text-primary font-medium">
-          Event Flyer
-        </label>
-        
+        <label className="block text-primary font-medium">Event Flyer</label>
+
         <div className="grid grid-cols-2 gap-4">
           <button
             type="button"
-            onClick={() => handleFlyerMethodChange('upload')}
+            onClick={() => handleFlyerMethodChange("upload")}
             className={`p-4 border-2 rounded-lg transition-all ${
               !useTemplate
-                ? 'border-primary bg-primary/5 text-primary'
-                : 'border-gray-200 hover:border-gray-300'
+                ? "border-primary bg-primary/5 text-primary"
+                : "border-gray-200 hover:border-gray-300"
             }`}
           >
             <Upload className="w-8 h-8 mx-auto mb-2" />
@@ -254,11 +281,11 @@ export const EventDetailsStep: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => handleFlyerMethodChange('template')}
+            onClick={() => handleFlyerMethodChange("template")}
             className={`p-4 border-2 rounded-lg transition-all ${
               useTemplate
-                ? 'border-primary bg-primary/5 text-primary'
-                : 'border-gray-200 hover:border-gray-300'
+                ? "border-primary bg-primary/5 text-primary"
+                : "border-gray-200 hover:border-gray-300"
             }`}
           >
             <FileImage className="w-8 h-8 mx-auto mb-2" />
