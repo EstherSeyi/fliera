@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Calendar, Clock, MessageSquare, Check, ArrowRight, X } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import {
   Dialog,
   DialogContent,
@@ -65,23 +67,6 @@ export const AIDescriptionGeneratorDialog: React.FC<AIDescriptionGeneratorProps>
     }
   }, [isOpen, initialTitle, initialDate]);
 
-  const formatDateForDisplay = (dateString: string) => {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return dateString;
-    }
-  };
-
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) {
@@ -119,7 +104,7 @@ export const AIDescriptionGeneratorDialog: React.FC<AIDescriptionGeneratorProps>
       showToast('Failed to generate description. Please try again.', 'error');
       
       // Create a fallback description
-      const fallbackDescription = `Join us for ${formData.title}${formData.date ? ` on ${formatDateForDisplay(formData.date)}` : ''}. ${formData.additionalNotes || 'This promises to be an amazing event you won\'t want to miss!'}`;
+      const fallbackDescription = `Join us for ${formData.title}${formData.date ? ` on ${new Date(formData.date).toLocaleDateString()}` : ''}. ${formData.additionalNotes || 'This promises to be an amazing event you won\'t want to miss!'}`;
       
       setGeneratedDescription(fallbackDescription);
       setCurrentStage('preview');
@@ -179,20 +164,29 @@ export const AIDescriptionGeneratorDialog: React.FC<AIDescriptionGeneratorProps>
           <label className="block text-sm font-medium text-gray-700">
             Event Date & Time
           </label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="datetime-local"
-              value={formData.date}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary"
-            />
-          </div>
-          {formData.date && (
-            <p className="text-xs text-gray-500">
-              {formatDateForDisplay(formData.date)}
-            </p>
-          )}
+          <DatePicker
+            selected={formData.date ? new Date(formData.date) : null}
+            onChange={(date) => setFormData(prev => ({ ...prev, date: date?.toISOString() || '' }))}
+            showTimeSelect
+            timeFormat="HH:mm"
+            timeIntervals={15}
+            dateFormat="MMMM d, yyyy h:mm aa"
+            minDate={new Date()}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary"
+            placeholderText="Select date and time"
+            filterTime={(time) => {
+              const selectedDate = formData.date ? new Date(formData.date) : new Date();
+              const now = new Date();
+              
+              // If the selected date is today, disable past times
+              if (selectedDate.toDateString() === now.toDateString()) {
+                return time.getTime() > now.getTime();
+              }
+              
+              // For future dates, all times are allowed
+              return true;
+            }}
+          />
         </div>
 
         <div className="space-y-2">
