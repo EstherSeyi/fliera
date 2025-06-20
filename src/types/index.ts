@@ -121,3 +121,28 @@ export interface GoogleFont {
   variants: string[];
   files: Record<string, string>; // variant => font file URL
 }
+
+// AI Description Generator interfaces
+export type DescriptionTone = 
+  | "professional"
+  | "casual" 
+  | "exciting"
+  | "informative"
+  | "creative"
+  | "formal"
+  | "none";
+
+export interface AIDescriptionFormData {
+  title: string;
+  date: string;
+  tone: DescriptionTone;
+  additionalNotes: string;
+}
+
+export interface AIDescriptionGeneratorProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onDescriptionGenerated: (description: string) => void;
+  initialTitle?: string;
+  initialDate?: string;
+}

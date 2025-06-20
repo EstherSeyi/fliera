@@ -1,13 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useFormContext, Controller } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Upload, FileImage } from "lucide-react";
+import { Upload, FileImage, Sparkles } from "lucide-react";
 import type { CreateEventFormData, EventVisibility, EventCategory } from "../../../types";
 import { FileUploadInput } from "../../../components/FileUploadInput";
 import { RichTextEditor } from "../../../components/RichTextEditor";
 import { FlierTemplateSelectionModal } from "../../../components/FlierTemplateSelectionModal";
+import { AIDescriptionGeneratorDialog } from "../../../components/AIDescriptionGeneratorDialog";
 import { Eye, EyeOff, Archive } from "lucide-react";
 import {
   Select,
@@ -45,8 +46,13 @@ export const EventDetailsStep: React.FC = () => {
   const selectedVisibility = watch("visibility");
   const useTemplate = watch("use_template");
   const flyerFile = watch("flyer_file");
-  const [showTemplateModal, setShowTemplateModal] = React.useState(false);
-  const [generatedFlyerUrl, setGeneratedFlyerUrl] = React.useState<string | null>(null);
+  const currentTitle = watch("title");
+  const currentDate = watch("date");
+  const currentDescription = watch("description");
+
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showAIDialog, setShowAIDialog] = useState(false);
+  const [generatedFlyerUrl, setGeneratedFlyerUrl] = useState<string | null>(null);
 
   const handleTemplateSelected = (
     generatedImageUrl: string,
@@ -71,6 +77,10 @@ export const EventDetailsStep: React.FC = () => {
       setValue('flyer_file', null);
       setGeneratedFlyerUrl(null);
     }
+  };
+
+  const handleAIDescriptionGenerated = (description: string) => {
+    setValue('description', description);
   };
 
   return (
@@ -193,9 +203,19 @@ export const EventDetailsStep: React.FC = () => {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="description" className="block text-primary font-medium">
-          Description
-        </label>
+        <div className="flex items-center justify-between">
+          <label htmlFor="description" className="block text-primary font-medium">
+            Description
+          </label>
+          <button
+            type="button"
+            onClick={() => setShowAIDialog(true)}
+            className="flex items-center px-3 py-1 text-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200"
+          >
+            <Sparkles className="w-4 h-4 mr-1" />
+            Generate with AI
+          </button>
+        </div>
         <Controller
           name="description"
           control={control}
@@ -300,6 +320,14 @@ export const EventDetailsStep: React.FC = () => {
         isOpen={showTemplateModal}
         onClose={() => setShowTemplateModal(false)}
         onTemplateSelected={handleTemplateSelected}
+      />
+
+      <AIDescriptionGeneratorDialog
+        isOpen={showAIDialog}
+        onClose={() => setShowAIDialog(false)}
+        onDescriptionGenerated={handleAIDescriptionGenerated}
+        initialTitle={currentTitle}
+        initialDate={currentDate}
       />
     </motion.div>
   );
