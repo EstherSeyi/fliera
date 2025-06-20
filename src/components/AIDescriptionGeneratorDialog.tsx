@@ -318,7 +318,7 @@ export const AIDescriptionGeneratorDialog: React.FC<AIDescriptionGeneratorProps>
         <div className="flex items-start space-x-3">
           <MessageSquare className="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap max-h-[500px] overflow-auto">
               {generatedDescription}
             </p>
           </div>
