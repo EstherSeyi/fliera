@@ -22,8 +22,8 @@ const steps = [
   {
     id: 3,
     icon: Edit3,
-    title: 'Add Your Name',
-    description: 'Enter your name to personalize your display picture with custom styling',
+    title: 'Customize Your Text',
+    description: 'Input personalized text like your name, event details, or custom messages with various styling options',
     color: 'bg-purple-100 text-purple-600',
     bgColor: 'bg-purple-50',
   },
