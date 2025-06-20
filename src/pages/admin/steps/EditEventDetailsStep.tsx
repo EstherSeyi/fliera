@@ -3,9 +3,13 @@ import { motion } from "framer-motion";
 import { useFormContext, Controller } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import type { EditEventFormData, EventVisibility, EventCategory, Event } from "../../../types";
+import type {
+  EditEventFormData,
+  EventVisibility,
+  EventCategory,
+  Event,
+} from "../../../types";
 import { FileUploadInput } from "../../../components/FileUploadInput";
-import { RichTextEditor } from "../../../components/RichTextEditor";
 import { Eye, EyeOff, Archive } from "lucide-react";
 import {
   Select,
@@ -14,21 +18,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
+import clsx from "clsx";
 
-const VISIBILITY_OPTIONS: { value: EventVisibility; label: string; icon: React.FC }[] = [
-  { value: 'public', label: 'Public', icon: Eye },
-  { value: 'private', label: 'Private', icon: EyeOff },
-  { value: 'archived', label: 'Archived', icon: Archive },
+const VISIBILITY_OPTIONS: {
+  value: EventVisibility;
+  label: string;
+  icon: React.FC;
+}[] = [
+  { value: "public", label: "Public", icon: Eye },
+  { value: "private", label: "Private", icon: EyeOff },
+  { value: "archived", label: "Archived", icon: Archive },
 ];
 
 const CATEGORY_OPTIONS: { value: EventCategory; label: string }[] = [
-  { value: 'business', label: 'Business' },
-  { value: 'technology', label: 'Technology' },
-  { value: 'music', label: 'Music' },
-  { value: 'social', label: 'Social' },
-  { value: 'sports', label: 'Sports' },
-  { value: 'activism', label: 'Activism' },
-  { value: 'other', label: 'Other' },
+  { value: "business", label: "Business" },
+  { value: "technology", label: "Technology" },
+  { value: "music", label: "Music" },
+  { value: "social", label: "Social" },
+  { value: "sports", label: "Sports" },
+  { value: "activism", label: "Activism" },
+  { value: "other", label: "Other" },
 ];
 
 interface EditEventDetailsStepProps {
@@ -50,6 +59,7 @@ export const EditEventDetailsStep: React.FC<EditEventDetailsStepProps> = ({
   } = useFormContext<EditEventFormData>();
 
   const selectedVisibility = watch("visibility");
+  const currentDescriptionLength = watch("description")?.length ?? 0;
 
   return (
     <motion.div
@@ -95,15 +105,17 @@ export const EditEventDetailsStep: React.FC<EditEventDetailsStepProps> = ({
               disabled={isEventPast}
               filterTime={(time) => {
                 if (isEventPast) return true; // Allow all times for past events
-                
-                const selectedDate = field.value ? new Date(field.value) : new Date();
+
+                const selectedDate = field.value
+                  ? new Date(field.value)
+                  : new Date();
                 const now = new Date();
-                
+
                 // If the selected date is today, disable past times
                 if (selectedDate.toDateString() === now.toDateString()) {
                   return time.getTime() > now.getTime();
                 }
-                
+
                 // For future dates, all times are allowed
                 return true;
               }}
@@ -182,17 +194,29 @@ export const EditEventDetailsStep: React.FC<EditEventDetailsStepProps> = ({
         <label htmlFor="description" className="block text-primary font-medium">
           Description
         </label>
-        <Controller
-          name="description"
-          control={control}
-          render={({ field }) => (
-            <RichTextEditor
-              value={field.value || ""}
-              onChange={field.onChange}
-              placeholder="Briefly describe the purpose, theme, or mood of this event..."
-            />
-          )}
-        />
+        <div className="relative">
+          <textarea
+            {...register("description")}
+            id="description"
+            placeholder="Briefly describe the purpose, theme, or mood of this event..."
+            className="w-full px-4 py-2 rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
+            rows={8}
+            maxLength={1000}
+          ></textarea>
+          <span
+            className={clsx(
+              "absolute right-2 bottom-2 text-xs text-black bg-white",
+              currentDescriptionLength >= 1000
+                ? "text-red-500"
+                : "text-gray-500"
+            )}
+          >
+            {currentDescriptionLength}/1000
+          </span>
+        </div>
+        {errors.description && (
+          <p className="text-red-500 text-sm">{errors.description.message}</p>
+        )}
       </div>
 
       <div className="space-y-4">
