@@ -28,7 +28,7 @@ const textPlaceholderSchema = z.object({
 export const editEventSchema = z.object({
   title: z.string().min(1, "Event title is required"),
   date: z.string().min(1, "Event date is required"),
-  description: z.string().nullable().optional(),
+  description: z.string().max(1000).nullable().optional(),
   flyer_file: z
     .instanceof(File)
     .refine(
