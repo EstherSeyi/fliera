@@ -29,7 +29,7 @@ export const createEventSchema = z
   .object({
     title: z.string().min(1, "Event title is required"),
     date: z.string().min(1, "Event date is required"),
-    description: z.string().nullable().optional(),
+    description: z.string().max(1000).nullable().optional(),
     use_template: z.boolean().optional(),
     template_id: z.string().optional(),
     flyer_file: z
