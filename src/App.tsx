@@ -46,6 +46,27 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "pricing",
+        async lazy() {
+          const { Pricing } = await import("./pages/Pricing");
+          return { Component: Pricing };
+        },
+      },
+      {
+        path: "payment-success",
+        async lazy() {
+          const { PaymentSuccess } = await import("./pages/PaymentSuccess");
+          return { Component: PaymentSuccess };
+        },
+      },
+      {
+        path: "payment-failure",
+        async lazy() {
+          const { PaymentFailure } = await import("./pages/PaymentFailure");
+          return { Component: PaymentFailure };
+        },
+      },
+      {
         path: "admin/create",
         async lazy() {
           const { CreateEvent } = await import("./pages/admin/CreateEvent");

@@ -62,11 +62,10 @@ export const Navbar: React.FC = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             <NavLink to="/events">Events</NavLink>
-             {
-                      isLoggedIn && (
-                      <NavLink to="/dashboard">Dashboard</NavLink>
-                      )
-                    }
+            <NavLink to="/pricing">Pricing</NavLink>
+            {isLoggedIn && (
+              <NavLink to="/dashboard">Dashboard</NavLink>
+            )}
 
             {isLoggedIn ? (
               <motion.button
@@ -142,17 +141,22 @@ export const Navbar: React.FC = () => {
                       Events
                     </NavLink>
 
-                    {
-                      isLoggedIn && (
-                        <NavLink
-                      to="/dashboard"
-                      Icon={Calendar}
+                    <NavLink
+                      to="/pricing"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Dashboard
+                      Pricing
                     </NavLink>
-                      )
-                    }
+
+                    {isLoggedIn && (
+                      <NavLink
+                        to="/dashboard"
+                        Icon={Calendar}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Dashboard
+                      </NavLink>
+                    )}
 
                     {isLoggedIn ? (
                       <button
