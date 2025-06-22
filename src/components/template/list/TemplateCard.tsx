@@ -21,8 +21,6 @@ export const TemplateCard = ({
       year: "numeric",
       month: "short",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
 
   const isOwner = template.user_id === currentUserId;
@@ -75,7 +73,7 @@ export const TemplateCard = ({
           </div>
           {template.created_by && (
             <span className="text-xs bg-muted px-2 py-1 rounded">
-              by {template.created_by}
+              by {isOwner ? "you" : template.created_by}
             </span>
           )}
         </div>
