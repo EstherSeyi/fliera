@@ -34,7 +34,7 @@ export const TemplatePreviewModal = ({ template, onClose, currentUserId }: Props
               </h3>
               {template.created_by && (
                 <p className="text-secondary">
-                  Created by {template.created_by}
+                  Created by  {isOwner ? "you" : template.created_by}
                 </p>
               )}
             </div>
