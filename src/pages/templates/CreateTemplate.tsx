@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
+import { TwitterColorPickerInput } from "../../components/TwitterColorPickerInput";
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
@@ -658,17 +659,11 @@ export const CreateTemplate = () => {
                 <label className="block text-sm font-medium text-primary mb-1">
                   Color
                 </label>
-                <input
-                  type="color"
+                <TwitterColorPickerInput
                   value={selectedData.color || "#000000"}
-                  onChange={(e) =>
-                    updatePlaceholderProperty(
-                      selectedData.id,
-                      "color",
-                      e.target.value
-                    )
+                  onChange={(color) =>
+                    updatePlaceholderProperty(selectedData.id, "color", color)
                   }
-                  className="w-full h-10 border border-gray-300 rounded-lg"
                 />
               </div>
             </div>
