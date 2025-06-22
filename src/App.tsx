@@ -145,6 +145,19 @@ const router = createBrowserRouter([
           };
         },
       },
+      {
+        path: "templates",
+        async lazy() {
+          const { Templates } = await import("./pages/templates/");
+          return {
+            Component: () => (
+              <ProtectedRoute>
+                <Templates />
+              </ProtectedRoute>
+            ),
+          };
+        },
+      },
     ],
   },
 ]);

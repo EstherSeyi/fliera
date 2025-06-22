@@ -9,6 +9,7 @@ import {
   List,
   ChevronLeft,
   ChevronRight,
+  LayoutTemplate,
 } from "lucide-react";
 
 const sideNavItems = [
@@ -32,6 +33,11 @@ const sideNavItems = [
     path: "/admin/create",
     label: "Create Event",
     icon: PlusCircle,
+  },
+  {
+    path: "/templates",
+    label: "Templates",
+    icon: LayoutTemplate,
   },
 ];
 
