@@ -36,7 +36,7 @@ import { TwitterColorPickerInput } from "../../components/TwitterColorPickerInpu
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
-  FONT_FAMILIES,
+   CATEGORIZED_FONTS,
   STEPS,
 } from "../../constants";
 
