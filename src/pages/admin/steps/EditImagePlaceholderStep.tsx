@@ -74,7 +74,7 @@ export const EditImagePlaceholderStep: React.FC<EditImagePlaceholderStepProps> =
       transformerRef.current.nodes([shapeRef.current]);
       transformerRef.current.getLayer().batchDraw();
     }
-  }, [placeholder.holeShape, isEventPast]);
+  }, [placeholder.holeShape, isEventPast, transformerRef.current]);
 
   const handleTransformEnd = () => {
     if (shapeRef.current && !isEventPast) {
