@@ -23,6 +23,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "../../lib/supabase";
+import { useToast } from "../../context/ToastContext";
 import { step1Schema } from "../../validation/createTemplateSchema";
 import {
   Select,
@@ -75,6 +76,7 @@ interface TemplateImageData {
 }
 
 export const CreateTemplate = () => {
+  const { showToast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [template, setTemplate] = useState<Template>({
     id: "",
@@ -490,15 +492,16 @@ export const CreateTemplate = () => {
       setValue("title", "");
       setValue("template_image_url", "");
 
-      // Show success message
-      alert("Template saved successfully!");
+      // Show success toast
+      showToast("Template saved successfully!", "success");
     } catch (error: any) {
       console.error("Error saving template:", error);
       setError(error.message || "Failed to save template");
+      showToast(error.message || "Failed to save template", "error");
     } finally {
       setSaving(false);
     }
-  }, [template, imageFile, setValue]);
+  }, [template, imageFile, setValue, showToast]);
 
   // Navigation functions with validation
   const onValidStep1 = (data: Step1FormData) => {
