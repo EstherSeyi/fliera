@@ -155,8 +155,6 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                 </div>
               </div>
 
-           
-
               {/* Description */}
               {event.description && (
                 <div>
@@ -169,6 +167,18 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                   />
                 </div>
               )}
+
+                 {/* Event Flyer */}
+              <div>
+                <h4 className="font-semibold text-primary mb-3">Event Flyer</h4>
+                <div className="rounded-lg overflow-hidden border border-gray-200">
+                  <img
+                    src={event.flyer_url}
+                    alt={event.title}
+                    className="w-full h-auto max-h-96 object-contain bg-gray-50"
+                  />
+                </div>
+              </div>
 
               {/* Template Info */}
               <div className="bg-blue-50 rounded-lg p-4">
