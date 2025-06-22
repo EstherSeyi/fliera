@@ -92,11 +92,6 @@ export const TemplateCard = ({
             <span className="text-accent font-medium">
               {template.template_placeholders.length} elements
             </span>
-            {isOwner && (
-              <span className="text-xs bg-primary text-white px-2 py-1 rounded">
-                Mine
-              </span>
-            )}
           </div>
         </div>
       </div>
