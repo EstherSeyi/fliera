@@ -12,6 +12,7 @@ interface Placeholder {
 interface Props {
   template: Template;
   onClose: () => void;
+    currentUserId: string;
 }
 
 export const TemplatePreviewModal = ({ template, onClose }: Props) => {
