@@ -1161,7 +1161,7 @@ export const CreateTemplate = () => {
                             fontFamily={placeholder.fontFamily || "Open Sans"}
                             listening={false}
                              align={placeholder.textAlign}
-                  fontStyle={placeholder.fontStyle}
+                              fontStyle={placeholder.fontStyle}
                           />
                         </>
                       )}
