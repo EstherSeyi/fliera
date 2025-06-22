@@ -3,6 +3,7 @@ import { Template } from "../../../hooks/useTemplates";
 
 interface Props {
   template: Template;
+  currentUserId: string;
   onPreview: (template: Template) => void;
   onDelete: (templateID: string) => void;
   deleting: string;
@@ -10,6 +11,7 @@ interface Props {
 
 export const TemplateCard = ({
   template,
+  currentUserId,
   onPreview,
   onDelete,
   deleting,
@@ -22,6 +24,8 @@ export const TemplateCard = ({
       hour: "2-digit",
       minute: "2-digit",
     });
+
+  const isOwner = template.user_id === currentUserId;
 
   return (
     <div className="group bg-neutral border border-border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 hover:transform hover:scale-105">
@@ -44,17 +48,19 @@ export const TemplateCard = ({
           >
             <Eye className="w-5 h-5" />
           </button>
-          <button
-            onClick={() => onDelete(template.id)}
-            disabled={deleting === template.id}
-            className="bg-imperialred text-neutral p-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
-          >
-            {deleting === template.id ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Trash2 className="w-5 h-5" />
-            )}
-          </button>
+          {isOwner && (
+            <button
+              onClick={() => onDelete(template.id)}
+              disabled={deleting === template.id}
+              className="bg-imperialred text-neutral p-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
+            >
+              {deleting === template.id ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Trash2 className="w-5 h-5" />
+              )}
+            </button>
+          )}
         </div>
       </div>
 
@@ -84,9 +90,16 @@ export const TemplateCard = ({
               <span>{template.user_text_placeholders.length}</span>
             </div>
           </div>
-          <span className="text-accent font-medium">
-            {template.template_placeholders.length} elements
-          </span>
+          <div className="flex items-center space-x-2">
+            <span className="text-accent font-medium">
+              {template.template_placeholders.length} elements
+            </span>
+            {isOwner && (
+              <span className="text-xs bg-primary text-white px-2 py-1 rounded">
+                Mine
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

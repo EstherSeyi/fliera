@@ -114,6 +114,15 @@ export interface TemplateInputValues {
   [placeholderId: string]: string | File | null;
 }
 
+// New interface for paginated templates result
+export interface PaginatedTemplatesResult {
+  templates: FlierTemplate[];
+  totalCount: number;
+}
+
+// Template filter types
+export type TemplateFilterType = "all" | "my" | "others";
+
 // Google Fonts API interface
 export interface GoogleFont {
   family: string;

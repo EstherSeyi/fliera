@@ -47,7 +47,7 @@ export const Templates = () => {
           <div>
             <h1 className="text-4xl font-bold text-primary">Templates</h1>
             <p className="text-secondary mt-2">
-              Find the perfect template for your project (15 total)
+              Discover and manage templates from the community
             </p>
           </div>
         ) : activeTab === "create" ? (
