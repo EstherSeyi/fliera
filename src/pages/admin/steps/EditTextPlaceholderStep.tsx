@@ -154,6 +154,9 @@ export const EditTextPlaceholderStep: React.FC<
       labelText: "",
     };
     setValue("text_placeholders", [...textPlaceholders, newPlaceholder]);
+    
+    // Automatically select the newly added placeholder
+    setSelectedIndex(textPlaceholders.length);
   };
 
   const removeTextPlaceholder = (index: number) => {

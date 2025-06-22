@@ -143,6 +143,9 @@ export const TextPlaceholderStep: React.FC = () => {
       labelText: "",
     };
     setValue("text_placeholders", [...textPlaceholders, newPlaceholder]);
+    
+    // Automatically select the newly added placeholder
+    setSelectedIndex(textPlaceholders.length);
   };
 
   const removeTextPlaceholder = (index: number) => {
@@ -391,7 +394,6 @@ export const TextPlaceholderStep: React.FC = () => {
                   onValueChange={(value) => {
                     updateTextStyle(selectedIndex, "fontFamily", value);
                   }}
-                  disabled={fontsLoading}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select font family" />
@@ -417,11 +419,6 @@ export const TextPlaceholderStep: React.FC = () => {
                     )}
                   </SelectContent>
                 </Select>
-                {fontsError && (
-                  <p className="text-xs text-red-500">
-                    {fontsError}. Using fallback fonts.
-                  </p>
-                )}
               </div>
 
               {TEXT_STYLE_OPTIONS.map(({ key, label, options }) => (
