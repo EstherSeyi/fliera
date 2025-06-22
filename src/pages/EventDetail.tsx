@@ -9,7 +9,6 @@ import { useToast } from "../context/ToastContext";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { EventDetailsModal } from "../components/EventDetailsModal";
 import { ImageCropperModal } from "../components/ImageCropperModal";
-import { SocialShareButtons } from "../components/SocialShareButtons";
 import { getPlainTextSnippet, transformText } from "../lib/utils";
 import type { Event } from "../types";
 
@@ -656,15 +655,6 @@ export const EventDetail: React.FC = () => {
             <p className="text-xs text-gray-500 text-center">
               Your DP will be saved to your account when downloaded
             </p>
-          )}
-
-          {/* Social Share Buttons - Show as soon as DP is generated */}
-          {hasGeneratedDP && generatedDpUrl && (
-            <SocialShareButtons
-              imageUrl={generatedDpUrl}
-              title={event.title}
-              description={getPlainTextSnippet(event.description || "", 100)}
-            />
           )}
         </motion.div>
       </div>

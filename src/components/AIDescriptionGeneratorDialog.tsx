@@ -1,68 +1,96 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Calendar, Clock, MessageSquare, Check, ArrowRight, X } from 'lucide-react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from './ui/dialog';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, MessageSquare, Check, ArrowRight } from "lucide-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from './ui/select';
-import { LoadingSpinner } from './LoadingSpinner';
-import { supabase } from '../lib/supabase';
-import { useToast } from '../context/ToastContext';
-import type { AIDescriptionGeneratorProps, AIDescriptionFormData, DescriptionTone } from '../types';
+} from "./ui/select";
+import { LoadingSpinner } from "./LoadingSpinner";
+import { supabase } from "../lib/supabase";
+import { useToast } from "../context/ToastContext";
+import type {
+  AIDescriptionGeneratorProps,
+  AIDescriptionFormData,
+  DescriptionTone,
+} from "../types";
 
-type DialogStage = 'form' | 'generating' | 'preview';
+type DialogStage = "form" | "generating" | "preview";
 
-const TONE_OPTIONS: { value: DescriptionTone; label: string; description: string }[] = [
-  { value: 'none', label: 'No specific tone', description: 'Let AI choose the best tone' },
-  { value: 'professional', label: 'Professional', description: 'Formal and business-like' },
-  { value: 'casual', label: 'Casual', description: 'Relaxed and friendly' },
-  { value: 'exciting', label: 'Exciting', description: 'Energetic and enthusiastic' },
-  { value: 'informative', label: 'Informative', description: 'Educational and detailed' },
-  { value: 'creative', label: 'Creative', description: 'Artistic and imaginative' },
-  { value: 'formal', label: 'Formal', description: 'Traditional and ceremonial' },
+const TONE_OPTIONS: {
+  value: DescriptionTone;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "none",
+    label: "No specific tone",
+    description: "Let AI choose the best tone",
+  },
+  {
+    value: "professional",
+    label: "Professional",
+    description: "Formal and business-like",
+  },
+  { value: "casual", label: "Casual", description: "Relaxed and friendly" },
+  {
+    value: "exciting",
+    label: "Exciting",
+    description: "Energetic and enthusiastic",
+  },
+  {
+    value: "informative",
+    label: "Informative",
+    description: "Educational and detailed",
+  },
+  {
+    value: "creative",
+    label: "Creative",
+    description: "Artistic and imaginative",
+  },
+  {
+    value: "formal",
+    label: "Formal",
+    description: "Traditional and ceremonial",
+  },
 ];
 
-export const AIDescriptionGeneratorDialog: React.FC<AIDescriptionGeneratorProps> = ({
+export const AIDescriptionGeneratorDialog: React.FC<
+  AIDescriptionGeneratorProps
+> = ({
   isOpen,
   onClose,
   onDescriptionGenerated,
-  initialTitle = '',
-  initialDate = '',
+  initialTitle = "",
+  initialDate = "",
 }) => {
   const { showToast } = useToast();
-  const [currentStage, setCurrentStage] = useState<DialogStage>('form');
+  const [currentStage, setCurrentStage] = useState<DialogStage>("form");
   const [formData, setFormData] = useState<AIDescriptionFormData>({
-    title: '',
-    date: '',
-    tone: 'none',
-    additionalNotes: '',
+    title: "",
+    date: "",
+    tone: "none",
+    additionalNotes: "",
   });
-  const [generatedDescription, setGeneratedDescription] = useState<string>('');
+  const [generatedDescription, setGeneratedDescription] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Reset state when dialog opens/closes
   useEffect(() => {
     if (isOpen) {
-      setCurrentStage('form');
+      setCurrentStage("form");
       setFormData({
         title: initialTitle,
         date: initialDate,
-        tone: 'none',
-        additionalNotes: '',
+        tone: "none",
+        additionalNotes: "",
       });
-      setGeneratedDescription('');
+      setGeneratedDescription("");
       setIsGenerating(false);
     }
   }, [isOpen, initialTitle, initialDate]);
@@ -70,44 +98,54 @@ export const AIDescriptionGeneratorDialog: React.FC<AIDescriptionGeneratorProps>
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      showToast('Event title is required', 'error');
+      showToast("Event title is required", "error");
       return;
     }
 
     setIsGenerating(true);
-    setCurrentStage('generating');
+    setCurrentStage("generating");
 
     try {
       // Call the Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke('generate-description', {
-        body: {
-          title: formData.title,
-          date: formData.date,
-          tone: formData.tone,
-          additionalNotes: formData.additionalNotes,
-        },
-      });
+      const { data, error } = await supabase.functions.invoke(
+        "generate-description",
+        {
+          body: {
+            title: formData.title,
+            date: formData.date,
+            tone: formData.tone,
+            additionalNotes: formData.additionalNotes,
+          },
+        }
+      );
 
       if (error) {
-        console.error('Error invoking Edge Function:', error);
-        throw new Error(error.message || 'Failed to generate description');
+        console.error("Error invoking Edge Function:", error);
+        throw new Error(error.message || "Failed to generate description");
       }
 
       if (data && data.description) {
         setGeneratedDescription(data.description);
-        setCurrentStage('preview');
+        setCurrentStage("preview");
       } else {
-        throw new Error('No description received from AI');
+        throw new Error("No description received from AI");
       }
     } catch (error) {
-      console.error('Error generating description:', error);
-      showToast('Failed to generate description. Please try again.', 'error');
-      
+      console.error("Error generating description:", error);
+      showToast("Failed to generate description. Please try again.", "error");
+
       // Create a fallback description
-      const fallbackDescription = `Join us for ${formData.title}${formData.date ? ` on ${new Date(formData.date).toLocaleDateString()}` : ''}. ${formData.additionalNotes || 'This promises to be an amazing event you won\'t want to miss!'}`;
-      
+      const fallbackDescription = `Join us for ${formData.title}${
+        formData.date
+          ? ` on ${new Date(formData.date).toLocaleDateString()}`
+          : ""
+      }. ${
+        formData.additionalNotes ||
+        "This promises to be an amazing event you won't want to miss!"
+      }`;
+
       setGeneratedDescription(fallbackDescription);
-      setCurrentStage('preview');
+      setCurrentStage("preview");
     } finally {
       setIsGenerating(false);
     }
@@ -119,8 +157,8 @@ export const AIDescriptionGeneratorDialog: React.FC<AIDescriptionGeneratorProps>
   };
 
   const handleBack = () => {
-    if (currentStage === 'preview') {
-      setCurrentStage('form');
+    if (currentStage === "preview") {
+      setCurrentStage("form");
     }
   };
 
@@ -153,7 +191,9 @@ export const AIDescriptionGeneratorDialog: React.FC<AIDescriptionGeneratorProps>
           <input
             type="text"
             value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, title: e.target.value }))
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary"
             placeholder="Enter your event title"
             required
@@ -166,7 +206,12 @@ export const AIDescriptionGeneratorDialog: React.FC<AIDescriptionGeneratorProps>
           </label>
           <DatePicker
             selected={formData.date ? new Date(formData.date) : null}
-            onChange={(date) => setFormData(prev => ({ ...prev, date: date?.toISOString() || '' }))}
+            onChange={(date) =>
+              setFormData((prev) => ({
+                ...prev,
+                date: date?.toISOString() || "",
+              }))
+            }
             showTimeSelect
             timeFormat="HH:mm"
             timeIntervals={15}
@@ -175,14 +220,16 @@ export const AIDescriptionGeneratorDialog: React.FC<AIDescriptionGeneratorProps>
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary"
             placeholderText="Select date and time"
             filterTime={(time) => {
-              const selectedDate = formData.date ? new Date(formData.date) : new Date();
+              const selectedDate = formData.date
+                ? new Date(formData.date)
+                : new Date();
               const now = new Date();
-              
+
               // If the selected date is today, disable past times
               if (selectedDate.toDateString() === now.toDateString()) {
                 return time.getTime() > now.getTime();
               }
-              
+
               // For future dates, all times are allowed
               return true;
             }}
@@ -195,7 +242,9 @@ export const AIDescriptionGeneratorDialog: React.FC<AIDescriptionGeneratorProps>
           </label>
           <Select
             value={formData.tone}
-            onValueChange={(value: DescriptionTone) => setFormData(prev => ({ ...prev, tone: value }))}
+            onValueChange={(value: DescriptionTone) =>
+              setFormData((prev) => ({ ...prev, tone: value }))
+            }
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select tone" />
@@ -219,7 +268,12 @@ export const AIDescriptionGeneratorDialog: React.FC<AIDescriptionGeneratorProps>
           </label>
           <textarea
             value={formData.additionalNotes}
-            onChange={(e) => setFormData(prev => ({ ...prev, additionalNotes: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                additionalNotes: e.target.value,
+              }))
+            }
             placeholder="Any specific details you want included in the description?"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary resize-none"
             rows={3}
@@ -321,7 +375,8 @@ export const AIDescriptionGeneratorDialog: React.FC<AIDescriptionGeneratorProps>
 
       <div className="bg-blue-50 rounded-lg p-4">
         <p className="text-blue-800 text-sm">
-          <strong>Preview:</strong> This description will be used for your event. You can always edit it later.
+          <strong>Preview:</strong> This description will be used for your
+          event. You can always edit it later.
         </p>
       </div>
 
@@ -352,9 +407,9 @@ export const AIDescriptionGeneratorDialog: React.FC<AIDescriptionGeneratorProps>
         </DialogHeader>
 
         <AnimatePresence mode="wait">
-          {currentStage === 'form' && renderFormStage()}
-          {currentStage === 'generating' && renderGeneratingStage()}
-          {currentStage === 'preview' && renderPreviewStage()}
+          {currentStage === "form" && renderFormStage()}
+          {currentStage === "generating" && renderGeneratingStage()}
+          {currentStage === "preview" && renderPreviewStage()}
         </AnimatePresence>
       </DialogContent>
     </Dialog>

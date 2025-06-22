@@ -1,12 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Download, Trash2, Calendar, ChevronLeft, ChevronRight, Image as ImageIcon, AlertCircle, Share2 } from 'lucide-react';
-import { useEvents } from '../context/EventContext';
-import { useToast } from '../context/ToastContext';
-import { LoadingSpinner } from '../components/LoadingSpinner';
-import { ConfirmationDialog } from '../components/ConfirmationDialog';
-import { ShareDPModal } from '../components/ShareDPModal';
-import type { GeneratedDP } from '../types';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  Download,
+  Trash2,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
+  AlertCircle,
+} from "lucide-react";
+import { useEvents } from "../context/EventContext";
+import { useToast } from "../context/ToastContext";
+import { LoadingSpinner } from "../components/LoadingSpinner";
+import { ConfirmationDialog } from "../components/ConfirmationDialog";
+import type { GeneratedDP } from "../types";
 
 export const MyDPs: React.FC = () => {
   const { fetchGeneratedDPsByUser, deleteGeneratedDP } = useEvents();
@@ -19,10 +26,6 @@ export const MyDPs: React.FC = () => {
   // Confirmation dialog state
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [dpToDelete, setDpToDelete] = useState<GeneratedDP | null>(null);
-
-  // Share dialog state
-  const [showShareDialog, setShowShareDialog] = useState(false);
-  const [selectedDpForShare, setSelectedDpForShare] = useState<GeneratedDP | null>(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,8 +48,8 @@ export const MyDPs: React.FC = () => {
       setDps(result.dps);
       setTotalDPs(result.totalCount);
     } catch (err) {
-      console.error('Error loading user DPs:', err);
-      setError('Failed to load your DPs');
+      console.error("Error loading user DPs:", err);
+      setError("Failed to load your DPs");
     } finally {
       setLoading(false);
     }
@@ -57,35 +60,26 @@ export const MyDPs: React.FC = () => {
       const response = await fetch(dp.generated_image_url);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      
+
       // Use the first text input for filename, or fallback to event title
-      const fileName = dp.user_text_inputs && dp.user_text_inputs.length > 0 
-        ? `${dp.event?.title || 'Event'}-DP-${dp.user_text_inputs[0]}.png`
-        : `${dp.event?.title || 'Event'}-DP.png`;
-      
-      const link = document.createElement('a');
+      const fileName =
+        dp.user_text_inputs && dp.user_text_inputs.length > 0
+          ? `${dp.event?.title || "Event"}-DP-${dp.user_text_inputs[0]}.png`
+          : `${dp.event?.title || "Event"}-DP.png`;
+
+      const link = document.createElement("a");
       link.href = url;
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       URL.revokeObjectURL(url);
-      showToast('DP downloaded successfully!', 'success');
+      showToast("DP downloaded successfully!", "success");
     } catch (err) {
-      console.error('Error downloading DP:', err);
-      showToast('Failed to download DP', 'error');
+      console.error("Error downloading DP:", err);
+      showToast("Failed to download DP", "error");
     }
-  };
-
-  const handleShareClick = (dp: GeneratedDP) => {
-    setSelectedDpForShare(dp);
-    setShowShareDialog(true);
-  };
-
-  const handleCloseShareDialog = () => {
-    setShowShareDialog(false);
-    setSelectedDpForShare(null);
   };
 
   const handleDeleteClick = (dp: GeneratedDP) => {
@@ -99,20 +93,20 @@ export const MyDPs: React.FC = () => {
     try {
       setDeletingId(dpToDelete.id);
       await deleteGeneratedDP(dpToDelete.id);
-      
+
       // Remove the deleted DP from the local state
-      setDps(prev => prev.filter(item => item.id !== dpToDelete.id));
-      setTotalDPs(prev => prev - 1);
-      
-      showToast('DP deleted successfully!', 'success');
-      
+      setDps((prev) => prev.filter((item) => item.id !== dpToDelete.id));
+      setTotalDPs((prev) => prev - 1);
+
+      showToast("DP deleted successfully!", "success");
+
       // If we deleted the last item on the current page and it's not the first page, go back one page
       if (dps.length === 1 && currentPage > 1) {
-        setCurrentPage(prev => prev - 1);
+        setCurrentPage((prev) => prev - 1);
       }
     } catch (err) {
-      console.error('Error deleting DP:', err);
-      showToast('Failed to delete DP', 'error');
+      console.error("Error deleting DP:", err);
+      showToast("Failed to delete DP", "error");
     } finally {
       setDeletingId(null);
       setShowDeleteDialog(false);
@@ -132,12 +126,12 @@ export const MyDPs: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -161,7 +155,7 @@ export const MyDPs: React.FC = () => {
     return (
       <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-gray-200 rounded-b-lg">
         <div className="flex items-center text-sm text-gray-500">
-          Showing {(currentPage - 1) * dpsPerPage + 1} to{' '}
+          Showing {(currentPage - 1) * dpsPerPage + 1} to{" "}
           {Math.min(currentPage * dpsPerPage, totalDPs)} of {totalDPs} DPs
         </div>
 
@@ -196,8 +190,8 @@ export const MyDPs: React.FC = () => {
                 onClick={() => handlePageChange(page)}
                 className={`px-3 py-2 text-sm font-medium rounded-md ${
                   page === currentPage
-                    ? 'text-primary bg-thistle border border-primary'
-                    : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                    ? "text-primary bg-thistle border border-primary"
+                    : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
                 }`}
               >
                 {page}
@@ -309,11 +303,11 @@ export const MyDPs: React.FC = () => {
                 <div className="aspect-square relative overflow-hidden bg-gray-200">
                   <img
                     src={dp.generated_image_url}
-                    alt={`DP for ${dp.event?.title || 'event'}`}
+                    alt={`DP for ${dp.event?.title || "event"}`}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     loading="lazy"
                   />
-                  
+
                   {/* Overlay with actions */}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-2">
                     <button
@@ -323,13 +317,7 @@ export const MyDPs: React.FC = () => {
                     >
                       <Download className="w-5 h-5" />
                     </button>
-                    <button
-                      onClick={() => handleShareClick(dp)}
-                      className="p-2 bg-blue-500/90 text-white rounded-full hover:bg-blue-600 transition-colors"
-                      title="Share DP"
-                    >
-                      <Share2 className="w-5 h-5" />
-                    </button>
+
                     <button
                       onClick={() => handleDeleteClick(dp)}
                       disabled={deletingId === dp.id}
@@ -348,9 +336,9 @@ export const MyDPs: React.FC = () => {
                 {/* DP Info */}
                 <div className="p-4 space-y-2">
                   <h3 className="font-semibold text-primary truncate">
-                    {dp.event?.title || 'Unknown Event'}
+                    {dp.event?.title || "Unknown Event"}
                   </h3>
-                  
+
                   <div className="flex items-center text-xs text-gray-500">
                     <Calendar className="w-3 h-3 mr-1" />
                     {formatDate(dp.created_at)}
@@ -365,12 +353,6 @@ export const MyDPs: React.FC = () => {
                   >
                     <Download className="w-4 h-4 mr-1" />
                     Download
-                  </button>
-                  <button
-                    onClick={() => handleShareClick(dp)}
-                    className="flex items-center justify-center px-3 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors text-sm"
-                  >
-                    <Share2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteClick(dp)}
@@ -399,18 +381,13 @@ export const MyDPs: React.FC = () => {
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         title="Delete Display Picture"
-        description={`Are you sure you want to delete this DP for "${dpToDelete?.event?.title || 'this event'}"? This action cannot be undone.`}
+        description={`Are you sure you want to delete this DP for "${
+          dpToDelete?.event?.title || "this event"
+        }"? This action cannot be undone.`}
         confirmText="Delete DP"
         cancelText="Cancel"
         variant="danger"
         isLoading={deletingId === dpToDelete?.id}
-      />
-
-      {/* Share DP Modal */}
-      <ShareDPModal
-        isOpen={showShareDialog}
-        onClose={handleCloseShareDialog}
-        dp={selectedDpForShare}
       />
     </div>
   );
