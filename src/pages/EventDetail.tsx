@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Download, Image as ImageIcon, Info, X, File } from "lucide-react";
+import { Download, Image as ImageIcon, Info, X, File, Share2 } from "lucide-react";
 import { Stage, Layer, Image as KonvaImage, Text, Group } from "react-konva";
 import { useEvents } from "../context/EventContext";
 import { useAuth } from "../context/AuthContext";
@@ -237,6 +237,38 @@ export const EventDetail: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
+  const handleShare = async () => {
+    if (!event) return;
+
+    const eventUrl = `${window.location.origin}/events/${event.id}`;
+    const shareData = {
+      title: event.title,
+      text: `Check out this event: ${event.title}`,
+      url: eventUrl,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        showToast("Event shared successfully!", "success");
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(eventUrl);
+        showToast("Event link copied to clipboard!", "success");
+      }
+    } catch (error) {
+      console.error("Error sharing event:", error);
+      // Final fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(eventUrl);
+        showToast("Event link copied to clipboard!", "success");
+      } catch (clipboardError) {
+        console.error("Error copying to clipboard:", clipboardError);
+        showToast("Unable to share event. Please copy the URL manually.", "error");
+      }
+    }
+  };
+
   const downloadDP = async () => {
     if (!generatedDpUrl || !hasGeneratedDP) return;
 
@@ -447,13 +479,22 @@ export const EventDetail: React.FC = () => {
       >
         <div className="flex items-center justify-center gap-4">
           <h1 className="text-4xl font-bold text-primary">{event.title}</h1>
-          <button
-            onClick={() => setShowEventModal(true)}
-            className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors"
-            title="View event details"
-          >
-            <Info className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowEventModal(true)}
+              className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors"
+              title="View event details"
+            >
+              <Info className="w-6 h-6" />
+            </button>
+            <button
+              onClick={handleShare}
+              className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors"
+              title="Share event"
+            >
+              <Share2 className="w-6 h-6" />
+            </button>
+          </div>
         </div>
         {event.description && (
           <div className="max-w-2xl mx-auto">

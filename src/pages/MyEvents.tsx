@@ -13,6 +13,7 @@ import {
   X,
   Trash2,
   MoreHorizontal,
+  Share2,
 } from "lucide-react";
 import DatePicker from "react-datepicker";
 import { isPast } from "date-fns";
@@ -287,6 +288,36 @@ export const MyEvents: React.FC = () => {
   const handleCancelDelete = () => {
     setShowDeleteDialog(false);
     setEventToDelete(null);
+  };
+
+  const handleShareEvent = async (eventId: string, eventTitle: string) => {
+    const eventUrl = `${window.location.origin}/events/${eventId}`;
+    const shareData = {
+      title: eventTitle,
+      text: `Check out this event: ${eventTitle}`,
+      url: eventUrl,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        showToast("Event shared successfully!", "success");
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(eventUrl);
+        showToast("Event link copied to clipboard!", "success");
+      }
+    } catch (error) {
+      console.error("Error sharing event:", error);
+      // Final fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(eventUrl);
+        showToast("Event link copied to clipboard!", "success");
+      } catch (clipboardError) {
+        console.error("Error copying to clipboard:", clipboardError);
+        showToast("Unable to share event. Please copy the URL manually.", "error");
+      }
+    }
   };
 
   const renderPaginationControls = () => {
@@ -700,6 +731,14 @@ export const MyEvents: React.FC = () => {
                                 </Link>
                               </DropdownMenuItem>
                               
+                              <DropdownMenuItem
+                                onClick={() => handleShareEvent(event.id, event.title)}
+                                className="flex items-center w-full"
+                              >
+                                <Share2 className="w-4 h-4 mr-2" />
+                                Share Event
+                              </DropdownMenuItem>
+                              
                               {!isEventPast(event.date) ? (
                                 <DropdownMenuItem asChild>
                                   <Link
@@ -793,6 +832,14 @@ export const MyEvents: React.FC = () => {
                                 <Eye className="w-4 h-4 mr-2" />
                                 View Event
                               </Link>
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuItem
+                              onClick={() => handleShareEvent(event.id, event.title)}
+                              className="flex items-center w-full"
+                            >
+                              <Share2 className="w-4 h-4 mr-2" />
+                              Share Event
                             </DropdownMenuItem>
                             
                             {!isEventPast(event.date) ? (
