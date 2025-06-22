@@ -1160,6 +1160,8 @@ export const CreateTemplate = () => {
                             fill={placeholder.color || "#000000"}
                             fontFamily={placeholder.fontFamily || "Open Sans"}
                             listening={false}
+                             align={placeholder.textAlign}
+                  fontStyle={placeholder.fontStyle}
                           />
                         </>
                       )}
