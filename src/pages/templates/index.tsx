@@ -61,13 +61,13 @@ export const Templates = () => {
           </div>
         ) : null}
 
-        <div className="flex items-center bg-muted rounded-lg p-1">
+        <div className="flex items-center bg-white rounded-lg shadow-sm border border-gray-200 p-1">
           <button
             onClick={() => handleTabChange("list")}
             className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
               activeTab === "list"
-                ? "bg-neutral text-primary shadow-sm"
-                : "text-secondary hover:text-primary"
+                ? "bg-primary text-white shadow-sm"
+                : "text-gray-600 hover:text-primary hover:bg-gray-50"
             }`}
           >
             <List className="w-4 h-4" />
@@ -77,8 +77,8 @@ export const Templates = () => {
             onClick={() => handleTabChange("create")}
             className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
               activeTab === "create"
-                ? "bg-neutral text-primary shadow-sm"
-                : "text-secondary hover:text-primary"
+                ? "bg-primary text-white shadow-sm"
+                : "text-gray-600 hover:text-primary hover:bg-gray-50"
             }`}
           >
             <Plus className="w-4 h-4" />

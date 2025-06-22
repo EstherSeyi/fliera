@@ -25,6 +25,13 @@ import { z } from "zod";
 import { supabase } from "../../lib/supabase";
 import { step1Schema } from "../../validation/createTemplateSchema";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   FONT_FAMILIES,
@@ -65,28 +72,6 @@ interface TemplateImageData {
   displayWidth: number;
   displayHeight: number;
 }
-
-// const STEPS = [
-//   { id: 1, title: "Basic Info", description: "Upload image and set title" },
-//   {
-//     id: 2,
-//     title: "Template Elements",
-//     description: "Add fixed template content",
-//   },
-//   { id: 3, title: "Preview", description: "Review and save template" },
-// ];
-
-// const CANVAS_WIDTH = 600;
-// const CANVAS_HEIGHT = 400;
-
-// const FONT_FAMILIES = [
-//   "Open Sans",
-//   "Arial",
-//   "Helvetica",
-//   "Times New Roman",
-//   "Georgia",
-//   "Verdana",
-// ];
 
 export const CreateTemplate = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -540,7 +525,7 @@ export const CreateTemplate = () => {
     if (!selectedData) return null;
 
     return (
-      <div className="mt-6 p-4 bg-muted rounded-lg border border-border">
+      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
         <h4 className="font-semibold text-primary mb-4">
           Placeholder Properties
         </h4>
@@ -561,7 +546,7 @@ export const CreateTemplate = () => {
                   e.target.value
                 )
               }
-              className="w-full px-3 py-1 border border-border rounded text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary text-sm"
             />
           </div>
 
@@ -580,7 +565,7 @@ export const CreateTemplate = () => {
                     parseInt(e.target.value)
                   )
                 }
-                className="w-full px-3 py-1 border border-border rounded text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                 min="5"
               />
             </div>
@@ -598,7 +583,7 @@ export const CreateTemplate = () => {
                     parseInt(e.target.value)
                   )
                 }
-                className="w-full px-3 py-1 border border-border rounded text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                 min="5"
               />
             </div>
@@ -611,40 +596,20 @@ export const CreateTemplate = () => {
             <label className="block text-sm font-medium text-primary mb-2">
               Shape
             </label>
-            <div className="flex space-x-2">
-              <button
-                onClick={() =>
-                  updatePlaceholderProperty(
-                    selectedData.id,
-                    "holeShape",
-                    "rectangle"
-                  )
-                }
-                className={`px-3 py-1 rounded text-sm ${
-                  selectedData.holeShape === "rectangle"
-                    ? "bg-primary text-neutral"
-                    : "bg-neutral border border-border"
-                }`}
-              >
-                Rectangle
-              </button>
-              <button
-                onClick={() =>
-                  updatePlaceholderProperty(
-                    selectedData.id,
-                    "holeShape",
-                    "circle"
-                  )
-                }
-                className={`px-3 py-1 rounded text-sm ${
-                  selectedData.holeShape === "circle"
-                    ? "bg-primary text-neutral"
-                    : "bg-neutral border border-border"
-                }`}
-              >
-                Circle
-              </button>
-            </div>
+            <Select
+              value={selectedData.holeShape || "rectangle"}
+              onValueChange={(value) =>
+                updatePlaceholderProperty(selectedData.id, "holeShape", value)
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select shape" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rectangle">Rectangle</SelectItem>
+                <SelectItem value="circle">Circle</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         )}
 
@@ -665,7 +630,7 @@ export const CreateTemplate = () => {
                     e.target.value
                   )
                 }
-                className="w-full px-3 py-1 border border-border rounded text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary text-sm"
               />
             </div>
 
@@ -684,7 +649,7 @@ export const CreateTemplate = () => {
                       parseInt(e.target.value)
                     )
                   }
-                  className="w-full px-3 py-1 border border-border rounded text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   min="8"
                   max="72"
                 />
@@ -703,7 +668,7 @@ export const CreateTemplate = () => {
                       e.target.value
                     )
                   }
-                  className="w-full h-8 border border-border rounded"
+                  className="w-full h-10 border border-gray-300 rounded-lg"
                 />
               </div>
             </div>
@@ -712,84 +677,72 @@ export const CreateTemplate = () => {
               <label className="block text-sm font-medium text-primary mb-1">
                 Font Family
               </label>
-              <select
+              <Select
                 value={selectedData.fontFamily || "Open Sans"}
-                onChange={(e) =>
-                  updatePlaceholderProperty(
-                    selectedData.id,
-                    "fontFamily",
-                    e.target.value
-                  )
+                onValueChange={(value) =>
+                  updatePlaceholderProperty(selectedData.id, "fontFamily", value)
                 }
-                className="w-full px-3 py-1 border border-border rounded text-sm"
               >
-                {FONT_FAMILIES.map((font) => (
-                  <option key={font} value={font}>
-                    {font}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select font family" />
+                </SelectTrigger>
+                <SelectContent>
+                  {FONT_FAMILIES.map((font) => (
+                    <SelectItem key={font} value={font}>
+                      {font}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-primary mb-2">
+              <label className="block text-sm font-medium text-primary mb-1">
                 Font Style
               </label>
-              <div className="flex space-x-2">
-                {["normal", "bold", "italic"].map((style) => (
-                  <button
-                    key={style}
-                    onClick={() =>
-                      updatePlaceholderProperty(
-                        selectedData.id,
-                        "fontStyle",
-                        style
-                      )
-                    }
-                    className={`px-3 py-1 rounded text-sm capitalize ${
-                      selectedData.fontStyle === style
-                        ? "bg-primary text-neutral"
-                        : "bg-neutral border border-border"
-                    }`}
-                  >
-                    {style}
-                  </button>
-                ))}
-              </div>
+              <Select
+                value={selectedData.fontStyle || "normal"}
+                onValueChange={(value) =>
+                  updatePlaceholderProperty(selectedData.id, "fontStyle", value)
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select font style" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="bold">Bold</SelectItem>
+                  <SelectItem value="italic">Italic</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-primary mb-2">
+              <label className="block text-sm font-medium text-primary mb-1">
                 Text Align
               </label>
-              <div className="flex space-x-2">
-                {["left", "center", "right"].map((align) => (
-                  <button
-                    key={align}
-                    onClick={() =>
-                      updatePlaceholderProperty(
-                        selectedData.id,
-                        "textAlign",
-                        align
-                      )
-                    }
-                    className={`px-3 py-1 rounded text-sm capitalize ${
-                      selectedData.textAlign === align
-                        ? "bg-primary text-neutral"
-                        : "bg-neutral border border-border"
-                    }`}
-                  >
-                    {align}
-                  </button>
-                ))}
-              </div>
+              <Select
+                value={selectedData.textAlign || "left"}
+                onValueChange={(value) =>
+                  updatePlaceholderProperty(selectedData.id, "textAlign", value)
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select text alignment" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="left">Left</SelectItem>
+                  <SelectItem value="center">Center</SelectItem>
+                  <SelectItem value="right">Right</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         )}
 
         <button
           onClick={() => deletePlaceholder(selectedData.id)}
-          className="mt-4 w-full bg-imperialred text-neutral py-2 rounded text-sm hover:bg-red-700 transition-colors"
+          className="mt-4 w-full bg-red-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-red-700 transition-colors"
         >
           Delete Placeholder
         </button>
@@ -810,8 +763,8 @@ export const CreateTemplate = () => {
               <input
                 type="text"
                 {...register("title")}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent ${
-                  errors.title ? "border-red-500" : "border-border"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-1 focus:ring-primary focus:border-primary ${
+                  errors.title ? "border-red-500" : "border-gray-300"
                 }`}
                 placeholder="Enter template title"
               />
@@ -830,7 +783,7 @@ export const CreateTemplate = () => {
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors ${
-                  errors.template_image_url ? "border-red-500" : "border-border"
+                  errors.template_image_url ? "border-red-500" : "border-gray-300"
                 }`}
               >
                 {template.template_image_url ? (
@@ -841,8 +794,8 @@ export const CreateTemplate = () => {
                   />
                 ) : (
                   <div className="space-y-2">
-                    <Upload className="w-12 h-12 text-secondary mx-auto" />
-                    <p className="text-secondary">
+                    <Upload className="w-12 h-12 text-gray-400 mx-auto" />
+                    <p className="text-gray-500">
                       Click to upload template image
                     </p>
                   </div>
@@ -875,10 +828,10 @@ export const CreateTemplate = () => {
               <div className="flex space-x-2">
                 <button
                   onClick={() => setPlaceholderType("image")}
-                  className={`px-3 py-1 rounded-lg flex items-center space-x-1 ${
+                  className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
                     placeholderType === "image"
-                      ? "bg-primary text-neutral"
-                      : "bg-muted text-secondary"
+                      ? "bg-primary text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
                   <ImageIcon className="w-4 h-4" />
@@ -886,10 +839,10 @@ export const CreateTemplate = () => {
                 </button>
                 <button
                   onClick={() => setPlaceholderType("text")}
-                  className={`px-3 py-1 rounded-lg flex items-center space-x-1 ${
+                  className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
                     placeholderType === "text"
-                      ? "bg-primary text-neutral"
-                      : "bg-muted text-secondary"
+                      ? "bg-primary text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
                   <Type className="w-4 h-4" />
@@ -898,7 +851,7 @@ export const CreateTemplate = () => {
               </div>
             </div>
 
-            <p className="text-sm text-secondary">
+            <p className="text-sm text-gray-600">
               Click on the canvas to add fixed {placeholderType} elements that
               will appear on every generated template. The properties panel will
               automatically appear for each new element you create.
@@ -909,15 +862,15 @@ export const CreateTemplate = () => {
               {template.template_placeholders.map((placeholder) => (
                 <div
                   key={placeholder.id}
-                  className="flex items-center justify-between bg-muted p-2 rounded"
+                  className="flex items-center justify-between bg-gray-50 p-3 rounded-lg"
                 >
-                  <span className="text-sm">
+                  <span className="text-sm text-primary">
                     {placeholder.labelText} ({Math.round(placeholder.x)},{" "}
                     {Math.round(placeholder.y)})
                   </span>
                   <button
                     onClick={() => deletePlaceholder(placeholder.id)}
-                    className="text-imperialred hover:text-red-700"
+                    className="text-red-600 hover:text-red-700 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -935,14 +888,14 @@ export const CreateTemplate = () => {
             <h3 className="text-lg font-semibold text-primary">
               Template Preview
             </h3>
-            <div className="bg-muted p-4 rounded-lg">
+            <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-medium text-primary mb-2">
                 Template Details:
               </h4>
-              <p>
+              <p className="text-gray-700">
                 <strong>Title:</strong> {template.title}
               </p>
-              <p>
+              <p className="text-gray-700">
                 <strong>Template Elements:</strong>{" "}
                 {template.template_placeholders.length}
               </p>
@@ -958,7 +911,7 @@ export const CreateTemplate = () => {
             <button
               onClick={handleSaveTemplate}
               disabled={saving}
-              className="w-full bg-primary text-neutral py-3 rounded-lg hover:bg-secondary transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-primary text-white py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? (
                 <>
@@ -989,14 +942,14 @@ export const CreateTemplate = () => {
             <div key={step.id} className="flex items-center">
               <div
                 className={`flex items-center space-x-2 ${
-                  currentStep >= step.id ? "text-primary" : "text-secondary"
+                  currentStep >= step.id ? "text-primary" : "text-gray-500"
                 }`}
               >
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                     currentStep >= step.id
-                      ? "bg-primary text-neutral"
-                      : "bg-muted text-secondary"
+                      ? "bg-primary text-white"
+                      : "bg-gray-200 text-gray-500"
                   }`}
                 >
                   {step.id}
@@ -1007,7 +960,7 @@ export const CreateTemplate = () => {
                 </div>
               </div>
               {index < STEPS.length - 1 && (
-                <ChevronRight className="w-4 h-4 text-secondary mx-2" />
+                <ChevronRight className="w-4 h-4 text-gray-400 mx-2" />
               )}
             </div>
           ))}
@@ -1016,7 +969,7 @@ export const CreateTemplate = () => {
 
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Left Panel - Form */}
-        <div className="bg-neutral border border-border rounded-lg p-6">
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
           {renderStepContent()}
 
           {/* Navigation Buttons */}
@@ -1024,7 +977,7 @@ export const CreateTemplate = () => {
             <button
               onClick={prevStep}
               disabled={currentStep === 1}
-              className="flex items-center space-x-2 px-4 py-2 border border-border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Previous</span>
@@ -1033,7 +986,7 @@ export const CreateTemplate = () => {
             <button
               onClick={nextStep}
               disabled={currentStep === 3}
-              className="flex items-center space-x-2 px-4 py-2 bg-primary text-neutral rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary transition-colors"
+              className="flex items-center space-x-2 px-6 py-2 bg-primary text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
             >
               <span>Next</span>
               <ChevronRight className="w-4 h-4" />
@@ -1042,11 +995,11 @@ export const CreateTemplate = () => {
         </div>
 
         {/* Right Panel - Canvas */}
-        <div className="bg-neutral border border-border rounded-lg p-6">
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-primary mb-4">
             Canvas Preview
           </h3>
-          <div className="border border-border rounded-lg overflow-hidden">
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
             <Stage
               ref={stageRef}
               width={CANVAS_WIDTH}
@@ -1215,8 +1168,8 @@ export const CreateTemplate = () => {
           {/* Legend */}
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 border-2 border-thistle bg-thistle/20"></div>
-              <span>Template Elements</span>
+              <div className="w-4 h-4 border-2 border-thistle bg-thistle/20 rounded"></div>
+              <span className="text-gray-600">Template Elements</span>
             </div>
             {selectedPlaceholder && (
               <div className="text-primary font-medium">
