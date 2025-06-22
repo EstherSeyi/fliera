@@ -685,11 +685,29 @@ export const CreateTemplate = () => {
                   <SelectValue placeholder="Select font family" />
                 </SelectTrigger>
                 <SelectContent>
-                  {FONT_FAMILIES.map((font) => (
+                    {Object.entries(CATEGORIZED_FONTS).map(
+                    ([category, fonts]) => (
+                      <div key={category}>
+                        <p className="font-semibold capitalize pl-8 pr-2 mt-4">
+                          {category}
+                        </p>
+                        {fonts.map((font) => (
+                          <SelectItem
+                            key={font}
+                            value={font}
+                            style={{ fontFamily: font }}
+                          >
+                            {font}
+                          </SelectItem>
+                        ))}
+                      </div>
+                    )
+                  )}
+                  {/* {FONT_FAMILIES.map((font) => (
                     <SelectItem key={font} value={font}>
                       {font}
                     </SelectItem>
-                  ))}
+                  ))} */}
                 </SelectContent>
               </Select>
             </div>
