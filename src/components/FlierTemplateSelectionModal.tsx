@@ -65,26 +65,91 @@ export const FlierTemplateSelectionModal: React.FC<
     }
   }, [isOpen]);
 
-  const fetchTemplates = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const fetchTemplates = useCallback(
+    async (
+      page: number = 1,
+      limit: number = 12,
+      filters: TemplateFilters = { filterType: "all" }
+    ): Promise<PaginatedTemplatesResult> => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const { data, error: fetchError } = await supabase
-        .from("flier_templates")
-        .select("*")
-        .order("created_at", { ascending: false });
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.user) {
+          throw new Error("You must be logged in to view templates");
+        }
 
-      if (fetchError) throw fetchError;
+        // Calculate offset for pagination
+        const offset = (page - 1) * limit;
 
-      setTemplates(data || []);
-    } catch (err) {
-      console.error("Error fetching templates:", err);
-      setError("Failed to load templates");
-    } finally {
-      setLoading(false);
-    }
-  };
+        // Build the base query
+        let countQuery = supabase
+          .from("flier_templates")
+          .select("*", { count: "exact", head: true });
+
+        let dataQuery = supabase.from("flier_templates").select("*");
+
+        // Apply filter type
+        if (filters.filterType === "my") {
+          countQuery = countQuery.eq("user_id", session.user.id);
+          dataQuery = dataQuery.eq("user_id", session.user.id);
+        } else if (filters.filterType === "others") {
+          countQuery = countQuery.neq("user_id", session.user.id);
+          dataQuery = dataQuery.neq("user_id", session.user.id);
+        }
+        // For "all", no additional filter is needed
+
+        // Apply search filter
+        if (filters.searchTerm) {
+          const searchFilter = `%${filters.searchTerm}%`;
+          countQuery = countQuery.ilike("title", searchFilter);
+          dataQuery = dataQuery.ilike("title", searchFilter);
+        }
+
+        // Apply date filters
+        if (filters.dateFrom) {
+          countQuery = countQuery.gte("created_at", filters.dateFrom);
+          dataQuery = dataQuery.gte("created_at", filters.dateFrom);
+        }
+
+        if (filters.dateTo) {
+          // Add 23:59:59 to include the entire day
+          const endOfDay = new Date(filters.dateTo);
+          endOfDay.setHours(23, 59, 59, 999);
+          const dateToString = endOfDay.toISOString();
+
+          countQuery = countQuery.lte("created_at", dateToString);
+          dataQuery = dataQuery.lte("created_at", dateToString);
+        }
+
+        // Execute count query
+        const { count, error: countError } = await countQuery;
+        if (countError) throw countError;
+
+        // Execute data query with pagination and ordering
+        const { data, error: fetchError } = await dataQuery
+          .order("created_at", { ascending: false })
+          .range(offset, offset + limit - 1);
+
+        if (fetchError) throw fetchError;
+
+        return {
+          templates: data || [],
+          totalCount: count || 0,
+        };
+      } catch (err) {
+        const error = err as Error;
+        setError(error?.message || "Failed to load templates");
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading, setError]
+  );
 
   const loadTemplateImage = useCallback(async () => {
     if (!selectedTemplate || !containerRef.current) return;
