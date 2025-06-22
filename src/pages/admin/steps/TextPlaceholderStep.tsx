@@ -22,7 +22,7 @@ import {
 } from "../../../components/ui/select";
 import { TwitterColorPickerInput } from "../../../components/TwitterColorPickerInput";
 import { transformText } from "../../../lib/utils";
-import { useGoogleFonts } from "../../../hooks/useGoogleFonts";
+import { CATEGORIZED_FONTS } from "../../../constants";
 
 const TEXT_STYLE_OPTIONS = [
   {
@@ -69,9 +69,6 @@ export const TextPlaceholderStep: React.FC = () => {
   const flyer_file = watch("flyer_file");
   const textPlaceholders = watch("text_placeholders");
   const imagePlaceholders = watch("image_placeholders");
-
-  // Google Fonts integration
-  const { fonts, loading: fontsLoading, error: fontsError, loadFont } = useGoogleFonts();
 
   const tempFlyerUrl = useMemo(
     () => (flyer_file?.name ? URL.createObjectURL(flyer_file) : null),
@@ -164,11 +161,6 @@ export const TextPlaceholderStep: React.FC = () => {
     // For fontSize, convert from display value to original image scale
     if (field === "fontSize") {
       value = Math.round(value / imageScale);
-    }
-
-    // Load font if fontFamily is being changed
-    if (field === "fontFamily") {
-      loadFont(value);
     }
 
     newPlaceholders[index] = { ...newPlaceholders[index], [field]: value };
@@ -405,24 +397,23 @@ export const TextPlaceholderStep: React.FC = () => {
                     <SelectValue placeholder="Select font family" />
                   </SelectTrigger>
                   <SelectContent className="max-h-60">
-                    {fontsLoading ? (
-                      <SelectItem value="loading" disabled>
-                        Loading fonts...
-                      </SelectItem>
-                    ) : fontsError ? (
-                      <SelectItem value="error" disabled>
-                        Error loading fonts
-                      </SelectItem>
-                    ) : (
-                      fonts.map((font) => (
-                        <SelectItem 
-                          key={font.family} 
-                          value={font.family}
-                          style={{ fontFamily: font.family }}
-                        >
-                          {font.family}
-                        </SelectItem>
-                      ))
+                    {Object.entries(CATEGORIZED_FONTS).map(
+                      ([category, fonts]) => (
+                        <div key={category}>
+                          <p className="font-semibold capitalize pl-8 pr-2 mt-4">
+                            {category}
+                          </p>
+                          {fonts.map((font) => (
+                            <SelectItem
+                              key={font}
+                              value={font}
+                              style={{ fontFamily: font }}
+                            >
+                              {font}
+                            </SelectItem>
+                          ))}
+                        </div>
+                      )
                     )}
                   </SelectContent>
                 </Select>

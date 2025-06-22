@@ -8,6 +8,7 @@ import { ToastContainer } from "./components/Toast";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
 import { EventProvider } from "./context/EventContext";
+import { usePreloadGoogleFonts } from "./hooks/usePreloadGoogleFonts";
 
 export const AppProviders = ({ children }: { children: React.ReactNode }) => (
   <ToastProvider>
@@ -163,6 +164,8 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
+  usePreloadGoogleFonts();
+
   return (
     <ErrorBoundary>
       <RouterProvider router={router} />
