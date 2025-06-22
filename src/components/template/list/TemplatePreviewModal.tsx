@@ -15,7 +15,7 @@ interface Props {
     currentUserId: string;
 }
 
-export const TemplatePreviewModal = ({ template, onClose }: Props) => {
+export const TemplatePreviewModal = ({ template, onClose, currentUserId }: Props) => {
   const textPlaceholders = template.template_placeholders.filter(
     (p) => p.type === "text"
   );
