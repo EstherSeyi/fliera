@@ -168,7 +168,7 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                 </div>
               )}
 
-                 {/* Event Flyer */}
+            {/* Event Flyer */}
               <div>
                 <h4 className="font-semibold text-primary mb-3">Event Flyer</h4>
                 <div className="rounded-lg overflow-hidden border border-gray-200">
