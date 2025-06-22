@@ -432,6 +432,7 @@ export const TemplateList = () => {
         <TemplatePreviewModal
           template={selectedTemplate}
           onClose={() => setSelectedTemplate(null)}
+           currentUserId={user?.id || ""}
         />
       )}
     </>
