@@ -1,5 +1,6 @@
-import { Plus, ImageIcon, Type } from "lucide-react";
+import { Plus, ImageIcon, Type, Calendar, Download } from "lucide-react";
 import { Template } from "../../../hooks/useTemplates";
+import { useToast } from "../../../context/ToastContext";
 
 interface Placeholder {
   id: string;
@@ -12,15 +13,56 @@ interface Placeholder {
 interface Props {
   template: Template;
   onClose: () => void;
-    currentUserId: string;
+  currentUserId: string;
 }
 
 export const TemplatePreviewModal = ({ template, onClose, currentUserId }: Props) => {
+  const { showToast } = useToast();
   const textPlaceholders = template.template_placeholders.filter(
     (p) => p.type === "text"
   );
 
-   const isOwner = template.user_id === currentUserId;
+  const isOwner = template.user_id === currentUserId;
+
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const handleDownload = async () => {
+    try {
+      // Fetch the image as blob
+      const response = await fetch(template.template_image_url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch template image");
+      }
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+
+      // Create download link
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${template.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_template.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up blob URL
+      URL.revokeObjectURL(url);
+
+      showToast("Template downloaded successfully!", "success");
+    } catch (error) {
+      console.error("Error downloading template:", error);
+      showToast("Failed to download template", "error");
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -34,7 +76,7 @@ export const TemplatePreviewModal = ({ template, onClose, currentUserId }: Props
               </h3>
               {template.created_by && (
                 <p className="text-secondary">
-                  Created by  {isOwner ? "you" : template.created_by}
+                  Created by {isOwner ? "you" : template.created_by}
                 </p>
               )}
             </div>
@@ -46,9 +88,28 @@ export const TemplatePreviewModal = ({ template, onClose, currentUserId }: Props
             </button>
           </div>
 
-          {/* Image */}
+          {/* Creation Date */}
+          <div className="mb-6 bg-gray-50 rounded-lg p-4">
+            <div className="flex items-center text-sm text-gray-600">
+              <Calendar className="w-4 h-4 mr-2" />
+              <span className="font-medium">Created on:</span>
+              <span className="ml-2">{formatDateTime(template.created_at)}</span>
+            </div>
+          </div>
+
+          {/* Image and Download Button */}
           {template.template_image_url && (
             <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-primary">Template Image</h4>
+                <button
+                  onClick={handleDownload}
+                  className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Template
+                </button>
+              </div>
               <img
                 src={template.template_image_url}
                 alt={template.title}
@@ -147,7 +208,7 @@ const PlaceholderList = ({
         <div key={item.id} className="bg-muted p-3 rounded text-sm">
           <div className="font-medium text-primary">{item.labelText}</div>
           <div className="text-secondary">
-            {item.text && <>“{item.text}” • </>}
+            {item.text && <>"{item.text}" • </>}
             {item.fontSize && `${item.fontSize}px`} {item.fontFamily}
           </div>
         </div>
