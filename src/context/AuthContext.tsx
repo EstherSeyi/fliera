@@ -81,6 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             is_admin: false,
             is_premium_user: false,
             is_creator: false,
+            credits: 0, // Initialize with 0 credits (free tier)
           });
 
         if (userProfileError) {

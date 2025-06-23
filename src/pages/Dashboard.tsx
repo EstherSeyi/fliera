@@ -1,11 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, Users, Image as ImageIcon, Eye, Edit, Plus } from 'lucide-react';
+import { 
+  Calendar, 
+  Users, 
+  Image as ImageIcon, 
+  Eye, 
+  Edit, 
+  Plus,
+  CreditCard,
+  Zap,
+  TrendingUp
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { getPlainTextSnippet } from '../lib/utils';
-import type { Event } from '../types';
+import { CreditDetailsDialog } from '../components/CreditDetailsDialog';
+import type { Event, UserCreditInfo } from '../types';
 
 interface DashboardStats {
   totalEvents: number;
@@ -20,17 +31,86 @@ export const Dashboard: React.FC = () => {
     totalDPs: 0,
     totalParticipants: 0,
   });
+  const [creditInfo, setCreditInfo] = useState<UserCreditInfo>({
+    credits: 0,
+    is_premium_user: false,
+    eventsCreated: 0,
+    totalDPsGenerated: 0,
+    freeEventsRemaining: 3,
+    freeDPsRemainingForCurrentEvents: 0,
+  });
   const [recentEvents, setRecentEvents] = useState<Event[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [loadingCredits, setLoadingCredits] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreditDialog, setShowCreditDialog] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchDashboardStats();
       fetchRecentEvents();
+      fetchCreditInfo();
     }
   }, [user]);
+
+  const fetchCreditInfo = async () => {
+    if (!user) return;
+
+    try {
+      setLoadingCredits(true);
+      setError(null);
+
+      // Fetch user data including credits
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('credits, is_premium_user')
+        .eq('id', user.id)
+        .single();
+
+      if (userError) throw userError;
+
+      // Fetch user's events count
+      const { count: eventsCount, error: eventsError } = await supabase
+        .from('events')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (eventsError) throw eventsError;
+
+      // Fetch user's total DPs generated
+      const { count: dpsCount, error: dpsError } = await supabase
+        .from('dps')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (dpsError) throw dpsError;
+
+      // Calculate free events remaining (max 3)
+      const freeEventsUsed = Math.min(eventsCount || 0, 3);
+      const freeEventsRemaining = Math.max(0, 3 - freeEventsUsed);
+
+      // For free DPs calculation, we need to check DPs per event
+      // For simplicity, we'll calculate total free DPs available across all events
+      const totalFreeEventsCreated = Math.min(eventsCount || 0, 3);
+      const totalFreeDPsAllowed = totalFreeEventsCreated * 100;
+      const freeDPsRemainingForCurrentEvents = Math.max(0, totalFreeDPsAllowed - (dpsCount || 0));
+
+      setCreditInfo({
+        credits: userData?.credits || 0,
+        is_premium_user: userData?.is_premium_user || false,
+        eventsCreated: eventsCount || 0,
+        totalDPsGenerated: dpsCount || 0,
+        freeEventsRemaining,
+        freeDPsRemainingForCurrentEvents,
+      });
+    } catch (err) {
+      console.error('Error fetching credit info:', err);
+      setError('Failed to load credit information');
+    } finally {
+      setLoadingCredits(false);
+    }
+  };
 
   const fetchDashboardStats = async () => {
     if (!user) return;
@@ -232,6 +312,75 @@ export const Dashboard: React.FC = () => {
         </div>
       )}
 
+      {/* Credit Balance Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.05 }}
+      >
+        <div 
+          className="bg-gradient-to-r from-primary to-primary/90 text-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+          onClick={() => setShowCreditDialog(true)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center space-x-2 mb-2">
+                <CreditCard className="w-5 h-5" />
+                <span className="text-white/90 font-medium">Credit Balance</span>
+              </div>
+              {loadingCredits ? (
+                <div className="space-y-2">
+                  <div className="h-8 bg-white/20 rounded animate-pulse w-24"></div>
+                  <div className="h-4 bg-white/20 rounded animate-pulse w-32"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-baseline space-x-2">
+                    <span className="text-3xl font-bold">{creditInfo.credits}</span>
+                    <span className="text-white/80">credit{creditInfo.credits !== 1 ? 's' : ''}</span>
+                  </div>
+                  <p className="text-white/80 text-sm">
+                    {creditInfo.is_premium_user ? 'Premium Account' : 'Free Tier'} • 
+                    {creditInfo.freeEventsRemaining > 0 && (
+                      <span className="ml-1">{creditInfo.freeEventsRemaining} free events left</span>
+                    )}
+                    {creditInfo.freeEventsRemaining === 0 && !creditInfo.is_premium_user && (
+                      <span className="ml-1">All free events used</span>
+                    )}
+                  </p>
+                </>
+              )}
+            </div>
+            <div className="flex flex-col items-center space-y-2">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xs text-white/70">Click for details</span>
+            </div>
+          </div>
+          
+          {/* Quick stats bar */}
+          {!loadingCredits && (
+            <div className="mt-4 pt-4 border-t border-white/20">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-lg font-semibold">{creditInfo.eventsCreated}</div>
+                  <div className="text-xs text-white/70">Events Created</div>
+                </div>
+                <div>
+                  <div className="text-lg font-semibold">{creditInfo.totalDPsGenerated}</div>
+                  <div className="text-xs text-white/70">DPs Generated</div>
+                </div>
+                <div>
+                  <div className="text-lg font-semibold">${(creditInfo.credits * 5).toFixed(0)}</div>
+                  <div className="text-xs text-white/70">Credit Value</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
       {/* Statistics Cards */}
       <motion.div
         className="grid grid-cols-1 md:grid-cols-3 gap-6"
@@ -351,6 +500,13 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
       </motion.div>
+
+      {/* Credit Details Dialog */}
+      <CreditDetailsDialog
+        isOpen={showCreditDialog}
+        onClose={() => setShowCreditDialog(false)}
+        creditInfo={creditInfo}
+      />
     </div>
   );
 };

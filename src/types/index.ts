@@ -155,3 +155,19 @@ export interface AIDescriptionGeneratorProps {
   initialTitle?: string;
   initialDate?: string;
 }
+
+// Credit system interfaces
+export interface UserCreditInfo {
+  credits: number;
+  is_premium_user: boolean;
+  eventsCreated: number;
+  totalDPsGenerated: number;
+  freeEventsRemaining: number;
+  freeDPsRemainingForCurrentEvents: number;
+}
+
+export interface CreditUsage {
+  eventCreditsUsed: number;
+  dpCreditsUsed: number;
+  totalCreditsUsed: number;
+}
