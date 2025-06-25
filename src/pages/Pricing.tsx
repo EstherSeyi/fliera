@@ -66,6 +66,7 @@ export const Pricing: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+  const [clickedPackId, setClickedPackId] = useState<string | null>(null); // Track which button was clicked
   const { initiateCreditPurchase, isLoading: isPurchasing } = useStripeCredits(); // Use the new hook
 
   // Check if user was redirected after login
@@ -75,6 +76,13 @@ export const Pricing: React.FC = () => {
       showToast("You're now logged in — completing your purchase…", 'success');
     }
   }, [isLoggedIn, searchParams, showToast]);
+
+  // Reset clickedPackId when purchase completes
+  useEffect(() => {
+    if (!isPurchasing) {
+      setClickedPackId(null);
+    }
+  }, [isPurchasing]);
 
   const freeTierPlan: FreeTierPlan = {
     id: 'free',
@@ -132,6 +140,9 @@ export const Pricing: React.FC = () => {
       return;
     }
 
+    // Set which button was clicked before starting the purchase
+    setClickedPackId(packId);
+    
     // Use the new hook to initiate the purchase
     await initiateCreditPurchase(packId);
   };
@@ -369,14 +380,15 @@ export const Pricing: React.FC = () => {
 
                 <button
                   onClick={() => handlePurchase(pack.id, 'credits')}
-                  disabled={isPurchasing} // Disable button while purchasing
+                  disabled={isPurchasing} // Disable all buttons while any purchase is in progress
                   className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg ${
                     pack.popular
                       ? 'bg-accent text-primary hover:bg-accent/90'
                       : 'bg-primary text-white hover:bg-primary/90'
                   } ${isPurchasing ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  {isPurchasing ? 'Processing...' : 'Buy Credits'}
+                  {/* Only show "Processing..." for the clicked button */}
+                  {isPurchasing && clickedPackId === pack.id ? 'Processing...' : 'Buy Credits'}
                 </button>
               </div>
             </motion.div>
@@ -468,7 +480,8 @@ export const Pricing: React.FC = () => {
             disabled={isPurchasing} // Disable button while purchasing
             className={`px-8 py-3 bg-accent text-primary rounded-lg font-semibold hover:bg-accent/90 transition-colors ${isPurchasing ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            Buy Credits
+            {/* Only show "Processing..." for the clicked button */}
+            {isPurchasing && clickedPackId === 'pack-5' ? 'Processing...' : 'Buy Credits'}
           </button>
         </div>
         <p className="text-sm text-white/70 mt-6">
