@@ -1,11 +1,12 @@
+// src/pages/Pricing.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  Check, 
+import {
+  Check,
   X,
-  Star, 
-  Zap, 
+  Star,
+  Zap,
   Gift,
   ChevronDown,
   ChevronUp,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useStripeCredits } from '../hooks/useStripeCredits'; // Import the new hook
 
 interface FreeTierPlan {
   id: string;
@@ -65,6 +67,7 @@ export const Pricing: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+  const { initiateCreditPurchase, isLoading: isPurchasing } = useStripeCredits(); // Use the new hook
 
   // Check if user was redirected after login
   useEffect(() => {
@@ -122,7 +125,7 @@ export const Pricing: React.FC = () => {
     }
   ];
 
-  const handlePurchase = (packId: string, type: 'credits') => {
+  const handlePurchase = async (packId: string, type: 'credits') => {
     if (!isLoggedIn) {
       // Store the intended purchase and redirect to login
       const currentUrl = `/pricing?plan=${packId}&type=${type}`;
@@ -130,19 +133,8 @@ export const Pricing: React.FC = () => {
       return;
     }
 
-    // Simulate payment flow - in real app, this would integrate with Stripe
-    showToast('Redirecting to payment...', 'info');
-    
-    // Simulate payment processing
-    setTimeout(() => {
-      const success = Math.random() > 0.1; // 90% success rate for demo
-      
-      if (success) {
-        navigate(`/payment-success?plan=${packId}&type=${type}`);
-      } else {
-        navigate(`/payment-failure?plan=${packId}&type=${type}`);
-      }
-    }, 2000);
+    // Use the new hook to initiate the purchase
+    await initiateCreditPurchase(packId);
   };
 
   const toggleFAQ = (index: number) => {
@@ -250,7 +242,7 @@ export const Pricing: React.FC = () => {
                 Credits are automatically used once your free event or flyer limits are reached.
               </p>
             </div>
-            
+
             <div className="p-6">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -309,7 +301,7 @@ export const Pricing: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-              
+
               <div className="mt-6 bg-blue-50 rounded-lg p-4">
                 <p className="text-blue-800 text-sm">
                   <strong>Note:</strong> Credits are automatically used once your free event or flyer limits are reached.
@@ -337,8 +329,8 @@ export const Pricing: React.FC = () => {
             <motion.div
               key={pack.id}
               className={`relative bg-white rounded-xl shadow-lg border-2 transition-all duration-300 hover:shadow-xl p-6 ${
-                pack.popular 
-                  ? 'border-accent scale-105' 
+                pack.popular
+                  ? 'border-accent scale-105'
                   : 'border-gray-200 hover:border-accent/30'
               }`}
               initial={{ opacity: 0, y: 30 }}
@@ -366,7 +358,7 @@ export const Pricing: React.FC = () => {
                   ${pack.price.toFixed(2)}
                 </div>
                 <p className="text-secondary text-sm mb-4">{pack.description}</p>
-                
+
                 <div className="bg-gray-50 rounded-lg p-3 mb-6">
                   <p className="text-xs text-gray-600 font-medium mb-1">Coverage:</p>
                   <p className="text-sm text-primary font-semibold">{pack.coverage}</p>
@@ -378,13 +370,14 @@ export const Pricing: React.FC = () => {
 
                 <button
                   onClick={() => handlePurchase(pack.id, 'credits')}
+                  disabled={isPurchasing} // Disable button while purchasing
                   className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg ${
                     pack.popular
                       ? 'bg-accent text-primary hover:bg-accent/90'
                       : 'bg-primary text-white hover:bg-primary/90'
-                  }`}
+                  } ${isPurchasing ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  Buy Credits
+                  {isPurchasing ? 'Processing...' : 'Buy Credits'}
                 </button>
               </div>
             </motion.div>
@@ -431,7 +424,7 @@ export const Pricing: React.FC = () => {
                   <ChevronDown className="w-5 h-5 text-gray-400" />
                 )}
               </button>
-              
+
               {expandedFAQ === index && (
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
@@ -473,7 +466,8 @@ export const Pricing: React.FC = () => {
           </button>
           <button
             onClick={() => handlePurchase('pack-5', 'credits')}
-            className="px-8 py-3 bg-accent text-primary rounded-lg font-semibold hover:bg-accent/90 transition-colors"
+            disabled={isPurchasing} // Disable button while purchasing
+            className={`px-8 py-3 bg-accent text-primary rounded-lg font-semibold hover:bg-accent/90 transition-colors ${isPurchasing ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             Buy Credits
           </button>
