@@ -51,7 +51,7 @@ export const PaymentSuccess: React.FC = () => {
         const creditMap: Record<string, { credits: number; amount: string }> = {
           "pack-1": { credits: 1, amount: "$5.00" },
           "pack-2": { credits: 2, amount: "$8.00" },
-          "pack-5": { credits: 5, amount: "$20.00" },
+          "pack-5": { credits: 5, amount: "$16.00" },
           "pack-10": { credits: 10, amount: "$35.00" },
         };
 
