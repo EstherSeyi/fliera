@@ -58,7 +58,7 @@ export const PaymentSuccess: React.FC = () => {
         const pack = creditMap[planId];
         details = {
           type: "credits",
-          planName: `${pack?.credits || 0} Credits`,
+          planName: `${pack?.credits ?? 0} Credits`,
           description: `Your purchase was successful! Check your dashboard for your updated credit balance.`,
           icon: Zap,
           color: "text-yellow-600",
