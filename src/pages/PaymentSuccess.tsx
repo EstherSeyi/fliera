@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle, ArrowRight, Download, Crown, Zap } from "lucide-react";
+import { CheckCircle, ArrowRight, Download, Crown, Zap, CreditCard } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useUserCredits } from "../hooks/useUserCredits";
 
 interface PurchaseDetails {
   type: "subscription" | "credits";
@@ -14,6 +15,7 @@ interface PurchaseDetails {
 
 export const PaymentSuccess: React.FC = () => {
   const { user } = useAuth();
+  const { creditInfo, loading: loadingCredits, refetch } = useUserCredits();
   const [searchParams] = useSearchParams();
   const [purchaseDetails, setPurchaseDetails] =
     useState<PurchaseDetails | null>(null);
@@ -48,18 +50,16 @@ export const PaymentSuccess: React.FC = () => {
         // Credits
         const creditMap: Record<string, { credits: number; amount: string }> = {
           "pack-1": { credits: 1, amount: "$5.00" },
-          "pack-2": { credits: 2, amount: "$8.00" },
-          "pack-5": { credits: 5, amount: "$20.00" },
-          "pack-10": { credits: 10, amount: "$55.00" },
+          "pack-2": { credits: 2, amount: "$10.00" },
+          "pack-5": { credits: 5, amount: "$25.00" },
+          "pack-10": { credits: 10, amount: "$50.00" },
         };
 
         const pack = creditMap[planId];
         details = {
           type: "credits",
           planName: `${pack?.credits || 0} Credits`,
-          description: `You now have ${
-            pack?.credits ?? 0
-          } credits available in your account.`,
+          description: `Your purchase was successful! Check your dashboard for your updated credit balance.`,
           icon: Zap,
           color: "text-yellow-600",
         };
@@ -68,6 +68,11 @@ export const PaymentSuccess: React.FC = () => {
       setPurchaseDetails(details);
     }
   }, [searchParams]);
+
+  // Refetch credit info when component mounts to get the latest balance
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   if (!purchaseDetails) {
     return (
@@ -141,9 +146,39 @@ export const PaymentSuccess: React.FC = () => {
           <h2 className="text-xl font-semibold text-primary mb-2">
             {purchaseDetails.planName}
           </h2>
-          <p className="text-secondary text-sm">
+          <p className="text-secondary text-sm mb-4">
             {purchaseDetails.description}
           </p>
+
+          {/* Current Credit Balance */}
+          {purchaseDetails.type === "credits" && (
+            <motion.div
+              className="bg-primary/10 rounded-lg p-4 mt-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="flex items-center justify-center space-x-2 mb-2">
+                <CreditCard className="w-5 h-5 text-primary" />
+                <span className="font-medium text-primary">Current Balance</span>
+              </div>
+              {loadingCredits ? (
+                <div className="h-8 bg-gray-200 rounded animate-pulse w-20 mx-auto"></div>
+              ) : (
+                <div className="flex items-baseline justify-center space-x-1">
+                  <span className="text-2xl font-bold text-primary">
+                    {creditInfo.credits}
+                  </span>
+                  <span className="text-primary/80 text-sm">
+                    credit{creditInfo.credits !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+              <p className="text-xs text-gray-600 mt-1">
+                ≈ ${(creditInfo.credits * 5).toFixed(2)} USD value
+              </p>
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Action Buttons */}

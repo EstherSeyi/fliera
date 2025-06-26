@@ -16,7 +16,8 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { getPlainTextSnippet } from '../lib/utils';
 import { CreditDetailsDialog } from '../components/CreditDetailsDialog';
-import type { Event, UserCreditInfo } from '../types';
+import { useUserCredits } from '../hooks/useUserCredits';
+import type { Event } from '../types';
 
 interface DashboardStats {
   totalEvents: number;
@@ -26,23 +27,15 @@ interface DashboardStats {
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const { creditInfo, loading: loadingCredits } = useUserCredits();
   const [stats, setStats] = useState<DashboardStats>({
     totalEvents: 0,
     totalDPs: 0,
     totalParticipants: 0,
   });
-  const [creditInfo, setCreditInfo] = useState<UserCreditInfo>({
-    credits: 0,
-    is_premium_user: false,
-    eventsCreated: 0,
-    totalDPsGenerated: 0,
-    freeEventsRemaining: 3,
-    freeDPsRemainingForCurrentEvents: 0,
-  });
   const [recentEvents, setRecentEvents] = useState<Event[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
-  const [loadingCredits, setLoadingCredits] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreditDialog, setShowCreditDialog] = useState(false);
 
@@ -50,67 +43,8 @@ export const Dashboard: React.FC = () => {
     if (user) {
       fetchDashboardStats();
       fetchRecentEvents();
-      fetchCreditInfo();
     }
   }, [user]);
-
-  const fetchCreditInfo = async () => {
-    if (!user) return;
-
-    try {
-      setLoadingCredits(true);
-      setError(null);
-
-      // Fetch user data including credits
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('credits, is_premium_user')
-        .eq('id', user.id)
-        .single();
-
-      if (userError) throw userError;
-
-      // Fetch user's events count
-      const { count: eventsCount, error: eventsError } = await supabase
-        .from('events')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      if (eventsError) throw eventsError;
-
-      // Fetch user's total DPs generated
-      const { count: dpsCount, error: dpsError } = await supabase
-        .from('dps')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      if (dpsError) throw dpsError;
-
-      // Calculate free events remaining (max 3)
-      const freeEventsUsed = Math.min(eventsCount || 0, 3);
-      const freeEventsRemaining = Math.max(0, 3 - freeEventsUsed);
-
-      // For free DPs calculation, we need to check DPs per event
-      // For simplicity, we'll calculate total free DPs available across all events
-      const totalFreeEventsCreated = Math.min(eventsCount || 0, 3);
-      const totalFreeDPsAllowed = totalFreeEventsCreated * 100;
-      const freeDPsRemainingForCurrentEvents = Math.max(0, totalFreeDPsAllowed - (dpsCount || 0));
-
-      setCreditInfo({
-        credits: userData?.credits || 0,
-        is_premium_user: userData?.is_premium_user || false,
-        eventsCreated: eventsCount || 0,
-        totalDPsGenerated: dpsCount || 0,
-        freeEventsRemaining,
-        freeDPsRemainingForCurrentEvents,
-      });
-    } catch (err) {
-      console.error('Error fetching credit info:', err);
-      setError('Failed to load credit information');
-    } finally {
-      setLoadingCredits(false);
-    }
-  };
 
   const fetchDashboardStats = async () => {
     if (!user) return;
