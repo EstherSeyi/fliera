@@ -118,7 +118,7 @@ export const Pricing: React.FC = () => {
     {
       id: 'pack-5',
       credits: 5,
-      price: 18.00,
+      price: 15.00,
       description: 'Most popular choice',
       coverage: 'Up to 10 Events or 5,000 DPs',
       popular: true
