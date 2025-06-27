@@ -1,7 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, LogOut, Menu, X, LogIn } from "lucide-react";
+import {
+  Calendar,
+  LogOut,
+  Menu,
+  X,
+  LogIn,
+  LayoutDashboard,
+  List,
+  ImageIcon,
+  PlusCircle,
+  LayoutTemplate,
+  CreditCardIcon,
+  LogOutIcon,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export const Navbar: React.FC = () => {
@@ -46,6 +59,10 @@ export const Navbar: React.FC = () => {
       </Link>
     );
   };
+
+  const mobileNavLinks = isLoggedIn
+    ? loggedMobileInNavLinks
+    : loggedOutNavLinks;
 
   return (
     <nav className="sticky top-0 bg-neutral/80 backdrop-blur-sm border-b border-primary/10 z-50">
@@ -131,51 +148,32 @@ export const Navbar: React.FC = () => {
                   </button>
 
                   <div className="flex flex-col pt-8 px-4 pb-4">
-                    <NavLink
-                      to="/events"
-                      Icon={Calendar}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Events
-                    </NavLink>
+                    {mobileNavLinks.map((item) => {
+                      if (!item.to) {
+                        return (
+                          <button
+                            onClick={() => {
+                              logout();
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="flex items-center w-full px-6 py-4 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <LogOut className="w-5 h-5 mr-3" />
+                            Logout
+                          </button>
+                        );
+                      }
 
-                    <NavLink
-                      to="/pricing"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Pricing
-                    </NavLink>
-
-                    {isLoggedIn && (
-                      <NavLink
-                        to="/dashboard"
-                        Icon={Calendar}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        Dashboard
-                      </NavLink>
-                    )}
-
-                    {isLoggedIn ? (
-                      <button
-                        onClick={() => {
-                          logout();
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="flex items-center w-full px-6 py-4 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                      >
-                        <LogOut className="w-5 h-5 mr-3" />
-                        Logout
-                      </button>
-                    ) : (
-                      <NavLink
-                        to="/login"
-                        Icon={LogIn}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        Login
-                      </NavLink>
-                    )}
+                      return (
+                        <NavLink
+                          to={item.to}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          Icon={item.icon}
+                        >
+                          {item.label}
+                        </NavLink>
+                      );
+                    })}
                   </div>
                 </motion.div>
               </motion.div>
@@ -186,3 +184,20 @@ export const Navbar: React.FC = () => {
     </nav>
   );
 };
+
+const loggedMobileInNavLinks = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/my-events", label: "My Events", icon: List },
+  { to: "/my-dps", label: "My DPs", icon: ImageIcon },
+  { to: "/admin/create", label: "Create Event", icon: PlusCircle },
+  { to: "/templates", label: "Templates", icon: LayoutTemplate },
+  { to: "/events", label: "Events", icon: Calendar },
+  { to: "/pricing", label: "Pricing", icon: CreditCardIcon },
+  { to: undefined, label: "Logout", icon: LogOutIcon },
+];
+
+const loggedOutNavLinks = [
+  { to: "/events", label: "Events", icon: Calendar },
+  { to: "/pricing", label: "Pricing", icon: CreditCardIcon },
+  { to: "/login", label: "Login", icon: LogIn },
+];
