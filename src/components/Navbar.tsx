@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, PlusCircle, LogOut, Menu, X, LayoutDashboard, Image as ImageIcon, LogIn } from "lucide-react";
+import { Calendar, LogOut, Menu, X, LogIn } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export const Navbar: React.FC = () => {
@@ -62,25 +62,19 @@ export const Navbar: React.FC = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             <NavLink to="/events">Events</NavLink>
+            <NavLink to="/pricing">Pricing</NavLink>
+            {isLoggedIn && <NavLink to="/dashboard">Dashboard</NavLink>}
 
             {isLoggedIn ? (
-              <>
-                <NavLink to="/dashboard">Dashboard</NavLink>
-                <NavLink to="/my-dps">My DPs</NavLink>
-                <NavLink to="/admin/create">
-                  <PlusCircle className="w-5 h-5 mr-1" />
-                  Create Event
-                </NavLink>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={logout}
-                   className="flex items-center px-6 py-2 bg-primary/10 text-primary hover:bg-primary/20 transition-colors rounded-lg"
-                >
-                  <LogOut className="w-5 h-5 mr-2" />
-                  Logout
-                </motion.button>
-              </>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={logout}
+                className="flex items-center px-6 py-2 bg-primary/10 text-primary hover:bg-primary/20 transition-colors rounded-lg"
+              >
+                <LogOut className="w-5 h-5 mr-2" />
+                Logout
+              </motion.button>
             ) : (
               <motion.div
                 whileHover={{ scale: 1.05 }}
@@ -115,7 +109,7 @@ export const Navbar: React.FC = () => {
               >
                 <motion.div
                   ref={mobileMenuRef}
-                   initial={{
+                  initial={{
                     scale: 1.1,
                     opacity: 0,
                   }}
@@ -145,40 +139,34 @@ export const Navbar: React.FC = () => {
                       Events
                     </NavLink>
 
+                    <NavLink
+                      to="/pricing"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Pricing
+                    </NavLink>
+
+                    {isLoggedIn && (
+                      <NavLink
+                        to="/dashboard"
+                        Icon={Calendar}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Dashboard
+                      </NavLink>
+                    )}
+
                     {isLoggedIn ? (
-                      <>
-                        <NavLink
-                          to="/dashboard"
-                          Icon={LayoutDashboard}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          Dashboard
-                        </NavLink>
-                        <NavLink
-                          to="/my-dps"
-                          Icon={ImageIcon}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          My DPs
-                        </NavLink>
-                        <NavLink
-                          to="/admin/create"
-                          Icon={PlusCircle}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          Create Event
-                        </NavLink>
-                        <button
-                          onClick={() => {
-                            logout();
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className="flex items-center w-full px-6 py-4 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                          <LogOut className="w-5 h-5 mr-3" />
-                          Logout
-                        </button>
-                      </>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="flex items-center w-full px-6 py-4 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <LogOut className="w-5 h-5 mr-3" />
+                        Logout
+                      </button>
                     ) : (
                       <NavLink
                         to="/login"

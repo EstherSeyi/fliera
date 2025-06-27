@@ -3,13 +3,19 @@ import { Layout } from "./components/Layout";
 import { Home } from "./pages/Home";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ToastProvider } from "./context/ToastContext";
+import { ToastContainer } from "./components/Toast";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 import { EventProvider } from "./context/EventContext";
+import { usePreloadGoogleFonts } from "./hooks/usePreloadGoogleFonts";
 
 export const AppProviders = ({ children }: { children: React.ReactNode }) => (
-  <AuthProvider>
-    <EventProvider>{children}</EventProvider>
-  </AuthProvider>
+  <ToastProvider>
+    <AuthProvider>
+      <EventProvider>{children}</EventProvider>
+    </AuthProvider>
+  </ToastProvider>
 );
 
 const router = createBrowserRouter([
@@ -18,6 +24,7 @@ const router = createBrowserRouter([
     element: (
       <AppProviders>
         <Layout />
+        <ToastContainer />
       </AppProviders>
     ),
     children: [
@@ -40,6 +47,27 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "pricing",
+        async lazy() {
+          const { Pricing } = await import("./pages/Pricing");
+          return { Component: Pricing };
+        },
+      },
+      {
+        path: "payment-success",
+        async lazy() {
+          const { PaymentSuccess } = await import("./pages/PaymentSuccess");
+          return { Component: PaymentSuccess };
+        },
+      },
+      {
+        path: "payment-failure",
+        async lazy() {
+          const { PaymentFailure } = await import("./pages/PaymentFailure");
+          return { Component: PaymentFailure };
+        },
+      },
+      {
         path: "admin/create",
         async lazy() {
           const { CreateEvent } = await import("./pages/admin/CreateEvent");
@@ -47,6 +75,19 @@ const router = createBrowserRouter([
             Component: () => (
               <ProtectedRoute>
                 <CreateEvent />
+              </ProtectedRoute>
+            ),
+          };
+        },
+      },
+      {
+        path: "admin/edit/:id",
+        async lazy() {
+          const { EditEvent } = await import("./pages/admin/EditEvent");
+          return {
+            Component: () => (
+              <ProtectedRoute>
+                <EditEvent />
               </ProtectedRoute>
             ),
           };
@@ -92,12 +133,44 @@ const router = createBrowserRouter([
           };
         },
       },
+      {
+        path: "my-events",
+        async lazy() {
+          const { MyEvents } = await import("./pages/MyEvents");
+          return {
+            Component: () => (
+              <ProtectedRoute>
+                <MyEvents />
+              </ProtectedRoute>
+            ),
+          };
+        },
+      },
+      {
+        path: "templates",
+        async lazy() {
+          const { Templates } = await import("./pages/templates/");
+          return {
+            Component: () => (
+              <ProtectedRoute>
+                <Templates />
+              </ProtectedRoute>
+            ),
+          };
+        },
+      },
     ],
   },
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  usePreloadGoogleFonts();
+
+  return (
+    <ErrorBoundary>
+      <RouterProvider router={router} />
+    </ErrorBoundary>
+  );
 }
 
 export default App;

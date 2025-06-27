@@ -35,23 +35,12 @@ export const CreateEvent: React.FC = () => {
       date: "",
       description: "",
       flyer_file: null,
-      image_placeholders: [{ x: 50, y: 50, width: 200, height: 200 }],
-      text_placeholders: [
-        {
-          x: 50,
-          y: 270,
-          width: 200,
-          height: 50,
-          text: "",
-          fontSize: 24,
-          color: "#000000",
-          textAlign: "center",
-          fontFamily: "Open Sans",
-          fontStyle: "normal",
-          textTransform: "none",
-          fontWeight: "600",
-        },
+      use_template: false,
+      template_id: "",
+      image_placeholders: [
+        { x: 50, y: 50, width: 200, height: 200, holeShape: "box" },
       ],
+      text_placeholders: [],
     },
     mode: "onChange",
   });
@@ -63,34 +52,63 @@ export const CreateEvent: React.FC = () => {
     setIsLoading(true);
     setError(null);
 
-    if (!data?.flyer_file) return;
+    if (!data?.flyer_file) {
+      setError("Flyer file is required");
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const file = data?.flyer_file;
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `event-flyers/${fileName}`;
+      let flyerUrl: string;
 
-      // Upload file to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from("event-flyers")
-        .upload(filePath, file);
+      if (data.use_template) {
+        // If using template, the flyer_file is already the generated image
+        // We need to upload it to the event-flyers bucket
+        const fileExt = "png"; // Template generated images are PNG
+        const fileName = `template-${Date.now()}.${fileExt}`;
+        const filePath = `event-flyers/${fileName}`;
 
-      if (uploadError) throw uploadError;
+        const { error: uploadError } = await supabase.storage
+          .from("event-flyers")
+          .upload(filePath, file);
 
-      // Get the public URL for the uploaded file
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("event-flyers").getPublicUrl(filePath);
+        if (uploadError) throw uploadError;
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("event-flyers").getPublicUrl(filePath);
+
+        flyerUrl = publicUrl;
+      } else {
+        // Regular file upload
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `event-flyers/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("event-flyers")
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("event-flyers").getPublicUrl(filePath);
+
+        flyerUrl = publicUrl;
+      }
 
       const newEvent: Event = {
         id: Date.now().toString(),
         title: data.title,
         date: data.date,
         description: data.description,
-        flyer_url: publicUrl,
+        flyer_url: flyerUrl,
         image_placeholders: data.image_placeholders,
         text_placeholders: data.text_placeholders,
+        category: data?.category,
+        visibility: data?.visibility ?? "public",
       };
 
       await addEvent(newEvent);

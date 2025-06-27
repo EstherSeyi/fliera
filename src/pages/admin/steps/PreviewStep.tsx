@@ -1,12 +1,22 @@
 import React, { useRef, useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Stage, Layer, Image as KonvaImage, Text, Rect } from "react-konva";
+import {
+  Stage,
+  Layer,
+  Image as KonvaImage,
+  Text,
+  Rect,
+  Circle,
+  Shape,
+} from "react-konva";
 import { useFormContext } from "react-hook-form";
 import type { CreateEventFormData } from "../../../types";
+import { transformText } from "../../../lib/utils";
 
 export const PreviewStep: React.FC = () => {
   const { watch } = useFormContext<CreateEventFormData>();
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [imageScale, setImageScale] = useState(1);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -27,6 +37,7 @@ export const PreviewStep: React.FC = () => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.offsetWidth;
         const scale = containerWidth / img.width;
+        setImageScale(scale);
         setStageSize({
           width: containerWidth,
           height: img.height * scale,
@@ -34,6 +45,56 @@ export const PreviewStep: React.FC = () => {
       }
     };
   }, [tempFlyerUrl]);
+
+  const renderPlaceholderShape = (placeholder: any, index: number) => {
+    // Scale coordinates for display on the Konva stage
+    const scaledX = placeholder.x * imageScale;
+    const scaledY = placeholder.y * imageScale;
+    const scaledWidth = placeholder.width * imageScale;
+    const scaledHeight = placeholder.height * imageScale;
+
+    const commonProps = {
+      key: index,
+      x: scaledX,
+      y: scaledY,
+      fill: "rgba(0, 123, 255, 0.3)",
+      stroke: "rgba(0, 123, 255, 0.8)",
+      strokeWidth: 2,
+    };
+
+    switch (placeholder.holeShape) {
+      case "circle":
+        return (
+          <Circle
+            {...commonProps}
+            radius={Math.min(scaledWidth, scaledHeight) / 2}
+            offsetX={0}
+            offsetY={0}
+          />
+        );
+      case "triangle":
+        return (
+          <Shape
+            {...commonProps}
+            sceneFunc={(context, shape) => {
+              context.beginPath();
+              context.moveTo(scaledWidth / 2, 0);
+              context.lineTo(scaledWidth, scaledHeight);
+              context.lineTo(0, scaledHeight);
+              context.closePath();
+              context.fillStrokeShape(shape);
+            }}
+            width={scaledWidth}
+            height={scaledHeight}
+          />
+        );
+      case "box":
+      default:
+        return (
+          <Rect {...commonProps} width={scaledWidth} height={scaledHeight} />
+        );
+    }
+  };
 
   if (!tempFlyerUrl) {
     return null;
@@ -62,18 +123,31 @@ export const PreviewStep: React.FC = () => {
                 width={stageSize.width}
                 height={stageSize.height}
               />
-              {image_placeholders.map((placeholder, index) => (
-                <Rect
-                  key={index}
-                  {...placeholder}
-                  fill="rgba(0, 123, 255, 0.3)"
-                  stroke="rgba(0, 123, 255, 0.8)"
-                  strokeWidth={2}
-                />
-              ))}
-              {text_placeholders.map((placeholder, index) => (
-                <Text key={index} {...placeholder} />
-              ))}
+              {image_placeholders.map((placeholder, index) =>
+                renderPlaceholderShape(placeholder, index)
+              )}
+              {text_placeholders.map((placeholder, index) => {
+                const displayText = transformText(
+                  placeholder.text,
+                  placeholder.textTransform ?? ""
+                );
+
+                return (
+                  <Text
+                    key={index}
+                    x={placeholder.x * imageScale}
+                    y={placeholder.y * imageScale}
+                    width={placeholder.width * imageScale}
+                    height={placeholder.height * imageScale}
+                    text={displayText}
+                    fontSize={placeholder.fontSize * imageScale}
+                    fill={placeholder.color}
+                    align={placeholder.textAlign}
+                    fontFamily={placeholder.fontFamily}
+                    fontStyle={placeholder.fontStyle}
+                  />
+                );
+              })}
             </Layer>
           </Stage>
         )}
