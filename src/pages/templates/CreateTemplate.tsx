@@ -33,12 +33,7 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { TwitterColorPickerInput } from "../../components/TwitterColorPickerInput";
-import {
-  CANVAS_HEIGHT,
-  CANVAS_WIDTH,
-   CATEGORIZED_FONTS,
-  STEPS,
-} from "../../constants";
+import { STEPS, CATEGORIZED_FONTS } from "../../constants";
 
 type Step1FormData = z.infer<typeof step1Schema>;
 
@@ -67,14 +62,6 @@ interface Template {
   template_placeholders: TemplatePlaceholder[];
 }
 
-interface TemplateImageData {
-  image: HTMLImageElement;
-  displayX: number;
-  displayY: number;
-  displayWidth: number;
-  displayHeight: number;
-}
-
 export const CreateTemplate = () => {
   const { showToast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
@@ -85,9 +72,11 @@ export const CreateTemplate = () => {
     template_placeholders: [],
   });
 
-  const [templateImage, setTemplateImage] = useState<TemplateImageData | null>(
-    null
-  );
+  // Responsive canvas states
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [imageScale, setImageScale] = useState(1);
+  const [originalImageSize, setOriginalImageSize] = useState({ width: 0, height: 0 });
+  
   const [selectedPlaceholder, setSelectedPlaceholder] = useState<string | null>(
     null
   );
@@ -101,6 +90,7 @@ export const CreateTemplate = () => {
   const stageRef = useRef<any>(null);
   const transformerRef = useRef<any>(null);
   const shapeRefs = useRef<{ [key: string]: any }>({});
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // React Hook Form setup
   const {
@@ -131,37 +121,32 @@ export const CreateTemplate = () => {
     }));
   }, [watchedTitle, watchedImageUrl]);
 
-  // Calculate image display properties to maintain aspect ratio
-  const calculateImageDisplayProperties = (
-    img: HTMLImageElement
-  ): Omit<TemplateImageData, "image"> => {
-    const imageAspectRatio = img.width / img.height;
-    const canvasAspectRatio = CANVAS_WIDTH / CANVAS_HEIGHT;
-
-    let displayWidth: number;
-    let displayHeight: number;
-
-    if (imageAspectRatio > canvasAspectRatio) {
-      // Image is wider than canvas aspect ratio
-      displayWidth = CANVAS_WIDTH;
-      displayHeight = CANVAS_WIDTH / imageAspectRatio;
-    } else {
-      // Image is taller than canvas aspect ratio
-      displayHeight = CANVAS_HEIGHT;
-      displayWidth = CANVAS_HEIGHT * imageAspectRatio;
-    }
-
-    // Center the image
-    const displayX = (CANVAS_WIDTH - displayWidth) / 2;
-    const displayY = (CANVAS_HEIGHT - displayHeight) / 2;
-
-    return {
-      displayX,
-      displayY,
-      displayWidth,
-      displayHeight,
+  // Update stage size when container size changes or window resizes
+  useEffect(() => {
+    const updateStageSize = () => {
+      if (containerRef.current && originalImageSize.width > 0) {
+        const containerWidth = containerRef.current.offsetWidth;
+        const scale = containerWidth / originalImageSize.width;
+        
+        setImageScale(scale);
+        setStageSize({
+          width: containerWidth,
+          height: originalImageSize.height * scale,
+        });
+      }
     };
-  };
+
+    // Initial update
+    updateStageSize();
+
+    // Add resize listener
+    window.addEventListener('resize', updateStageSize);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', updateStageSize);
+    };
+  }, [containerRef, originalImageSize]);
 
   // Handle image upload
   const handleImageUpload = useCallback(
@@ -173,11 +158,24 @@ export const CreateTemplate = () => {
         reader.onload = (e) => {
           const img = new Image();
           img.onload = () => {
-            const displayProps = calculateImageDisplayProperties(img);
-            setTemplateImage({
-              image: img,
-              ...displayProps,
+            // Store original image dimensions
+            setOriginalImageSize({
+              width: img.width,
+              height: img.height
             });
+            
+            // Calculate scale and stage size based on container width
+            if (containerRef.current) {
+              const containerWidth = containerRef.current.offsetWidth;
+              const scale = containerWidth / img.width;
+              
+              setImageScale(scale);
+              setStageSize({
+                width: containerWidth,
+                height: img.height * scale,
+              });
+            }
+            
             const imageUrl = e.target?.result as string;
             setValue("template_image_url", imageUrl);
             trigger("template_image_url");
@@ -194,7 +192,7 @@ export const CreateTemplate = () => {
   const handleCanvasClick = useCallback(
     (e: any) => {
       if (currentStep !== 2) return;
-      if (!templateImage) return;
+      if (originalImageSize.width === 0) return;
 
       const stage = e.target.getStage();
       const point = stage.getPointerPosition();
@@ -204,19 +202,9 @@ export const CreateTemplate = () => {
         return;
       }
 
-      // Convert canvas coordinates to image-relative coordinates
-      const relativeX = point.x - templateImage.displayX;
-      const relativeY = point.y - templateImage.displayY;
-
-      // Check if click is within the image bounds
-      if (
-        relativeX < 0 ||
-        relativeY < 0 ||
-        relativeX > templateImage.displayWidth ||
-        relativeY > templateImage.displayHeight
-      ) {
-        return; // Click is outside the image
-      }
+      // Calculate relative position in original image coordinates
+      const relativeX = point.x / imageScale;
+      const relativeY = point.y / imageScale;
 
       // Add template placeholders
       const newPlaceholder: TemplatePlaceholder = {
@@ -249,22 +237,22 @@ export const CreateTemplate = () => {
       // Auto-select the newly created placeholder
       setSelectedPlaceholder(newPlaceholder.id);
     },
-    [currentStep, placeholderType, templateImage]
+    [currentStep, placeholderType, imageScale, originalImageSize]
   );
 
   // Handle placeholder selection
-  const handlePlaceholderSelect = useCallback((id: string) => {
+  const handlePlaceholderSelect = useCallback((id: string, e: any) => {
+    // Stop event propagation to prevent creating a new placeholder
+    e.cancelBubble = true;
     setSelectedPlaceholder(id);
   }, []);
 
   // Handle placeholder drag
   const handlePlaceholderDrag = useCallback(
     (id: string, newX: number, newY: number) => {
-      if (!templateImage) return;
-
-      // Convert back to relative coordinates
-      const relativeX = newX - templateImage.displayX;
-      const relativeY = newY - templateImage.displayY;
+      // Convert to original image coordinates
+      const relativeX = newX / imageScale;
+      const relativeY = newY / imageScale;
 
       setTemplate((prev) => ({
         ...prev,
@@ -273,14 +261,12 @@ export const CreateTemplate = () => {
         ),
       }));
     },
-    [templateImage]
+    [imageScale]
   );
 
   // Handle placeholder transform
   const handlePlaceholderTransform = useCallback(
     (id: string, node: any) => {
-      if (!templateImage) return;
-
       const scaleX = node.scaleX();
       const scaleY = node.scaleY();
       const newWidth = Math.max(5, node.width() * scaleX);
@@ -301,12 +287,12 @@ export const CreateTemplate = () => {
       if (isCircleImagePlaceholder) {
         // For circles, node.x() and node.y() represent the center after transformation
         // Convert center coordinates to top-left coordinates for storage
-        relativeX = node.x() - newWidth / 2 - templateImage.displayX;
-        relativeY = node.y() - newHeight / 2 - templateImage.displayY;
+        relativeX = node.x() / imageScale;
+        relativeY = node.y() / imageScale;
       } else {
         // For rectangles and text, node.x() and node.y() represent top-left coordinates
-        relativeX = node.x() - templateImage.displayX;
-        relativeY = node.y() - templateImage.displayY;
+        relativeX = node.x() / imageScale;
+        relativeY = node.y() / imageScale;
       }
 
       setTemplate((prev) => ({
@@ -323,8 +309,8 @@ export const CreateTemplate = () => {
                 ...p,
                 x: relativeX,
                 y: relativeY,
-                width: newWidth,
-                height: newHeight,
+                width: newWidth / imageScale,
+                height: newHeight / imageScale,
                 fontSize: newFontSize,
               };
             }
@@ -332,15 +318,15 @@ export const CreateTemplate = () => {
               ...p,
               x: relativeX,
               y: relativeY,
-              width: newWidth,
-              height: newHeight,
+              width: newWidth / imageScale,
+              height: newHeight / imageScale,
             };
           }
           return p;
         }),
       }));
     },
-    [templateImage, template.template_placeholders]
+    [imageScale, template.template_placeholders]
   );
 
   // Update placeholder property
@@ -485,7 +471,8 @@ export const CreateTemplate = () => {
         template_image_url: "",
         template_placeholders: [],
       });
-      setTemplateImage(null);
+      setOriginalImageSize({ width: 0, height: 0 });
+      setStageSize({ width: 0, height: 0 });
       setImageFile(null);
       setSelectedPlaceholder(null);
       setCurrentStep(1);
@@ -703,11 +690,6 @@ export const CreateTemplate = () => {
                       </div>
                     )
                   )}
-                  {/* {FONT_FAMILIES.map((font) => (
-                    <SelectItem key={font} value={font}>
-                      {font}
-                    </SelectItem>
-                  ))} */}
                 </SelectContent>
               </Select>
             </div>
@@ -1015,30 +997,34 @@ export const CreateTemplate = () => {
           <h3 className="text-lg font-semibold text-primary mb-4">
             Canvas Preview
           </h3>
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <Stage
-              ref={stageRef}
-              width={CANVAS_WIDTH}
-              height={CANVAS_HEIGHT}
-              onClick={handleCanvasClick}
-              className="cursor-crosshair"
-            >
-              <Layer>
-                {/* Background Image */}
-                {templateImage && (
-                  <KonvaImage
-                    image={templateImage.image}
-                    x={templateImage.displayX}
-                    y={templateImage.displayY}
-                    width={templateImage.displayWidth}
-                    height={templateImage.displayHeight}
-                    listening={false}
-                  />
-                )}
+          <div 
+            ref={containerRef} 
+            className="border border-gray-200 rounded-lg overflow-hidden"
+          >
+            {stageSize.width > 0 && stageSize.height > 0 && (
+              <Stage
+                ref={stageRef}
+                width={stageSize.width}
+                height={stageSize.height}
+                onClick={handleCanvasClick}
+                className="cursor-crosshair"
+              >
+                <Layer>
+                  {/* Background Image */}
+                  {template.template_image_url && (
+                    <KonvaImage
+                      image={new window.Image()}
+                      x={0}
+                      y={0}
+                      width={stageSize.width}
+                      height={stageSize.height}
+                      src={template.template_image_url}
+                      listening={false}
+                    />
+                  )}
 
-                {/* Template Placeholders */}
-                {templateImage &&
-                  template.template_placeholders.map((placeholder) => (
+                  {/* Template Placeholders */}
+                  {template.template_placeholders.map((placeholder) => (
                     <React.Fragment key={placeholder.id}>
                       {placeholder.type === "image" ? (
                         placeholder.holeShape === "circle" ? (
@@ -1050,29 +1036,18 @@ export const CreateTemplate = () => {
                                 delete shapeRefs.current[placeholder.id];
                               }
                             }}
-                            x={
-                              templateImage.displayX +
-                              placeholder.x +
-                              (placeholder.width || 100) / 2
-                            }
-                            y={
-                              templateImage.displayY +
-                              placeholder.y +
-                              (placeholder.height || 100) / 2
-                            }
-                            radius={(placeholder.width || 100) / 2}
+                            x={(placeholder.x + (placeholder.width || 100) / 2) * imageScale}
+                            y={(placeholder.y + (placeholder.height || 100) / 2) * imageScale}
+                            radius={(placeholder.width || 100) / 2 * imageScale}
                             stroke="#BFACC8"
                             strokeWidth={2}
                             fill="rgba(191, 172, 200, 0.2)"
                             draggable
-                            onClick={() =>
-                              handlePlaceholderSelect(placeholder.id)
-                            }
+                            onClick={(e) => handlePlaceholderSelect(placeholder.id, e)}
+                            onTap={(e) => handlePlaceholderSelect(placeholder.id, e)}
                             onDragEnd={(e) => {
-                              const newX =
-                                e.target.x() - (placeholder.width || 100) / 2;
-                              const newY =
-                                e.target.y() - (placeholder.height || 100) / 2;
+                              const newX = e.target.x() - ((placeholder.width || 100) / 2 * imageScale);
+                              const newY = e.target.y() - ((placeholder.height || 100) / 2 * imageScale);
                               handlePlaceholderDrag(placeholder.id, newX, newY);
                             }}
                             onTransformEnd={(e) =>
@@ -1091,17 +1066,16 @@ export const CreateTemplate = () => {
                                 delete shapeRefs.current[placeholder.id];
                               }
                             }}
-                            x={templateImage.displayX + placeholder.x}
-                            y={templateImage.displayY + placeholder.y}
-                            width={placeholder.width || 100}
-                            height={placeholder.height || 100}
+                            x={placeholder.x * imageScale}
+                            y={placeholder.y * imageScale}
+                            width={(placeholder.width || 100) * imageScale}
+                            height={(placeholder.height || 100) * imageScale}
                             stroke="#BFACC8"
                             strokeWidth={2}
                             fill="rgba(191, 172, 200, 0.2)"
                             draggable
-                            onClick={() =>
-                              handlePlaceholderSelect(placeholder.id)
-                            }
+                            onClick={(e) => handlePlaceholderSelect(placeholder.id, e)}
+                            onTap={(e) => handlePlaceholderSelect(placeholder.id, e)}
                             onDragEnd={(e) =>
                               handlePlaceholderDrag(
                                 placeholder.id,
@@ -1127,17 +1101,16 @@ export const CreateTemplate = () => {
                                 delete shapeRefs.current[placeholder.id];
                               }
                             }}
-                            x={templateImage.displayX + placeholder.x}
-                            y={templateImage.displayY + placeholder.y}
-                            width={placeholder.width || 150}
-                            height={placeholder.height || 30}
+                            x={placeholder.x * imageScale}
+                            y={placeholder.y * imageScale}
+                            width={(placeholder.width || 150) * imageScale}
+                            height={(placeholder.height || 30) * imageScale}
                             stroke="#BFACC8"
                             strokeWidth={1}
                             fill="rgba(191, 172, 200, 0.1)"
                             draggable
-                            onClick={() =>
-                              handlePlaceholderSelect(placeholder.id)
-                            }
+                            onClick={(e) => handlePlaceholderSelect(placeholder.id, e)}
+                            onTap={(e) => handlePlaceholderSelect(placeholder.id, e)}
                             onDragEnd={(e) =>
                               handlePlaceholderDrag(
                                 placeholder.id,
@@ -1153,34 +1126,36 @@ export const CreateTemplate = () => {
                             }
                           />
                           <Text
-                            x={templateImage.displayX + placeholder.x + 5}
-                            y={templateImage.displayY + placeholder.y + 5}
+                            x={(placeholder.x + 5) * imageScale}
+                            y={(placeholder.y + 5) * imageScale}
                             text={placeholder.text || "Template Text"}
-                            fontSize={placeholder.fontSize || 16}
+                            fontSize={(placeholder.fontSize || 16) * imageScale}
                             fill={placeholder.color || "#000000"}
                             fontFamily={placeholder.fontFamily || "Open Sans"}
                             listening={false}
                             align={placeholder.textAlign}
                             fontStyle={placeholder.fontStyle}
+                            width={(placeholder.width || 150) * imageScale - 10}
                           />
                         </>
                       )}
                     </React.Fragment>
                   ))}
 
-                {/* Transformer */}
-                <Transformer
-                  ref={transformerRef}
-                  boundBoxFunc={(oldBox, newBox) => {
-                    // Limit resize
-                    if (newBox.width < 5 || newBox.height < 5) {
-                      return oldBox;
-                    }
-                    return newBox;
-                  }}
-                />
-              </Layer>
-            </Stage>
+                  {/* Transformer */}
+                  <Transformer
+                    ref={transformerRef}
+                    boundBoxFunc={(oldBox, newBox) => {
+                      // Limit resize
+                      if (newBox.width < 5 || newBox.height < 5) {
+                        return oldBox;
+                      }
+                      return newBox;
+                    }}
+                  />
+                </Layer>
+              </Stage>
+            )}
           </div>
 
           {/* Legend */}
