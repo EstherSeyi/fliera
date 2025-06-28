@@ -65,7 +65,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const { checkAndDeductEventCredits, checkAndDeductDPCredits } = useCreditSystem();
+  const { checkAndDeductDPCredits } = useCreditSystem();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -421,15 +421,6 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       setError(null);
 
-      // Check if user has sufficient credits for event creation
-      if (user) {
-        const creditCheck = await checkAndDeductEventCredits();
-        
-        if (!creditCheck.success) {
-          throw new Error(creditCheck.message || "Failed to check credits");
-        }
-      }
-
       const { data, error: insertError } = await supabase
         .from("events")
         .insert({ ...rest, user_id: user?.id })
@@ -532,7 +523,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       // Check if user has sufficient credits for DP generation
       const creditCheck = await checkAndDeductDPCredits(dpData.event_id);
-      
+
       if (!creditCheck.success) {
         throw new Error(creditCheck.message || "Failed to check credits");
       }
