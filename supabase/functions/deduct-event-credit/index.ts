@@ -38,10 +38,25 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    // Validate environment variables
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Missing environment variables:", { 
+        hasUrl: !!supabaseUrl, 
+        hasKey: !!supabaseServiceKey 
+      });
+      return new Response(
+        JSON.stringify({ error: "Server configuration error" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check if this request has already been processed
     const { data: existingRequest, error: checkError } = await supabaseClient
@@ -114,14 +129,12 @@ Deno.serve(async (req: Request) => {
 
     // Check if user is within free event limit (3 free events)
     if (free_events_used < 3) {
-      // Increment free_events_used within a transaction
-      const { data, error: transactionError } = await supabaseClient.rpc(
-        "increment_free_events_used",
-        { user_id_param: userId }
-      );
+      // Increment free_events_used using the database function
+      const { data: incrementResult, error: incrementError } = await supabaseClient
+        .rpc("increment_free_events_used", { user_id_param: userId });
 
-      if (transactionError) {
-        console.error("Transaction error:", transactionError);
+      if (incrementError || !incrementResult || incrementResult.length === 0 || !incrementResult[0].success) {
+        console.error("Error incrementing free events:", incrementError);
         
         // Record the failed request
         await supabaseClient
@@ -156,13 +169,13 @@ Deno.serve(async (req: Request) => {
           amount: 0,
           transaction_type: "free_event_used",
           status: "completed",
-          notes: `Free event used (${free_events_used + 1}/3)`
+          notes: `Free event used (${incrementResult[0].new_count}/3)`
         });
 
       return new Response(
         JSON.stringify({
           message: "Free event used successfully.",
-          remaining_free_events: 3 - (free_events_used + 1),
+          remaining_free_events: 3 - incrementResult[0].new_count,
           credits_deducted: 0,
         }),
         {
@@ -199,17 +212,15 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      // Deduct credits within a transaction
-      const { data, error: transactionError } = await supabaseClient.rpc(
-        "deduct_user_credits",
-        { 
+      // Deduct credits using the database function
+      const { data: deductResult, error: deductError } = await supabaseClient
+        .rpc("deduct_user_credits", { 
           user_id_param: userId,
           amount_param: eventCost
-        }
-      );
+        });
 
-      if (transactionError) {
-        console.error("Transaction error:", transactionError);
+      if (deductError || !deductResult || deductResult.length === 0 || !deductResult[0].success) {
+        console.error("Error deducting credits:", deductError);
         
         // Record the failed request
         await supabaseClient
@@ -250,7 +261,7 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({
           message: "Credits deducted for event successfully.",
-          remaining_credits: credits - eventCost,
+          remaining_credits: deductResult[0].remaining_credits,
           credits_deducted: eventCost,
         }),
         {

@@ -47,15 +47,25 @@ export const useCreditSystem = () => {
       // Generate a unique request ID for idempotency
       const requestId = generateRequestId('event');
       
-      const { data, error } = await supabase.functions.invoke('deduct-event-credit', {
+      const { data, error: functionError } = await supabase.functions.invoke('deduct-event-credit', {
         body: { 
           userId: user.id,
           requestId
         }
       });
 
-      if (error) {
-        throw new Error(error.message || 'Failed to process event credits');
+      if (functionError) {
+        console.error('Supabase function error:', functionError);
+        throw new Error(functionError.message || 'Failed to process event credits');
+      }
+
+      if (!data) {
+        throw new Error('No response data from credit function');
+      }
+
+      // Check if the response indicates an error
+      if (data.error) {
+        throw new Error(data.error);
       }
 
       // Refresh user credits after successful deduction
@@ -82,10 +92,21 @@ export const useCreditSystem = () => {
         };
       }
       
-      setError(err.message || 'Failed to process event credits');
+      // Handle network/connection errors
+      if (err.message?.includes('Failed to fetch') || err.message?.includes('fetch')) {
+        const errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+        setError(errorMessage);
+        return { 
+          success: false, 
+          message: errorMessage
+        };
+      }
+      
+      const errorMessage = err.message || 'Failed to process event credits';
+      setError(errorMessage);
       return { 
         success: false, 
-        message: err.message || 'Failed to process event credits' 
+        message: errorMessage
       };
     } finally {
       setIsProcessing(false);
@@ -117,7 +138,7 @@ export const useCreditSystem = () => {
       // Generate a unique request ID for idempotency
       const requestId = generateRequestId('dp', eventId);
       
-      const { data, error } = await supabase.functions.invoke('deduct-dp-credit', {
+      const { data, error: functionError } = await supabase.functions.invoke('deduct-dp-credit', {
         body: { 
           userId: user.id,
           eventId,
@@ -125,8 +146,18 @@ export const useCreditSystem = () => {
         }
       });
 
-      if (error) {
-        throw new Error(error.message || 'Failed to process DP credits');
+      if (functionError) {
+        console.error('Supabase function error:', functionError);
+        throw new Error(functionError.message || 'Failed to process DP credits');
+      }
+
+      if (!data) {
+        throw new Error('No response data from credit function');
+      }
+
+      // Check if the response indicates an error
+      if (data.error) {
+        throw new Error(data.error);
       }
 
       // Refresh user credits after successful deduction
@@ -153,10 +184,21 @@ export const useCreditSystem = () => {
         };
       }
       
-      setError(err.message || 'Failed to process DP credits');
+      // Handle network/connection errors
+      if (err.message?.includes('Failed to fetch') || err.message?.includes('fetch')) {
+        const errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+        setError(errorMessage);
+        return { 
+          success: false, 
+          message: errorMessage
+        };
+      }
+      
+      const errorMessage = err.message || 'Failed to process DP credits';
+      setError(errorMessage);
       return { 
         success: false, 
-        message: err.message || 'Failed to process DP credits' 
+        message: errorMessage
       };
     } finally {
       setIsProcessing(false);
