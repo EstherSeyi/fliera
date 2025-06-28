@@ -1,6 +1,13 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, Eye, Tag, Clock } from "lucide-react";
+import { motion } from "framer-motion";
+import { Calendar, Eye, Tag, Clock } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+} from "./ui/dialog";
 import type { Event } from "../types";
 
 interface EventDetailsModalProps {
@@ -87,137 +94,118 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
   const categoryInfo = getCategoryInfo(event.category);
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 !mt-0"
-          onClick={onClose}
-        >
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Event Details</DialogTitle>
+        </DialogHeader>
+
+        <DialogBody>
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.2 }}
-            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
           >
-            {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-lg">
-              <h2 className="text-2xl font-bold text-primary">Event Details</h2>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X className="w-6 h-6 text-gray-500" />
-              </button>
+            {/* Event Title */}
+            <div>
+              <h3 className="text-3xl font-bold text-primary mb-2">
+                {event.title}
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${categoryInfo.bg} ${categoryInfo.color}`}
+                >
+                  <Tag className="w-4 h-4 mr-1" />
+                  {categoryInfo.label}
+                </span>
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${visibilityInfo.bg} ${visibilityInfo.color}`}
+                >
+                  <Eye className="w-4 h-4 mr-1" />
+                  {visibilityInfo.label}
+                </span>
+              </div>
             </div>
 
-            {/* Content */}
-            <div className="p-6 space-y-6">
-              {/* Event Title */}
+            {/* Date and Time */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center mb-2">
+                <Calendar className="w-5 h-5 text-primary mr-2" />
+                <span className="font-semibold text-primary">
+                  Date & Time
+                </span>
+              </div>
+              <div className="space-y-1">
+                <p className="text-gray-800 font-medium">{date}</p>
+                <div className="flex items-center">
+                  <Clock className="w-4 h-4 text-gray-500 mr-1" />
+                  <p className="text-gray-600">{time}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            {event.description && (
               <div>
-                <h3 className="text-3xl font-bold text-primary mb-2">
-                  {event.title}
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${categoryInfo.bg} ${categoryInfo.color}`}
-                  >
-                    <Tag className="w-4 h-4 mr-1" />
-                    {categoryInfo.label}
-                  </span>
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${visibilityInfo.bg} ${visibilityInfo.color}`}
-                  >
-                    <Eye className="w-4 h-4 mr-1" />
-                    {visibilityInfo.label}
-                  </span>
-                </div>
+                <h4 className="font-semibold text-primary mb-3">
+                  Description
+                </h4>
+                <div
+                  className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: event.description }}
+                />
               </div>
-
-              {/* Date and Time */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center mb-2">
-                  <Calendar className="w-5 h-5 text-primary mr-2" />
-                  <span className="font-semibold text-primary">
-                    Date & Time
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-gray-800 font-medium">{date}</p>
-                  <div className="flex items-center">
-                    <Clock className="w-4 h-4 text-gray-500 mr-1" />
-                    <p className="text-gray-600">{time}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Description */}
-              {event.description && (
-                <div>
-                  <h4 className="font-semibold text-primary mb-3">
-                    Description
-                  </h4>
-                  <div
-                    className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: event.description }}
-                  />
-                </div>
-              )}
+            )}
 
             {/* Event Flyer */}
-              <div>
-                <h4 className="font-semibold text-primary mb-3">Event Flyer</h4>
-                <div className="rounded-lg overflow-hidden border border-gray-200">
-                  <img
-                    src={event.flyer_url}
-                    alt={event.title}
-                    className="w-full h-auto max-h-96 object-contain bg-gray-50"
-                  />
-                </div>
+            <div>
+              <h4 className="font-semibold text-primary mb-3">Event Flyer</h4>
+              <div className="rounded-lg overflow-hidden border border-gray-200">
+                <img
+                  src={event.flyer_url}
+                  alt={event.title}
+                  className="w-full h-auto max-h-96 object-contain bg-gray-50"
+                />
               </div>
-
-              {/* Template Info */}
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h4 className="font-semibold text-primary mb-2">
-                  Template Information
-                </h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Image Placeholders:</span>
-                    <span className="ml-2 font-medium">
-                      {event.image_placeholders.length}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Text Placeholders:</span>
-                    <span className="ml-2 font-medium">
-                      {event.text_placeholders.length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Created Date */}
-              {event.created_at && (
-                <div className="text-sm text-gray-500 border-t pt-4">
-                  Created on{" "}
-                  {new Date(event.created_at).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
-              )}
             </div>
+
+            {/* Template Info */}
+            <div className="bg-blue-50 rounded-lg p-4">
+              <h4 className="font-semibold text-primary mb-2">
+                Template Information
+              </h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">Image Placeholders:</span>
+                  <span className="ml-2 font-medium">
+                    {event.image_placeholders.length}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Text Placeholders:</span>
+                  <span className="ml-2 font-medium">
+                    {event.text_placeholders.length}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Created Date */}
+            {event.created_at && (
+              <div className="text-sm text-gray-500 border-t pt-4">
+                Created on{" "}
+                {new Date(event.created_at).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
+            )}
           </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
   );
 };
