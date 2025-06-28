@@ -3,13 +3,13 @@ import { Search } from "lucide-react";
 import { Dispatch, SetStateAction, useState } from "react";
 
 import { LoadingSpinner } from "../LoadingSpinner";
-import { FlierTemplate, TemplateInputValues } from "../../types";
+import { FlierTemplate, PaginatedTemplatesResult, TemplateInputValues } from "../../types";
 import { ModalStep } from "../FlierTemplateSelectionModal";
 
 interface Props {
   loading: boolean;
   error: string | null;
-  fetchTemplates: () => Promise<void>;
+  fetchTemplates: (page?: number, limit?: number, filters?: any) => Promise<PaginatedTemplatesResult>;
   setSelectedTemplate: Dispatch<SetStateAction<FlierTemplate | null>>;
   setInputValues: Dispatch<SetStateAction<TemplateInputValues>>;
   templates: FlierTemplate[];
@@ -28,7 +28,6 @@ export const TemplateSelectionStep = ({
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleTemplateSelect = (template: FlierTemplate) => {
-    console.log("got called!!!!!!!!", template);
     setSelectedTemplate(template);
     // Initialize input values
     const initialValues: TemplateInputValues = {};
@@ -44,6 +43,7 @@ export const TemplateSelectionStep = ({
       template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       template.created_by?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -71,7 +71,7 @@ export const TemplateSelectionStep = ({
           <div className="text-center py-12 text-red-500">
             <p>{error}</p>
             <button
-              onClick={fetchTemplates}
+              onClick={() => fetchTemplates()}
               className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
             >
               Try Again

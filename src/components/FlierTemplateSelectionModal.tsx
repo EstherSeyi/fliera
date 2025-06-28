@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabase";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody } from "./ui/dialog";
 import type {
   FlierTemplate,
   TemplateInputValues,
   ImagePlaceholderZone,
   TextPlaceholderZone,
+  PaginatedTemplatesResult,
+  TemplateFilterType,
 } from "../types";
 
 import { TemplatePreviewStep } from "./template/TemplatePreviewStep";
@@ -69,7 +71,7 @@ export const FlierTemplateSelectionModal: React.FC<
     async (
       page: number = 1,
       limit: number = 12,
-      filters: TemplateFilters = { filterType: "all" }
+      filters: { filterType: TemplateFilterType } = { filterType: "all" }
     ): Promise<PaginatedTemplatesResult> => {
       try {
         setLoading(true);
@@ -136,6 +138,9 @@ export const FlierTemplateSelectionModal: React.FC<
 
         if (fetchError) throw fetchError;
 
+        // Update templates state with the fetched data
+        setTemplates(data || []);
+
         return {
           templates: data || [],
           totalCount: count || 0,
@@ -148,7 +153,7 @@ export const FlierTemplateSelectionModal: React.FC<
         setLoading(false);
       }
     },
-    [setLoading, setError]
+    [setLoading, setError, setTemplates]
   );
 
   const loadTemplateImage = useCallback(async () => {
@@ -229,48 +234,50 @@ export const FlierTemplateSelectionModal: React.FC<
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Choose a Flier Template</DialogTitle>
         </DialogHeader>
 
-        <AnimatePresence mode="wait">
-          {currentStep === "selection" && (
-            <TemplateSelectionStep
-              loading={loading}
-              error={error}
-              fetchTemplates={fetchTemplates}
-              setSelectedTemplate={setSelectedTemplate}
-              setInputValues={setInputValues}
-              templates={templates}
-              setCurrentStep={setCurrentStep}
-            />
-          )}
-          {currentStep === "input" && (
-            <TemplateInputStep
-              setCurrentStep={setCurrentStep}
-              selectedTemplate={selectedTemplate}
-              inputValues={inputValues}
-              containerRef={containerRef}
-              templateImage={templateImage}
-              stageSize={stageSize}
-              userImages={userImages}
-              imageScale={imageScale}
-              setInputValues={setInputValues}
-              setGeneratedImageUrl={setGeneratedImageUrl}
-              setError={setError}
-            />
-          )}
-          {currentStep === "preview" && (
-            <TemplatePreviewStep
-              setCurrentStep={setCurrentStep}
-              generatedImageUrl={generatedImageUrl}
-              selectedTemplate={selectedTemplate}
-              onTemplateSelected={onTemplateSelected}
-              onClose={onClose}
-            />
-          )}
-        </AnimatePresence>
+        <DialogBody>
+          <AnimatePresence mode="wait">
+            {currentStep === "selection" && (
+              <TemplateSelectionStep
+                loading={loading}
+                error={error}
+                fetchTemplates={fetchTemplates}
+                setSelectedTemplate={setSelectedTemplate}
+                setInputValues={setInputValues}
+                templates={templates}
+                setCurrentStep={setCurrentStep}
+              />
+            )}
+            {currentStep === "input" && (
+              <TemplateInputStep
+                setCurrentStep={setCurrentStep}
+                selectedTemplate={selectedTemplate}
+                inputValues={inputValues}
+                containerRef={containerRef}
+                templateImage={templateImage}
+                stageSize={stageSize}
+                userImages={userImages}
+                imageScale={imageScale}
+                setInputValues={setInputValues}
+                setGeneratedImageUrl={setGeneratedImageUrl}
+                setError={setError}
+              />
+            )}
+            {currentStep === "preview" && (
+              <TemplatePreviewStep
+                setCurrentStep={setCurrentStep}
+                generatedImageUrl={generatedImageUrl}
+                selectedTemplate={selectedTemplate}
+                onTemplateSelected={onTemplateSelected}
+                onClose={onClose}
+              />
+            )}
+          </AnimatePresence>
+        </DialogBody>
       </DialogContent>
     </Dialog>
   );
