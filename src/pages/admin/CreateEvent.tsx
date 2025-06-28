@@ -56,39 +56,48 @@ export const CreateEvent: React.FC = () => {
     // Only proceed with form submission if we're on the last step
     if (currentStep !== STEPS.length - 1) return;
 
-    // Store form data for potential credit confirmation
-    setFormData(data);
-
-    // Check if user has sufficient credits
-    const creditCheck = await checkAndDeductEventCredits();
-    
-    if (!creditCheck.success) {
-      if (creditCheck.insufficientCredits) {
-        // Show credit confirmation dialog
-        setShowCreditConfirmation(true);
-        return;
-      } else {
-        // Other error
-        setError(creditCheck.message || "Failed to check credits");
-        return;
-      }
-    }
-
-    // If credit check passed, proceed with event creation
-    await createEvent(data);
-  };
-
-  const createEvent = async (data: CreateEventFormData) => {
+    // Set loading state immediately to prevent multiple submissions
     setIsLoading(true);
     setError(null);
 
-    if (!data?.flyer_file) {
-      setError("Flyer file is required");
-      setIsLoading(false);
-      return;
-    }
-
     try {
+      // Store form data for potential credit confirmation
+      setFormData(data);
+
+      // Check if user has sufficient credits
+      const creditCheck = await checkAndDeductEventCredits();
+      
+      if (!creditCheck.success) {
+        if (creditCheck.insufficientCredits) {
+          // Show credit confirmation dialog
+          setShowCreditConfirmation(true);
+          return;
+        } else {
+          // Other error
+          setError(creditCheck.message || "Failed to check credits");
+          return;
+        }
+      }
+
+      // If credit check passed, proceed with event creation
+      await createEvent(data);
+    } catch (err) {
+      console.error("Error in form submission:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const createEvent = async (data: CreateEventFormData) => {
+    try {
+      setError(null);
+
+      if (!data?.flyer_file) {
+        setError("Flyer file is required");
+        return;
+      }
+
       const file = data?.flyer_file;
       let flyerUrl: string;
 
@@ -147,8 +156,7 @@ export const CreateEvent: React.FC = () => {
     } catch (err) {
       console.error("Error creating event:", err);
       setError("Failed to create event. Please try again.");
-    } finally {
-      setIsLoading(false);
+      throw err; // Re-throw to be caught by the onSubmit function
     }
   };
 
@@ -242,6 +250,7 @@ export const CreateEvent: React.FC = () => {
                     type="button"
                     onClick={handleBack}
                     className="flex items-center px-4 py-2 text-primary hover:text-primary/80 transition-colors"
+                    disabled={isLoading}
                   >
                     <ArrowLeft className="w-5 h-5 mr-2" />
                     Back
@@ -256,6 +265,7 @@ export const CreateEvent: React.FC = () => {
                       handleNext();
                     }}
                     className="ml-auto flex items-center px-6 py-2 bg-thistle text-primary rounded-lg hover:bg-thistle/90 transition-colors"
+                    disabled={isLoading}
                   >
                     Next
                     <ArrowRight className="w-5 h-5 ml-2" />
@@ -288,7 +298,10 @@ export const CreateEvent: React.FC = () => {
       {/* Credit Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={showCreditConfirmation}
-        onClose={() => setShowCreditConfirmation(false)}
+        onClose={() => {
+          setShowCreditConfirmation(false);
+          setIsLoading(false); // Make sure to reset loading state when dialog is closed
+        }}
         onConfirm={handleBuyCredits}
         title="Insufficient Credits"
         description="You don't have enough credits to create this event. Each event after your first 3 free events costs 0.5 credits."
