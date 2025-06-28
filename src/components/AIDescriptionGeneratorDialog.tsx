@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, MessageSquare, Check, ArrowRight } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from "./ui/dialog";
 import {
   Select,
   SelectContent,
@@ -183,7 +183,7 @@ export const AIDescriptionGeneratorDialog: React.FC<
         </div>
       </div>
 
-      <form onSubmit={handleFormSubmit} className="space-y-4">
+      <form id="ai-description-form" onSubmit={handleFormSubmit} className="space-y-4">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
             Event Title *
@@ -283,25 +283,6 @@ export const AIDescriptionGeneratorDialog: React.FC<
             {formData.additionalNotes.length}/300 characters
           </p>
         </div>
-
-        <div className="flex gap-3 pt-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={!formData.title.trim() || isGenerating}
-            className="flex-1 flex items-center justify-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-          >
-            <Sparkles className="w-5 h-5 mr-2" />
-            Generate Description
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </button>
-        </div>
       </form>
     </motion.div>
   );
@@ -366,7 +347,7 @@ export const AIDescriptionGeneratorDialog: React.FC<
         <div className="flex items-start space-x-3">
           <MessageSquare className="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap max-h-[500px] overflow-auto">
+            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
               {generatedDescription}
             </p>
           </div>
@@ -379,25 +360,58 @@ export const AIDescriptionGeneratorDialog: React.FC<
           event. You can always edit it later.
         </p>
       </div>
-
-      <div className="flex gap-3 pt-4">
-        <button
-          type="button"
-          onClick={handleBack}
-          className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-        >
-          Back
-        </button>
-        <button
-          onClick={handleApprove}
-          className="flex-1 flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-medium"
-        >
-          <Check className="w-5 h-5 mr-2" />
-          Use This Description
-        </button>
-      </div>
     </motion.div>
   );
+
+  const renderFooterButtons = () => {
+    switch (currentStage) {
+      case "form":
+        return (
+          <>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="ai-description-form"
+              disabled={!formData.title.trim() || isGenerating}
+              className="flex-1 flex items-center justify-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
+              Generate Description
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </button>
+          </>
+        );
+      case "generating":
+        return null; // No buttons during generation
+      case "preview":
+        return (
+          <>
+            <button
+              type="button"
+              onClick={handleBack}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              Back
+            </button>
+            <button
+              onClick={handleApprove}
+              className="flex-1 flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-medium"
+            >
+              <Check className="w-5 h-5 mr-2" />
+              Use This Description
+            </button>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -406,11 +420,19 @@ export const AIDescriptionGeneratorDialog: React.FC<
           <DialogTitle>AI Description Generator</DialogTitle>
         </DialogHeader>
 
-        <AnimatePresence mode="wait">
-          {currentStage === "form" && renderFormStage()}
-          {currentStage === "generating" && renderGeneratingStage()}
-          {currentStage === "preview" && renderPreviewStage()}
-        </AnimatePresence>
+        <DialogBody>
+          <AnimatePresence mode="wait">
+            {currentStage === "form" && renderFormStage()}
+            {currentStage === "generating" && renderGeneratingStage()}
+            {currentStage === "preview" && renderPreviewStage()}
+          </AnimatePresence>
+        </DialogBody>
+
+        {currentStage !== "generating" && (
+          <DialogFooter className="gap-3">
+            {renderFooterButtons()}
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -8,6 +8,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogBody,
 } from './ui/dialog';
 
 interface ConfirmationDialogProps {
@@ -93,9 +94,11 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           </div>
         </DialogHeader>
         
-        <DialogDescription className="text-secondary leading-relaxed">
-          {description}
-        </DialogDescription>
+        <DialogBody>
+          <DialogDescription className="text-secondary leading-relaxed">
+            {description}
+          </DialogDescription>
+        </DialogBody>
 
         <DialogFooter className="gap-3 sm:gap-2">
           <button

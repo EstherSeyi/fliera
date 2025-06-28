@@ -210,11 +210,11 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+            className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
               <h2 className="text-xl font-semibold text-primary">Edit Your Photo</h2>
               <button
                 onClick={handleClose}
@@ -225,102 +225,105 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
               </button>
             </div>
 
-            {/* Cropper Area */}
-            <div className="relative h-96 bg-gray-900">
-              <Cropper
-                image={imageSrc}
-                crop={crop}
-                rotation={rotation}
-                zoom={zoom}
-                aspect={1}
-                onCropChange={onCropChange}
-                onRotationChange={setRotation}
-                onCropComplete={onCropCompleteCallback}
-                onZoomChange={setZoom}
-                showGrid={true}
-                style={{
-                  containerStyle: {
-                    width: '100%',
-                    height: '100%',
-                    backgroundColor: '#1f2937',
-                  },
-                }}
-              />
-            </div>
-
-            {/* Controls */}
-            <div className="p-4 space-y-4 border-t border-gray-200">
-              {/* Zoom Control */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Zoom: {Math.round(zoom * 100)}%
-                </label>
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={handleZoomOut}
-                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                    disabled={zoom <= 1 || isProcessing}
-                  >
-                    <ZoomOut className="w-4 h-4" />
-                  </button>
-                  <input
-                    type="range"
-                    value={zoom}
-                    min={1}
-                    max={3}
-                    step={0.1}
-                    onChange={(e) => setZoom(Number(e.target.value))}
-                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                    disabled={isProcessing}
-                  />
-                  <button
-                    onClick={handleZoomIn}
-                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                    disabled={zoom >= 3 || isProcessing}
-                  >
-                    <ZoomIn className="w-4 h-4" />
-                  </button>
-                </div>
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Cropper Area */}
+              <div className="relative h-96 bg-gray-900">
+                <Cropper
+                  image={imageSrc}
+                  crop={crop}
+                  rotation={rotation}
+                  zoom={zoom}
+                  aspect={1}
+                  onCropChange={onCropChange}
+                  onRotationChange={setRotation}
+                  onCropComplete={onCropCompleteCallback}
+                  onZoomChange={setZoom}
+                  showGrid={true}
+                  style={{
+                    containerStyle: {
+                      width: '100%',
+                      height: '100%',
+                      backgroundColor: '#1f2937',
+                    },
+                  }}
+                />
               </div>
 
-              {/* Rotation Controls */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Rotation: {rotation}°
-                </label>
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={handleRotateLeft}
-                    className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                    disabled={isProcessing}
-                  >
-                    <RotateCcw className="w-4 h-4 mr-1" />
-                    Rotate Left
-                  </button>
-                  <input
-                    type="range"
-                    value={rotation}
-                    min={-180}
-                    max={180}
-                    step={1}
-                    onChange={(e) => setRotation(Number(e.target.value))}
-                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                    disabled={isProcessing}
-                  />
-                  <button
-                    onClick={handleRotateRight}
-                    className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                    disabled={isProcessing}
-                  >
-                    <RotateCw className="w-4 h-4 mr-1" />
-                    Rotate Right
-                  </button>
+              {/* Controls */}
+              <div className="p-4 space-y-4 border-t border-gray-200">
+                {/* Zoom Control */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Zoom: {Math.round(zoom * 100)}%
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={handleZoomOut}
+                      className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      disabled={zoom <= 1 || isProcessing}
+                    >
+                      <ZoomOut className="w-4 h-4" />
+                    </button>
+                    <input
+                      type="range"
+                      value={zoom}
+                      min={1}
+                      max={3}
+                      step={0.1}
+                      onChange={(e) => setZoom(Number(e.target.value))}
+                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      disabled={isProcessing}
+                    />
+                    <button
+                      onClick={handleZoomIn}
+                      className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      disabled={zoom >= 3 || isProcessing}
+                    >
+                      <ZoomIn className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Rotation Controls */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Rotation: {rotation}°
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={handleRotateLeft}
+                      className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      disabled={isProcessing}
+                    >
+                      <RotateCcw className="w-4 h-4 mr-1" />
+                      Rotate Left
+                    </button>
+                    <input
+                      type="range"
+                      value={rotation}
+                      min={-180}
+                      max={180}
+                      step={1}
+                      onChange={(e) => setRotation(Number(e.target.value))}
+                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      disabled={isProcessing}
+                    />
+                    <button
+                      onClick={handleRotateRight}
+                      className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      disabled={isProcessing}
+                    >
+                      <RotateCw className="w-4 h-4 mr-1" />
+                      Rotate Right
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end space-x-3 p-4 border-t border-gray-200 bg-gray-50">
+            <div className="flex justify-end space-x-3 p-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
               <button
                 onClick={handleClose}
                 className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
