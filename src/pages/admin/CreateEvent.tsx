@@ -66,7 +66,7 @@ export const CreateEvent: React.FC = () => {
 
       // Check if user has sufficient credits
       const creditCheck = await checkAndDeductEventCredits();
-      
+
       if (!creditCheck.success) {
         if (creditCheck.insufficientCredits) {
           // Show credit confirmation dialog
@@ -151,7 +151,6 @@ export const CreateEvent: React.FC = () => {
       };
 
       await addEvent(newEvent);
-      showToast("Event created successfully!", "success");
       navigate("/events");
     } catch (err) {
       console.error("Error creating event:", err);
