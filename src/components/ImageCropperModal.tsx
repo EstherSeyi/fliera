@@ -2,6 +2,14 @@ import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Cropper from 'react-easy-crop';
 import { X, RotateCw, ZoomIn, ZoomOut, Check, RotateCcw } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+} from './ui/dialog';
 
 interface Area {
   x: number;
@@ -196,162 +204,135 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          onClick={handleClose}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.2 }}
-            className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col m-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-              <h2 className="text-xl font-semibold text-primary">Edit Your Photo</h2>
-              <button
-                onClick={handleClose}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                disabled={isProcessing}
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Edit Your Photo</DialogTitle>
+        </DialogHeader>
 
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto">
-              {/* Cropper Area */}
-              <div className="relative h-96 bg-gray-900">
-                <Cropper
-                  image={imageSrc}
-                  crop={crop}
-                  rotation={rotation}
-                  zoom={zoom}
-                  aspect={1}
-                  onCropChange={onCropChange}
-                  onRotationChange={setRotation}
-                  onCropComplete={onCropCompleteCallback}
-                  onZoomChange={setZoom}
-                  showGrid={true}
-                  style={{
-                    containerStyle: {
-                      width: '100%',
-                      height: '100%',
-                      backgroundColor: '#1f2937',
-                    },
-                  }}
+        <DialogBody>
+          {/* Cropper Area */}
+          <div className="relative h-96 bg-gray-900 rounded-lg overflow-hidden">
+            <Cropper
+              image={imageSrc}
+              crop={crop}
+              rotation={rotation}
+              zoom={zoom}
+              aspect={1}
+              onCropChange={onCropChange}
+              onRotationChange={setRotation}
+              onCropComplete={onCropCompleteCallback}
+              onZoomChange={setZoom}
+              showGrid={true}
+              style={{
+                containerStyle: {
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: '#1f2937',
+                },
+              }}
+            />
+          </div>
+
+          {/* Controls */}
+          <div className="space-y-4">
+            {/* Zoom Control */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Zoom: {Math.round(zoom * 100)}%
+              </label>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handleZoomOut}
+                  className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  disabled={zoom <= 1 || isProcessing}
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <input
+                  type="range"
+                  value={zoom}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  disabled={isProcessing}
                 />
-              </div>
-
-              {/* Controls */}
-              <div className="p-4 space-y-4 border-t border-gray-200">
-                {/* Zoom Control */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Zoom: {Math.round(zoom * 100)}%
-                  </label>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={handleZoomOut}
-                      className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                      disabled={zoom <= 1 || isProcessing}
-                    >
-                      <ZoomOut className="w-4 h-4" />
-                    </button>
-                    <input
-                      type="range"
-                      value={zoom}
-                      min={1}
-                      max={3}
-                      step={0.1}
-                      onChange={(e) => setZoom(Number(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                      disabled={isProcessing}
-                    />
-                    <button
-                      onClick={handleZoomIn}
-                      className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                      disabled={zoom >= 3 || isProcessing}
-                    >
-                      <ZoomIn className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Rotation Controls */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Rotation: {rotation}°
-                  </label>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={handleRotateLeft}
-                      className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                      disabled={isProcessing}
-                    >
-                      <RotateCcw className="w-4 h-4 mr-1" />
-                      Rotate Left
-                    </button>
-                    <input
-                      type="range"
-                      value={rotation}
-                      min={-180}
-                      max={180}
-                      step={1}
-                      onChange={(e) => setRotation(Number(e.target.value))}
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                      disabled={isProcessing}
-                    />
-                    <button
-                      onClick={handleRotateRight}
-                      className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                      disabled={isProcessing}
-                    >
-                      <RotateCw className="w-4 h-4 mr-1" />
-                      Rotate Right
-                    </button>
-                  </div>
-                </div>
+                <button
+                  onClick={handleZoomIn}
+                  className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  disabled={zoom >= 3 || isProcessing}
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </button>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="flex justify-end space-x-3 p-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-              <button
-                onClick={handleClose}
-                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                disabled={isProcessing}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleApplyCrop}
-                disabled={!croppedAreaPixels || isProcessing}
-                className="flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isProcessing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    Apply Changes
-                  </>
-                )}
-              </button>
+            {/* Rotation Controls */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Rotation: {rotation}°
+              </label>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handleRotateLeft}
+                  className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  disabled={isProcessing}
+                >
+                  <RotateCcw className="w-4 h-4 mr-1" />
+                  Rotate Left
+                </button>
+                <input
+                  type="range"
+                  value={rotation}
+                  min={-180}
+                  max={180}
+                  step={1}
+                  onChange={(e) => setRotation(Number(e.target.value))}
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  disabled={isProcessing}
+                />
+                <button
+                  onClick={handleRotateRight}
+                  className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  disabled={isProcessing}
+                >
+                  <RotateCw className="w-4 h-4 mr-1" />
+                  Rotate Right
+                </button>
+              </div>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </div>
+        </DialogBody>
+
+        <DialogFooter>
+          <button
+            onClick={handleClose}
+            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            disabled={isProcessing}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleApplyCrop}
+            disabled={!croppedAreaPixels || isProcessing}
+            className="flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isProcessing ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Processing...
+              </>
+            ) : (
+              <>
+                <Check className="w-4 h-4 mr-2" />
+                Apply Changes
+              </>
+            )}
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
