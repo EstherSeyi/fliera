@@ -25,7 +25,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { packId, userId } = await req.json();
+    const { packId, userId, originUrl } = await req.json();
 
     if (!packId || !userId) {
       return new Response(
@@ -35,6 +35,14 @@ Deno.serve(async (req: Request) => {
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
+    }
+
+    // Validate origin URL
+    let baseUrl = originUrl;
+    if (!baseUrl) {
+      // Fallback to a default URL if originUrl is not provided
+      baseUrl = "https://eventdp.com";
+      console.warn("No origin URL provided, using fallback URL:", baseUrl);
     }
 
     // Validate pack ID
@@ -101,8 +109,8 @@ Deno.serve(async (req: Request) => {
         },
       ],
       mode: "payment",
-      success_url: `${Deno.env.get("PUBLIC_SITE_URL")}/payment-success?plan=${packId}&type=credits`,
-      cancel_url: `${Deno.env.get("PUBLIC_SITE_URL")}/payment-failure?plan=${packId}&type=credits`,
+      success_url: `${baseUrl}/payment-success?plan=${packId}&type=credits`,
+      cancel_url: `${baseUrl}/payment-failure?plan=${packId}&type=credits`,
       customer_email: userData.user.email,
       metadata: {
         userId,

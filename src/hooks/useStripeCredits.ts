@@ -25,6 +25,7 @@ export const useStripeCredits = () => {
           body: {
             packId: packId,
             userId: user.id,
+            originUrl: window.location.origin, // Send the current origin URL
           },
         }
       );
@@ -54,4 +55,3 @@ export const useStripeCredits = () => {
     error,
   };
 };
-
