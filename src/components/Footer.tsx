@@ -41,6 +41,9 @@ export const Footer: React.FC<FooterProps> = ({ showSimplified = false }) => {
             <Link to="/events" className="hover:text-accent transition-colors">
               Events
             </Link>
+            <Link to="/pricing" className="hover:text-accent transition-colors">
+              Pricing
+            </Link>
             {isLoggedIn ? (
               <>
                 <Link
