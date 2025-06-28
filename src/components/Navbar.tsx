@@ -99,7 +99,7 @@ export const Navbar: React.FC = () => {
               >
                 <Link
                   to="/login"
-                  className="flex items-center px-6 py-2 bg-accent text-primary  hover:bg-accent/90 transition-colors"
+                  className="flex items-center px-6 py-2 bg-accent text-primary rounded-lg hover:bg-accent/90 transition-colors"
                 >
                   Login
                 </Link>

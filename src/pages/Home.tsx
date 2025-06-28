@@ -140,7 +140,7 @@ export const Home: React.FC = () => {
         >
           <Link
             to="/events"
-            className="inline-flex items-center px-6 py-3 bg-thistle text-primary  hover:bg-thistle/90 transition-colors duration-200 animate-scale active:scale-95"
+            className="inline-flex items-center px-6 py-3 bg-thistle text-primary rounded-lg hover:bg-thistle/90 transition-colors duration-200 animate-scale active:scale-95"
           >
             Browse Events
             <ArrowRight className="ml-2 w-5 h-5" />
