@@ -8,7 +8,6 @@ import { useEvents } from "../../context/EventContext";
 import { LoadingSpinner } from "../../components/LoadingSpinner";
 import { supabase } from "../../lib/supabase";
 import { useCreditSystem } from "../../hooks/useCreditSystem";
-import { useToast } from "../../context/ToastContext";
 import type { Event, CreateEventFormData } from "../../types";
 import { createEventSchema } from "../../validation/eventSchema";
 import { EventDetailsStep } from "./steps/EventDetailsStep";
@@ -28,7 +27,6 @@ export const CreateEvent: React.FC = () => {
   const navigate = useNavigate();
   const { addEvent } = useEvents();
   const { checkAndDeductEventCredits } = useCreditSystem();
-  const { showToast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
