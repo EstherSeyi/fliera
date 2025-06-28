@@ -76,6 +76,7 @@ export const CreateTemplate = () => {
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [imageScale, setImageScale] = useState(1);
   const [originalImageSize, setOriginalImageSize] = useState({ width: 0, height: 0 });
+  const [loadedBackgroundImage, setLoadedBackgroundImage] = useState<HTMLImageElement | null>(null);
   
   const [selectedPlaceholder, setSelectedPlaceholder] = useState<string | null>(
     null
@@ -121,6 +122,28 @@ export const CreateTemplate = () => {
     }));
   }, [watchedTitle, watchedImageUrl]);
 
+  // Load background image when template_image_url changes
+  useEffect(() => {
+    if (template.template_image_url) {
+      const img = new window.Image();
+      img.crossOrigin = "anonymous"; // Important for images from external URLs
+      img.src = template.template_image_url;
+      img.onload = () => {
+        setLoadedBackgroundImage(img);
+        // Set original image size once the image is loaded
+        setOriginalImageSize({ width: img.width, height: img.height });
+      };
+      img.onerror = (err) => {
+        console.error("Error loading background image for Konva:", err);
+        setLoadedBackgroundImage(null);
+        setOriginalImageSize({ width: 0, height: 0 }); // Reset size on error
+      };
+    } else {
+      setLoadedBackgroundImage(null);
+      setOriginalImageSize({ width: 0, height: 0 }); // Reset size if URL is empty
+    }
+  }, [template.template_image_url]);
+
   // Update stage size when container size changes or window resizes
   useEffect(() => {
     const updateStageSize = () => {
@@ -156,31 +179,9 @@ export const CreateTemplate = () => {
         setImageFile(file);
         const reader = new FileReader();
         reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => {
-            // Store original image dimensions
-            setOriginalImageSize({
-              width: img.width,
-              height: img.height
-            });
-            
-            // Calculate scale and stage size based on container width
-            if (containerRef.current) {
-              const containerWidth = containerRef.current.offsetWidth;
-              const scale = containerWidth / img.width;
-              
-              setImageScale(scale);
-              setStageSize({
-                width: containerWidth,
-                height: img.height * scale,
-              });
-            }
-            
-            const imageUrl = e.target?.result as string;
-            setValue("template_image_url", imageUrl);
-            trigger("template_image_url");
-          };
-          img.src = e.target?.result as string;
+          const imageUrl = e.target?.result as string;
+          setValue("template_image_url", imageUrl);
+          trigger("template_image_url");
         };
         reader.readAsDataURL(file);
       }
@@ -1011,14 +1012,13 @@ export const CreateTemplate = () => {
               >
                 <Layer>
                   {/* Background Image */}
-                  {template.template_image_url && (
+                  {loadedBackgroundImage && (
                     <KonvaImage
-                      image={new window.Image()}
+                      image={loadedBackgroundImage}
                       x={0}
                       y={0}
                       width={stageSize.width}
                       height={stageSize.height}
-                      src={template.template_image_url}
                       listening={false}
                     />
                   )}
