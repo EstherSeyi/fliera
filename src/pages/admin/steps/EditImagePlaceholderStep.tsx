@@ -45,7 +45,12 @@ export const EditImagePlaceholderStep: React.FC<EditImagePlaceholderStepProps> =
   const shapeRef = useRef<any>(null);
 
   const imagePlaceholders = watch("image_placeholders");
-  const placeholder = imagePlaceholders[0];
+  
+  // Check if image placeholders array is empty
+  const hasImagePlaceholder = imagePlaceholders && imagePlaceholders.length > 0;
+  
+  // Safely access the first placeholder only if it exists
+  const placeholder = hasImagePlaceholder ? imagePlaceholders[0] : null;
 
   // Use new flyer file preview URL if available, otherwise use existing event flyer
   const flyerUrl = currentFlyerPreviewUrl || event.flyer_url;
@@ -70,14 +75,29 @@ export const EditImagePlaceholderStep: React.FC<EditImagePlaceholderStepProps> =
   }, [flyerUrl]);
 
   useEffect(() => {
-    if (transformerRef.current && shapeRef.current && !isEventPast) {
+    if (transformerRef.current && shapeRef.current && placeholder && !isEventPast) {
       transformerRef.current.nodes([shapeRef.current]);
       transformerRef.current.getLayer().batchDraw();
     }
-  }, [placeholder.holeShape, isEventPast, transformerRef.current]);
+  }, [placeholder?.holeShape, isEventPast, transformerRef.current]);
+
+  // If no placeholder exists, create a default one
+  useEffect(() => {
+    if (!hasImagePlaceholder && image) {
+      // Create a default placeholder in the center of the image
+      const defaultPlaceholder: ImagePlaceholderZone = {
+        x: Math.round(image.width / 4),
+        y: Math.round(image.height / 4),
+        width: Math.round(image.width / 2),
+        height: Math.round(image.height / 2),
+        holeShape: "box",
+      };
+      setValue("image_placeholders", [defaultPlaceholder]);
+    }
+  }, [hasImagePlaceholder, image, setValue]);
 
   const handleTransformEnd = () => {
-    if (shapeRef.current && !isEventPast) {
+    if (shapeRef.current && placeholder && !isEventPast) {
       const node = shapeRef.current;
       const scaleX = node.scaleX();
       const scaleY = node.scaleY();
@@ -100,6 +120,8 @@ export const EditImagePlaceholderStep: React.FC<EditImagePlaceholderStepProps> =
   };
 
   const renderShape = () => {
+    if (!placeholder) return null;
+    
     // Scale coordinates for display on the Konva stage
     const scaledX = placeholder.x * imageScale;
     const scaledY = placeholder.y * imageScale;
@@ -156,6 +178,24 @@ export const EditImagePlaceholderStep: React.FC<EditImagePlaceholderStepProps> =
     }
   };
 
+  // If there's no image placeholder configuration, show a message
+  if (!hasImagePlaceholder && !image) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        className="space-y-6"
+      >
+        <div className="text-center py-12">
+          <p className="text-amber-600">
+            No image placeholder configuration found. A default placeholder will be created when the image loads.
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -180,28 +220,34 @@ export const EditImagePlaceholderStep: React.FC<EditImagePlaceholderStepProps> =
           <label className="block text-primary font-medium">
             Placeholder Shape
           </label>
-          <Controller
-            name="image_placeholders.0.holeShape"
-            control={control}
-            render={({ field }) => (
-              <Select 
-                value={field.value} 
-                onValueChange={field.onChange}
-                disabled={isEventPast}
-              >
-                <SelectTrigger className="w-full max-w-xs">
-                  <SelectValue placeholder="Select shape" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SHAPE_OPTIONS.map(({ value, label }) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
+          {placeholder ? (
+            <Controller
+              name="image_placeholders.0.holeShape"
+              control={control}
+              render={({ field }) => (
+                <Select 
+                  value={field.value} 
+                  onValueChange={field.onChange}
+                  disabled={isEventPast}
+                >
+                  <SelectTrigger className="w-full max-w-xs">
+                    <SelectValue placeholder="Select shape" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SHAPE_OPTIONS.map(({ value, label }) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          ) : (
+            <div className="text-gray-500">
+              Loading shape options...
+            </div>
+          )}
           {isEventPast && (
             <p className="text-yellow-600 text-sm">
               Shape editing is disabled for past events
@@ -219,7 +265,7 @@ export const EditImagePlaceholderStep: React.FC<EditImagePlaceholderStepProps> =
                   height={stageSize.height}
                 />
                 {renderShape()}
-                {!isEventPast && (
+                {!isEventPast && placeholder && (
                   <Transformer
                     ref={transformerRef}
                     boundBoxFunc={(oldBox, newBox) => {

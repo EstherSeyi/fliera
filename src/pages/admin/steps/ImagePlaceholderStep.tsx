@@ -36,7 +36,12 @@ export const ImagePlaceholderStep: React.FC = () => {
 
   const flyer_file = watch("flyer_file");
   const imagePlaceholders = watch("image_placeholders");
-  const placeholder = imagePlaceholders[0];
+  
+  // Check if image placeholders array is empty
+  const hasImagePlaceholder = imagePlaceholders && imagePlaceholders.length > 0;
+  
+  // Safely access the first placeholder only if it exists
+  const placeholder = hasImagePlaceholder ? imagePlaceholders[0] : null;
 
   const flyer_url = useMemo(
     () => (flyer_file?.name ? URL.createObjectURL(flyer_file) : null),
@@ -63,14 +68,29 @@ export const ImagePlaceholderStep: React.FC = () => {
   }, [flyer_url]);
 
   useEffect(() => {
-    if (transformerRef.current && shapeRef.current) {
+    if (transformerRef.current && shapeRef.current && placeholder) {
       transformerRef.current.nodes([shapeRef.current]);
       transformerRef.current.getLayer().batchDraw();
     }
-  }, [placeholder.holeShape, transformerRef.current, shapeRef.current]); // Added 'image' to dependencies
+  }, [placeholder?.holeShape, transformerRef.current, shapeRef.current]);
+
+  // If no placeholder exists, create a default one
+  useEffect(() => {
+    if (!hasImagePlaceholder && image) {
+      // Create a default placeholder in the center of the image
+      const defaultPlaceholder: ImagePlaceholderZone = {
+        x: Math.round(image.width / 4),
+        y: Math.round(image.height / 4),
+        width: Math.round(image.width / 2),
+        height: Math.round(image.height / 2),
+        holeShape: "box",
+      };
+      setValue("image_placeholders", [defaultPlaceholder]);
+    }
+  }, [hasImagePlaceholder, image, setValue]);
 
   const handleTransformEnd = () => {
-    if (shapeRef.current) {
+    if (shapeRef.current && placeholder) {
       const node = shapeRef.current;
       const scaleX = node.scaleX();
       const scaleY = node.scaleY();
@@ -93,6 +113,8 @@ export const ImagePlaceholderStep: React.FC = () => {
   };
 
   const renderShape = () => {
+    if (!placeholder) return null;
+
     // Scale coordinates for display on the Konva stage
     const scaledX = placeholder.x * imageScale;
     const scaledY = placeholder.y * imageScale;
@@ -149,6 +171,24 @@ export const ImagePlaceholderStep: React.FC = () => {
     }
   };
 
+  // If there's no flyer file, show a message
+  if (!flyer_file) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        className="space-y-6"
+      >
+        <div className="text-center py-12">
+          <p className="text-red-500">
+            Please go back and upload a flyer image first.
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -170,24 +210,30 @@ export const ImagePlaceholderStep: React.FC = () => {
           <label className="block text-primary font-medium">
             Placeholder Shape
           </label>
-          <Controller
-            name="image_placeholders.0.holeShape"
-            control={control}
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="w-full max-w-xs">
-                  <SelectValue placeholder="Select shape" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SHAPE_OPTIONS.map(({ value, label }) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
+          {placeholder ? (
+            <Controller
+              name="image_placeholders.0.holeShape"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full max-w-xs">
+                    <SelectValue placeholder="Select shape" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SHAPE_OPTIONS.map(({ value, label }) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          ) : (
+            <div className="text-gray-500">
+              Loading shape options...
+            </div>
+          )}
         </div>
 
         <div ref={containerRef} className="border rounded-lg overflow-hidden">
@@ -200,23 +246,25 @@ export const ImagePlaceholderStep: React.FC = () => {
                   height={stageSize.height}
                 />
                 {renderShape()}
-                <Transformer
-                  ref={transformerRef}
-                  boundBoxFunc={(oldBox, newBox) => {
-                    // Limit resize (accounting for scale)
-                    const minSize = 20 * imageScale;
-                    const maxSize = Math.min(stageSize.width, stageSize.height);
-                    if (
-                      newBox.width < minSize ||
-                      newBox.height < minSize ||
-                      newBox.width > maxSize ||
-                      newBox.height > maxSize
-                    ) {
-                      return oldBox;
-                    }
-                    return newBox;
-                  }}
-                />
+                {placeholder && (
+                  <Transformer
+                    ref={transformerRef}
+                    boundBoxFunc={(oldBox, newBox) => {
+                      // Limit resize (accounting for scale)
+                      const minSize = 20 * imageScale;
+                      const maxSize = Math.min(stageSize.width, stageSize.height);
+                      if (
+                        newBox.width < minSize ||
+                        newBox.height < minSize ||
+                        newBox.width > maxSize ||
+                        newBox.height > maxSize
+                      ) {
+                        return oldBox;
+                      }
+                      return newBox;
+                    }}
+                  />
+                )}
               </Layer>
             </Stage>
           )}
