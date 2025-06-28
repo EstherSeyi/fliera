@@ -684,7 +684,9 @@ export const EventDetail: React.FC = () => {
                 </Stage>
               )}
             </div>
-            {isGenerating && (
+            
+            {/* Loading spinner - only show when saving, not during typing/preview generation */}
+            {isSaving && (
               <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
                 <LoadingSpinner size={32} />
               </div>
