@@ -171,9 +171,10 @@ export const FlierTemplateSelectionModal: React.FC<
 
       setTemplateImage(img);
 
-      // Calculate scale and stage size
+      // Calculate scale and stage size based on container width only
+      // This ensures consistent scaling across different screens
       const containerWidth = containerRef.current.offsetWidth;
-      const scale = Math.min(containerWidth / img.width, 400 / img.height);
+      const scale = containerWidth / img.width;
       setImageScale(scale);
 
       setStageSize({

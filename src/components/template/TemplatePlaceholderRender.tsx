@@ -1,4 +1,4 @@
-import { Image as KonvaImage, Text } from "react-konva";
+import { Image as KonvaImage, Text, Group } from "react-konva";
 import { transformText } from "../../lib/utils";
 import { TemplateInputValues, TemplatePlaceholder } from "../../types";
 
@@ -17,6 +17,7 @@ export const TemplatePlaceholderRender = ({
   imageScale,
   inputValues,
 }: Props) => {
+  // Scale coordinates for display on the Konva stage
   const scaledX = placeholder.x * imageScale;
   const scaledY = placeholder.y * imageScale;
   const scaledWidth = placeholder.width * imageScale;
@@ -43,21 +44,38 @@ export const TemplatePlaceholderRender = ({
       cropY = (userImage.height - cropHeight) / 2;
     }
 
+    // Use Group with clipFunc for proper shape clipping
     return (
-      <KonvaImage
-        key={placeholder.id}
-        image={userImage}
+      <Group
         x={scaledX}
         y={scaledY}
-        width={scaledWidth}
-        height={scaledHeight}
-        crop={{
-          x: cropX,
-          y: cropY,
-          width: cropWidth,
-          height: cropHeight,
+        clipFunc={(ctx) => {
+          // Create clipping path based on shape
+          if (placeholder.holeShape === "circle") {
+            const radius = Math.min(scaledWidth, scaledHeight) / 2;
+            ctx.beginPath();
+            ctx.arc(scaledWidth / 2, scaledHeight / 2, radius, 0, Math.PI * 2);
+            ctx.closePath();
+          } else {
+            // Default to rectangle
+            ctx.beginPath();
+            ctx.rect(0, 0, scaledWidth, scaledHeight);
+            ctx.closePath();
+          }
         }}
-      />
+      >
+        <KonvaImage
+          image={userImage}
+          width={scaledWidth}
+          height={scaledHeight}
+          crop={{
+            x: cropX,
+            y: cropY,
+            width: cropWidth,
+            height: cropHeight,
+          }}
+        />
+      </Group>
     );
   } else {
     const textValue = inputValues[placeholder.id] as string;
@@ -69,15 +87,17 @@ export const TemplatePlaceholderRender = ({
       placeholder.textTransform ?? ""
     );
 
+    // Ensure all text properties are properly scaled
     return (
       <Text
         key={placeholder.id}
-        x={placeholder.x}
-        y={placeholder.y}
-        width={placeholder.width}
+        x={scaledX}
+        y={scaledY}
+        width={scaledWidth}
+        height={scaledHeight}
         text={displayText}
-        fontSize={placeholder.fontSize || 24}
-        fill={placeholder.color || "#ff0000"}
+        fontSize={placeholder.fontSize * imageScale}
+        fill={placeholder.color || "#000000"}
         align={placeholder.textAlign || "center"}
         fontFamily={placeholder.fontFamily || "Open Sans"}
         fontStyle={placeholder.fontStyle || "normal"}
