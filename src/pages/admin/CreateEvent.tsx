@@ -7,12 +7,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEvents } from "../../context/EventContext";
 import { LoadingSpinner } from "../../components/LoadingSpinner";
 import { supabase } from "../../lib/supabase";
+import { useCreditSystem } from "../../hooks/useCreditSystem";
+import { useToast } from "../../context/ToastContext";
 import type { Event, CreateEventFormData } from "../../types";
 import { createEventSchema } from "../../validation/eventSchema";
 import { EventDetailsStep } from "./steps/EventDetailsStep";
 import { ImagePlaceholderStep } from "./steps/ImagePlaceholderStep";
 import { TextPlaceholderStep } from "./steps/TextPlaceholderStep";
 import { PreviewStep } from "./steps/PreviewStep";
+import { ConfirmationDialog } from "../../components/ConfirmationDialog";
 
 const STEPS = [
   { id: "details", title: "Event Details" },
@@ -24,9 +27,13 @@ const STEPS = [
 export const CreateEvent: React.FC = () => {
   const navigate = useNavigate();
   const { addEvent } = useEvents();
+  const { checkAndDeductEventCredits } = useCreditSystem();
+  const { showToast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCreditConfirmation, setShowCreditConfirmation] = useState(false);
+  const [formData, setFormData] = useState<CreateEventFormData | null>(null);
 
   const methods = useForm<CreateEventFormData>({
     resolver: zodResolver(createEventSchema),
@@ -49,6 +56,29 @@ export const CreateEvent: React.FC = () => {
     // Only proceed with form submission if we're on the last step
     if (currentStep !== STEPS.length - 1) return;
 
+    // Store form data for potential credit confirmation
+    setFormData(data);
+
+    // Check if user has sufficient credits
+    const creditCheck = await checkAndDeductEventCredits();
+    
+    if (!creditCheck.success) {
+      if (creditCheck.insufficientCredits) {
+        // Show credit confirmation dialog
+        setShowCreditConfirmation(true);
+        return;
+      } else {
+        // Other error
+        setError(creditCheck.message || "Failed to check credits");
+        return;
+      }
+    }
+
+    // If credit check passed, proceed with event creation
+    await createEvent(data);
+  };
+
+  const createEvent = async (data: CreateEventFormData) => {
     setIsLoading(true);
     setError(null);
 
@@ -112,6 +142,7 @@ export const CreateEvent: React.FC = () => {
       };
 
       await addEvent(newEvent);
+      showToast("Event created successfully!", "success");
       navigate("/events");
     } catch (err) {
       console.error("Error creating event:", err);
@@ -133,6 +164,10 @@ export const CreateEvent: React.FC = () => {
 
   const handleBack = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
+  };
+
+  const handleBuyCredits = () => {
+    navigate("/pricing");
   };
 
   return (
@@ -249,6 +284,18 @@ export const CreateEvent: React.FC = () => {
           </FormProvider>
         </div>
       </motion.div>
+
+      {/* Credit Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showCreditConfirmation}
+        onClose={() => setShowCreditConfirmation(false)}
+        onConfirm={handleBuyCredits}
+        title="Insufficient Credits"
+        description="You don't have enough credits to create this event. Each event after your first 3 free events costs 0.5 credits."
+        confirmText="Buy Credits"
+        cancelText="Cancel"
+        variant="warning"
+      />
     </div>
   );
 };

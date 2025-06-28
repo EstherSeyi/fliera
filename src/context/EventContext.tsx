@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "../lib/supabase";
+import { useToast } from "./ToastContext";
+import { useCreditSystem } from "../hooks/useCreditSystem";
 import type {
   Event,
   EventCategory,
@@ -62,6 +64,8 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { user } = useAuth();
+  const { showToast } = useToast();
+  const { checkAndDeductEventCredits, checkAndDeductDPCredits } = useCreditSystem();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -417,6 +421,15 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       setError(null);
 
+      // Check if user has sufficient credits for event creation
+      if (user) {
+        const creditCheck = await checkAndDeductEventCredits();
+        
+        if (!creditCheck.success) {
+          throw new Error(creditCheck.message || "Failed to check credits");
+        }
+      }
+
       const { data, error: insertError } = await supabase
         .from("events")
         .insert({ ...rest, user_id: user?.id })
@@ -426,6 +439,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       if (insertError) throw insertError;
 
       setEvents((prev) => [data, ...prev]);
+      showToast("Event created successfully!", "success");
     } catch (err) {
       console.error("Error adding event:", err);
       throw new Error("Failed to create event");
@@ -516,6 +530,13 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     try {
+      // Check if user has sufficient credits for DP generation
+      const creditCheck = await checkAndDeductDPCredits(dpData.event_id);
+      
+      if (!creditCheck.success) {
+        throw new Error(creditCheck.message || "Failed to check credits");
+      }
+
       // If the generated_image_data is a data URL, upload it first
       let generatedImageUrl = dpData.generated_image_data;
 

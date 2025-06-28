@@ -1,22 +1,26 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Download, Image as ImageIcon, Info, X, File, Share2 } from "lucide-react";
 import { Stage, Layer, Image as KonvaImage, Text, Group } from "react-konva";
 import { useEvents } from "../context/EventContext";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { useCreditSystem } from "../hooks/useCreditSystem";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { EventDetailsModal } from "../components/EventDetailsModal";
 import { ImageCropperModal } from "../components/ImageCropperModal";
+import { ConfirmationDialog } from "../components/ConfirmationDialog";
 import { getPlainTextSnippet, transformText } from "../lib/utils";
 import type { Event } from "../types";
 
 export const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { getEvent, uploadGeneratedDPImage, saveGeneratedDP } = useEvents();
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { checkAndDeductDPCredits } = useCreditSystem();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +34,7 @@ export const EventDetail: React.FC = () => {
   const [showEventModal, setShowEventModal] = useState(false);
   const [hasGeneratedDP, setHasGeneratedDP] = useState(false);
   const [generatedDpUrl, setGeneratedDpUrl] = useState<string | null>(null);
+  const [showCreditConfirmation, setShowCreditConfirmation] = useState(false);
 
   // Image cropper states
   const [showImageCropper, setShowImageCropper] = useState(false);
@@ -270,10 +275,25 @@ export const EventDetail: React.FC = () => {
   };
 
   const downloadDP = async () => {
-    if (!generatedDpUrl || !hasGeneratedDP) return;
+    if (!generatedDpUrl || !hasGeneratedDP || !event) return;
 
     try {
       setIsSaving(true);
+
+      // Check if user has sufficient credits for DP generation
+      if (user) {
+        const creditCheck = await checkAndDeductDPCredits(event.id);
+        
+        if (!creditCheck.success) {
+          if (creditCheck.insufficientCredits) {
+            setShowCreditConfirmation(true);
+            setIsSaving(false);
+            return;
+          } else {
+            throw new Error(creditCheck.message || "Failed to check credits");
+          }
+        }
+      }
 
       // Fetch the image as blob for forced download
       const response = await fetch(generatedDpUrl);
@@ -321,6 +341,10 @@ export const EventDetail: React.FC = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleBuyCredits = () => {
+    navigate("/pricing");
   };
 
   const renderImagePlaceholder = () => {
@@ -670,7 +694,7 @@ export const EventDetail: React.FC = () => {
           <button
             onClick={downloadDP}
             disabled={!hasGeneratedDP || !hasRequiredInputs || isSaving}
-            className="w-full flex items-center justify-center px-6 py-3 bg-thistle text-primary hover:bg-thistle/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center px-6 py-3 bg-thistle text-primary rounded-lg hover:bg-thistle/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSaving ? (
               <>
@@ -712,6 +736,18 @@ export const EventDetail: React.FC = () => {
         imageSrc={originalImageSrc}
         onCropComplete={handleCropComplete}
         originalFileName={originalFileName}
+      />
+
+      {/* Credit Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showCreditConfirmation}
+        onClose={() => setShowCreditConfirmation(false)}
+        onConfirm={handleBuyCredits}
+        title="Insufficient Credits"
+        description="You don't have enough credits to generate this DP. After 100 free DPs per event, each additional DP requires credits."
+        confirmText="Buy Credits"
+        cancelText="Cancel"
+        variant="warning"
       />
     </div>
   );

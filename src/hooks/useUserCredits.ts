@@ -26,10 +26,10 @@ export const useUserCredits = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch user data including credits
+      // Fetch user data including credits and free_events_used
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('credits, is_premium_user')
+        .select('credits, is_premium_user, free_events_used')
         .eq('id', user.id)
         .single();
 
@@ -52,12 +52,12 @@ export const useUserCredits = () => {
       if (dpsError) throw dpsError;
 
       // Calculate free events remaining (max 3)
-      const freeEventsUsed = Math.min(eventsCount || 0, 3);
+      const freeEventsUsed = userData?.free_events_used || 0;
       const freeEventsRemaining = Math.max(0, 3 - freeEventsUsed);
 
       // For free DPs calculation, we need to check DPs per event
       // For simplicity, we'll calculate total free DPs available across all events
-      const totalFreeEventsCreated = Math.min(eventsCount || 0, 3);
+      const totalFreeEventsCreated = Math.min(freeEventsUsed, 3);
       const totalFreeDPsAllowed = totalFreeEventsCreated * 100;
       const freeDPsRemainingForCurrentEvents = Math.max(0, totalFreeDPsAllowed - (dpsCount || 0));
 
