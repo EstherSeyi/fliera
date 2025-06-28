@@ -16,11 +16,21 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { userId, eventId } = await req.json();
+    const { userId, eventId, requestId } = await req.json();
 
     if (!userId || !eventId) {
       return new Response(
         JSON.stringify({ error: "User ID and Event ID are required" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    if (!requestId) {
+      return new Response(
+        JSON.stringify({ error: "Request ID is required for idempotency" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -33,6 +43,48 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Check if this request has already been processed
+    const { data: existingRequest, error: checkError } = await supabaseClient
+      .from("credit_deduction_requests")
+      .select("status, amount")
+      .eq("request_id", requestId)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("Error checking for existing request:", checkError);
+      throw new Error("Failed to check for duplicate request.");
+    }
+
+    // If request already exists, return the previous result
+    if (existingRequest) {
+      console.log("Duplicate request detected:", requestId);
+      
+      if (existingRequest.status === "completed") {
+        return new Response(
+          JSON.stringify({
+            message: "Request already processed successfully.",
+            credits_deducted: existingRequest.amount,
+            idempotent: true,
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      } else {
+        return new Response(
+          JSON.stringify({ 
+            error: "Previous request failed",
+            idempotent: true
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+    }
+
     // Fetch user's current credit info
     const { data: userData, error: userError } = await supabaseClient
       .from("users")
@@ -42,6 +94,19 @@ Deno.serve(async (req: Request) => {
 
     if (userError || !userData) {
       console.error("Error fetching user data:", userError);
+      
+      // Record the failed request
+      await supabaseClient
+        .from("credit_deduction_requests")
+        .insert({
+          request_id: requestId,
+          user_id: userId,
+          event_id: eventId,
+          type: "dp",
+          amount: 0,
+          status: "failed"
+        });
+        
       throw new Error("User not found or could not fetch data.");
     }
 
@@ -56,6 +121,19 @@ Deno.serve(async (req: Request) => {
 
     if (dpsCountError) {
       console.error("Error counting DPs:", dpsCountError);
+      
+      // Record the failed request
+      await supabaseClient
+        .from("credit_deduction_requests")
+        .insert({
+          request_id: requestId,
+          user_id: userId,
+          event_id: eventId,
+          type: "dp",
+          amount: 0,
+          status: "failed"
+        });
+        
       throw new Error("Failed to count DPs for event.");
     }
 
@@ -65,6 +143,19 @@ Deno.serve(async (req: Request) => {
 
     if (dpsCount !== null && dpsCount < freeDPLimitPerEvent) {
       // Still within free DP limit for this event, no credit deduction
+      
+      // Record the successful request with zero cost
+      await supabaseClient
+        .from("credit_deduction_requests")
+        .insert({
+          request_id: requestId,
+          user_id: userId,
+          event_id: eventId,
+          type: "dp",
+          amount: 0,
+          status: "completed"
+        });
+
       return new Response(
         JSON.stringify({
           message: "Within free DP limit for this event.",
@@ -79,6 +170,18 @@ Deno.serve(async (req: Request) => {
     } else {
       // Free DP limit exhausted for this event, deduct credits
       if (credits < dpCostPerUnit) {
+        // Record the failed request due to insufficient credits
+        await supabaseClient
+          .from("credit_deduction_requests")
+          .insert({
+            request_id: requestId,
+            user_id: userId,
+            event_id: eventId,
+            type: "dp",
+            amount: dpCostPerUnit,
+            status: "failed"
+          });
+          
         return new Response(
           JSON.stringify({ 
             error: "Insufficient credits",
@@ -92,22 +195,60 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      const newCredits = credits - dpCostPerUnit;
+      // Deduct credits within a transaction
+      const { data, error: transactionError } = await supabaseClient.rpc(
+        "deduct_user_credits",
+        { 
+          user_id_param: userId,
+          amount_param: dpCostPerUnit
+        }
+      );
 
-      const { error: updateError } = await supabaseClient
-        .from("users")
-        .update({ credits: newCredits })
-        .eq("id", userId);
-
-      if (updateError) {
-        console.error("Error updating credits:", updateError);
+      if (transactionError) {
+        console.error("Transaction error:", transactionError);
+        
+        // Record the failed request
+        await supabaseClient
+          .from("credit_deduction_requests")
+          .insert({
+            request_id: requestId,
+            user_id: userId,
+            event_id: eventId,
+            type: "dp",
+            amount: dpCostPerUnit,
+            status: "failed"
+          });
+          
         throw new Error("Failed to deduct credits for DP generation.");
       }
+
+      // Record the successful request
+      await supabaseClient
+        .from("credit_deduction_requests")
+        .insert({
+          request_id: requestId,
+          user_id: userId,
+          event_id: eventId,
+          type: "dp",
+          amount: dpCostPerUnit,
+          status: "completed"
+        });
+
+      // Record the transaction
+      await supabaseClient
+        .from("credit_transactions")
+        .insert({
+          user_id: userId,
+          amount: -dpCostPerUnit,
+          transaction_type: "dp_generation",
+          status: "completed",
+          notes: `DP generated for event ${eventId}`
+        });
 
       return new Response(
         JSON.stringify({
           message: "Credits deducted for DP generation successfully.",
-          remaining_credits: newCredits,
+          remaining_credits: credits - dpCostPerUnit,
           credits_deducted: dpCostPerUnit,
         }),
         {

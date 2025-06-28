@@ -12,6 +12,18 @@ export const useCreditSystem = () => {
   const [error, setError] = useState<string | null>(null);
 
   /**
+   * Generate a unique request ID for idempotent operations
+   */
+  const generateRequestId = (type: 'event' | 'dp', eventId?: string) => {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 10);
+    const userId = user?.id || 'anonymous';
+    const eventPart = eventId ? `-${eventId}` : '';
+    
+    return `${type}-${userId}${eventPart}-${timestamp}-${random}`;
+  };
+
+  /**
    * Check and deduct credits for event creation
    * @returns Object with success status and any error message
    */
@@ -32,8 +44,14 @@ export const useCreditSystem = () => {
     setError(null);
 
     try {
+      // Generate a unique request ID for idempotency
+      const requestId = generateRequestId('event');
+      
       const { data, error } = await supabase.functions.invoke('deduct-event-credit', {
-        body: { userId: user.id }
+        body: { 
+          userId: user.id,
+          requestId
+        }
       });
 
       if (error) {
@@ -96,10 +114,14 @@ export const useCreditSystem = () => {
     setError(null);
 
     try {
+      // Generate a unique request ID for idempotency
+      const requestId = generateRequestId('dp', eventId);
+      
       const { data, error } = await supabase.functions.invoke('deduct-dp-credit', {
         body: { 
           userId: user.id,
-          eventId
+          eventId,
+          requestId
         }
       });
 
