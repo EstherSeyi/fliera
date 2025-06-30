@@ -35,11 +35,11 @@ export const createEventSchema = z
     flyer_file: z
       .instanceof(File)
       .refine(
-        (file) => file.size <= MAX_FILE_SIZE,
+        file => file.size <= MAX_FILE_SIZE,
         "File size must be less than 2MB"
       )
       .refine(
-        (file) => file.type.startsWith("image/"),
+        file => file.type.startsWith("image/"),
         "File must be an image (PNG, JPG)"
       )
       .nullable()
@@ -60,13 +60,7 @@ export const createEventSchema = z
     ]),
   })
   .refine(
-    (data) => {
-      console.log(
-        data.flyer_file !== null || data.use_template === true,
-        data.flyer_file,
-        data.use_template,
-        "Gor here"
-      );
+    data => {
       // Either flyer_file must be provided OR use_template must be true
       return data.flyer_file !== null || data.use_template === true;
     },
