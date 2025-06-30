@@ -44,7 +44,7 @@ export const DownloadButton = ({
   // Define the mutation for downloading and saving the DP
   const downloadDPMutation = useMutation({
     mutationFn: async () => {
-      const response = await handleDownload();
+      const response = await handleDownload(event?.title);
 
       if (user && userPhoto && response && event && response) {
         await saveGeneratedDP({
@@ -114,7 +114,7 @@ export const DownloadButton = ({
       </button>
 
       {!hasRequiredInputs && (
-        <p className="text-xs text-red-500 text-center">
+        <p className="text-xs text-red-500 text-center mt-1">
           Please upload a photo and fill in all text fields to download your DP
         </p>
       )}
