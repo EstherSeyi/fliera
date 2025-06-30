@@ -12,6 +12,7 @@ import { EventDetailsModal } from "../components/EventDetailsModal";
 import { ImageCropperModal } from "../components/ImageCropperModal";
 import { ConfirmationDialog } from "../components/ConfirmationDialog";
 import { getPlainTextSnippet, transformText } from "../lib/utils";
+import { useMutation } from "@tanstack/react-query";
 import type { Event } from "../types";
 
 export const EventDetail: React.FC = () => {
@@ -30,7 +31,6 @@ export const EventDetail: React.FC = () => {
   const [userPhotoPreview, setUserPhotoPreview] = useState<string | null>(null);
   const [userTextInputs, setUserTextInputs] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
   const [hasGeneratedDP, setHasGeneratedDP] = useState(false);
   const [generatedDpUrl, setGeneratedDpUrl] = useState<string | null>(null);
@@ -157,30 +157,27 @@ export const EventDetail: React.FC = () => {
 
     setIsGenerating(true);
     try {
-      // Small delay to ensure the stage is fully rendered
-      setTimeout(async () => {
-        if (stageRef.current) {
-          // Generate the DP URL immediately when preview is ready
-          const dataURL = stageRef.current.toDataURL({
-            mimeType: "image/png",
-            quality: 1,
-            pixelRatio: 2,
-          });
+      if (stageRef.current) {
+        // Generate the DP URL immediately when preview is ready
+        const dataURL = stageRef.current.toDataURL({
+          mimeType: "image/png",
+          quality: 1,
+          pixelRatio: 2,
+        });
 
-          // Upload to Supabase and get public URL for sharing
-          try {
-            const publicUrl = await uploadGeneratedDPImage(dataURL);
-            setGeneratedDpUrl(publicUrl);
-          } catch (uploadError) {
-            console.error("Error uploading DP:", uploadError);
-            // Fallback to data URL if upload fails
-            setGeneratedDpUrl(dataURL);
-          }
-
-          setHasGeneratedDP(true);
+        // Upload to Supabase and get public URL for sharing
+        try {
+          const publicUrl = await uploadGeneratedDPImage(dataURL);
+          setGeneratedDpUrl(publicUrl);
+        } catch (uploadError) {
+          console.error("Error uploading DP:", uploadError);
+          // Fallback to data URL if upload fails
+          setGeneratedDpUrl(dataURL);
         }
-        setIsGenerating(false);
-      }, 100);
+
+        setHasGeneratedDP(true);
+      }
+      setIsGenerating(false);
     } catch (err) {
       console.error("Error generating DP:", err);
       setError("Failed to generate DP");
@@ -274,24 +271,23 @@ export const EventDetail: React.FC = () => {
     }
   };
 
-  const downloadDP = async () => {
-    if (!generatedDpUrl || !hasGeneratedDP || !event) return;
-
-    try {
-      setIsSaving(true);
+  // Define the mutation for downloading and saving the DP
+  const downloadDPMutation = useMutation({
+    mutationFn: async () => {
+      if (!generatedDpUrl || !hasGeneratedDP || !event) {
+        throw new Error("DP not generated or event data missing.");
+      }
 
       // Check if user has sufficient credits for DP generation
       if (user) {
         const creditCheck = await checkAndDeductDPCredits(event.id);
-        
         if (!creditCheck.success) {
-          if (creditCheck.insufficientCredits) {
-            setShowCreditConfirmation(true);
-            setIsSaving(false);
-            return;
-          } else {
-            throw new Error(creditCheck.message || "Failed to check credits");
-          }
+          // Throw an error that can be caught by onError
+          throw {
+            message: creditCheck.message || "Failed to check credits",
+            insufficientCredits: creditCheck.insufficientCredits,
+            requiredCredits: creditCheck.requiredCredits,
+          };
         }
       }
 
@@ -324,24 +320,26 @@ export const EventDetail: React.FC = () => {
           user_photo: userPhoto,
           generated_image_data: generatedDpUrl,
         });
-
-        showToast("Your DP has been successfully saved!", "success");
-      } else {
-        // For non-logged in users, just show download success
-        showToast("Your DP has been downloaded successfully!", "success");
       }
 
-      // Reset the page state after successful download
+      return { success: true };
+    },
+    onSuccess: () => {
+      showToast("Your DP has been successfully downloaded and saved!", "success");
+      // Only reset page state on successful download and save
       setTimeout(() => {
         resetPageState();
       }, 1000);
-    } catch (err) {
+    },
+    onError: (err: any) => {
       console.error("Error saving DP:", err);
-      showToast("Failed to save your DP. Please try again.", "error");
-    } finally {
-      setIsSaving(false);
-    }
-  };
+      if (err.insufficientCredits) {
+        setShowCreditConfirmation(true);
+      } else {
+        showToast(err.message || "Failed to save your DP. Please try again.", "error");
+      }
+    },
+  });
 
   const handleBuyCredits = () => {
     navigate("/pricing");
@@ -686,7 +684,7 @@ export const EventDetail: React.FC = () => {
             </div>
             
             {/* Loading spinner - only show when saving, not during typing/preview generation */}
-            {isSaving && (
+            {downloadDPMutation.isPending && (
               <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
                 <LoadingSpinner size={32} />
               </div>
@@ -694,11 +692,11 @@ export const EventDetail: React.FC = () => {
           </div>
 
           <button
-            onClick={downloadDP}
-            disabled={!hasGeneratedDP || !hasRequiredInputs || isSaving}
+            onClick={() => downloadDPMutation.mutate()}
+            disabled={!hasGeneratedDP || !hasRequiredInputs || downloadDPMutation.isPending}
             className="w-full flex items-center justify-center px-6 py-3 bg-thistle text-primary rounded-lg hover:bg-thistle/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSaving ? (
+            {downloadDPMutation.isPending ? (
               <>
                 <LoadingSpinner className="mr-2" />
                 Saving...

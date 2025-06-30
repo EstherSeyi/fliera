@@ -6,16 +6,22 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ToastProvider } from "./context/ToastContext";
 import { ToastContainer } from "./components/Toast";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { EventProvider } from "./context/EventContext";
 import { usePreloadGoogleFonts } from "./hooks/usePreloadGoogleFonts";
 
+// Create a client
+const queryClient = new QueryClient();
+
 export const AppProviders = ({ children }: { children: React.ReactNode }) => (
-  <ToastProvider>
-    <AuthProvider>
-      <EventProvider>{children}</EventProvider>
-    </AuthProvider>
-  </ToastProvider>
+  <QueryClientProvider client={queryClient}>
+    <ToastProvider>
+      <AuthProvider>
+        <EventProvider>{children}</EventProvider>
+      </AuthProvider>
+    </ToastProvider>
+  </QueryClientProvider>
 );
 
 const router = createBrowserRouter([
