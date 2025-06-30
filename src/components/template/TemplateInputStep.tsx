@@ -49,7 +49,7 @@ export const TemplateInputStep = ({
     placeholderId: string,
     value: string | File | null
   ) => {
-    setInputValues((prev) => ({
+    setInputValues(prev => ({
       ...prev,
       [placeholderId]: value,
     }));
@@ -58,7 +58,7 @@ export const TemplateInputStep = ({
   const isFormValid = () => {
     if (!selectedTemplate) return false;
 
-    return selectedTemplate.template_placeholders.every((placeholder) => {
+    return selectedTemplate.template_placeholders.every(placeholder => {
       if (!placeholder.required) return true;
 
       const value = inputValues[placeholder.id];
@@ -122,8 +122,8 @@ export const TemplateInputStep = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
-          {selectedTemplate?.template_placeholders.map((placeholder) => (
-            <div key={placeholder.id} className="space-y-2">
+          {selectedTemplate?.template_placeholders.map((placeholder, index) => (
+            <div key={`${placeholder.id}_${index}`} className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
                 {placeholder?.labelText}
                 {placeholder.required && (
@@ -135,7 +135,7 @@ export const TemplateInputStep = ({
                 <input
                   type="text"
                   value={(inputValues[placeholder.id] as string) || ""}
-                  onChange={(e) =>
+                  onChange={e =>
                     handleInputChange(placeholder.id, e.target.value)
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary"
@@ -145,7 +145,7 @@ export const TemplateInputStep = ({
               ) : (
                 <FileUploadInput
                   value={inputValues[placeholder.id] as File | null}
-                  onChange={(file) => handleInputChange(placeholder.id, file)}
+                  onChange={file => handleInputChange(placeholder.id, file)}
                   accept="image/*"
                   maxSize={2 * 1024 * 1024}
                 />
@@ -174,16 +174,15 @@ export const TemplateInputStep = ({
                     width={stageSize.width}
                     height={stageSize.height}
                   />
-                  {selectedTemplate?.template_placeholders.map(
-                    (placeholder) => (
-                      <TemplatePlaceholderRender
-                        placeholder={placeholder}
-                        userImages={userImages}
-                        imageScale={imageScale}
-                        inputValues={inputValues}
-                      />
-                    )
-                  )}
+                  {selectedTemplate?.template_placeholders.map(placeholder => (
+                    <TemplatePlaceholderRender
+                      key={placeholder?.id}
+                      placeholder={placeholder}
+                      userImages={userImages}
+                      imageScale={imageScale}
+                      inputValues={inputValues}
+                    />
+                  ))}
                 </Layer>
               </Stage>
             )}
