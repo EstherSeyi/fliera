@@ -23,7 +23,7 @@ interface EventFilters {
   dateTo?: string;
 }
 
-interface SaveDPData {
+export interface SaveDPData {
   event_id: string;
   user_text_inputs: string[];
   user_photo: File;
@@ -404,7 +404,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       if (deleteError) throw deleteError;
 
       // Update local state if the event is in the current events list
-      setEvents((prev) => prev.filter((event) => event.id !== id));
+      setEvents(prev => prev.filter(event => event.id !== id));
     } catch (err) {
       console.error("Error deleting event:", err);
       throw new Error("Failed to delete event");
@@ -429,7 +429,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (insertError) throw insertError;
 
-      setEvents((prev) => [data, ...prev]);
+      setEvents(prev => [data, ...prev]);
       showToast("Event created successfully!", "success");
     } catch (err) {
       console.error("Error adding event:", err);
@@ -452,8 +452,8 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
       if (updateError) throw updateError;
 
       // Update local state if the event is in the current events list
-      setEvents((prev) =>
-        prev.map((event) =>
+      setEvents(prev =>
+        prev.map(event =>
           event.id === id ? { ...event, ...eventData } : event
         )
       );
