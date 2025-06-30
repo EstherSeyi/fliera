@@ -157,27 +157,30 @@ export const EventDetail: React.FC = () => {
 
     setIsGenerating(true);
     try {
-      if (stageRef.current) {
-        // Generate the DP URL immediately when preview is ready
-        const dataURL = stageRef.current.toDataURL({
-          mimeType: "image/png",
-          quality: 1,
-          pixelRatio: 2,
-        });
+      // Small delay to ensure the stage is fully rendered
+      setTimeout(async () => {
+        if (stageRef.current) {
+          // Generate the DP URL immediately when preview is ready
+          const dataURL = stageRef.current.toDataURL({
+            mimeType: "image/png",
+            quality: 1,
+            pixelRatio: 2,
+          });
 
-        // Upload to Supabase and get public URL for sharing
-        try {
-          const publicUrl = await uploadGeneratedDPImage(dataURL);
-          setGeneratedDpUrl(publicUrl);
-        } catch (uploadError) {
-          console.error("Error uploading DP:", uploadError);
-          // Fallback to data URL if upload fails
-          setGeneratedDpUrl(dataURL);
+          // Upload to Supabase and get public URL for sharing
+          try {
+            const publicUrl = await uploadGeneratedDPImage(dataURL);
+            setGeneratedDpUrl(publicUrl);
+          } catch (uploadError) {
+            console.error("Error uploading DP:", uploadError);
+            // Fallback to data URL if upload fails
+            setGeneratedDpUrl(dataURL);
+          }
+
+          setHasGeneratedDP(true);
         }
-
-        setHasGeneratedDP(true);
-      }
-      setIsGenerating(false);
+        setIsGenerating(false);
+      }, 100);
     } catch (err) {
       console.error("Error generating DP:", err);
       setError("Failed to generate DP");
