@@ -1,28 +1,22 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { 
-  X, 
-  Zap, 
-  Gift, 
-  Calendar, 
+import React from "react";
+import { motion } from "framer-motion";
+import {
+  Zap,
+  Gift,
+  Calendar,
   Image as ImageIcon,
   CreditCard,
   TrendingUp,
-  Info
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from './ui/dialog';
-import type { UserCreditInfo } from '../types';
+  Info,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import type { UserCreditInfo } from "../types";
 
 interface CreditDetailsDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  creditInfo: UserCreditInfo;
+  creditInfo: UserCreditInfo | null;
 }
 
 export const CreditDetailsDialog: React.FC<CreditDetailsDialogProps> = ({
@@ -30,6 +24,8 @@ export const CreditDetailsDialog: React.FC<CreditDetailsDialogProps> = ({
   onClose,
   creditInfo,
 }) => {
+  if (!creditInfo) return null;
+
   const {
     credits,
     is_premium_user,
@@ -63,7 +59,9 @@ export const CreditDetailsDialog: React.FC<CreditDetailsDialogProps> = ({
                 <h3 className="text-lg font-semibold mb-2">Current Balance</h3>
                 <div className="flex items-baseline space-x-2">
                   <span className="text-3xl font-bold">{credits}</span>
-                  <span className="text-white/80">credit{credits !== 1 ? 's' : ''}</span>
+                  <span className="text-white/80">
+                    credit{credits !== 1 ? "s" : ""}
+                  </span>
                 </div>
                 <p className="text-white/80 text-sm mt-1">
                   ≈ ${(credits * 5).toFixed(2)} USD value
@@ -92,26 +90,34 @@ export const CreditDetailsDialog: React.FC<CreditDetailsDialogProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-600">Free Events</span>
+                        <span className="text-sm font-medium text-gray-600">
+                          Free Events
+                        </span>
                         <Calendar className="w-4 h-4 text-gray-400" />
                       </div>
                       <div className="flex items-baseline space-x-2">
                         <span className="text-2xl font-bold text-primary">
                           {freeEventsRemaining}
                         </span>
-                        <span className="text-gray-500 text-sm">of 3 remaining</span>
+                        <span className="text-gray-500 text-sm">
+                          of 3 remaining
+                        </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                        <div 
+                        <div
                           className="bg-accent h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${((3 - freeEventsRemaining) / 3) * 100}%` }}
+                          style={{
+                            width: `${((3 - freeEventsRemaining) / 3) * 100}%`,
+                          }}
                         />
                       </div>
                     </div>
 
                     <div className="bg-white rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-600">Free DPs</span>
+                        <span className="text-sm font-medium text-gray-600">
+                          Free DPs
+                        </span>
                         <ImageIcon className="w-4 h-4 text-gray-400" />
                       </div>
                       <div className="flex items-baseline space-x-2">
@@ -139,26 +145,36 @@ export const CreditDetailsDialog: React.FC<CreditDetailsDialogProps> = ({
           >
             <div className="flex items-center space-x-2 mb-4">
               <TrendingUp className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold text-primary">Usage Statistics</h3>
+              <h3 className="text-lg font-semibold text-primary">
+                Usage Statistics
+              </h3>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Total Events Created</span>
-                  <span className="font-semibold text-primary">{eventsCreated}</span>
+                  <span className="font-semibold text-primary">
+                    {eventsCreated}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Total DPs Generated</span>
-                  <span className="font-semibold text-primary">{totalDPsGenerated}</span>
+                  <span className="font-semibold text-primary">
+                    {totalDPsGenerated}
+                  </span>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Account Type</span>
-                  <span className={`font-semibold ${is_premium_user ? 'text-accent' : 'text-primary'}`}>
-                    {is_premium_user ? 'Premium' : 'Free Tier'}
+                  <span
+                    className={`font-semibold ${
+                      is_premium_user ? "text-accent" : "text-primary"
+                    }`}
+                  >
+                    {is_premium_user ? "Premium" : "Free Tier"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -183,10 +199,22 @@ export const CreditDetailsDialog: React.FC<CreditDetailsDialogProps> = ({
                   How Credits Work
                 </h3>
                 <div className="space-y-2 text-sm text-blue-700">
-                  <p>• <strong>Events:</strong> After 3 free events, each new event costs 0.5 credits ($2.50)</p>
-                  <p>• <strong>DPs:</strong> After 100 free DPs per event, each additional 1,000 DPs costs 1 credit ($5.00)</p>
-                  <p>• <strong>Auto-deduction:</strong> Credits are automatically used when free limits are reached</p>
-                  <p>• <strong>No expiry:</strong> Your credits never expire and can be used anytime</p>
+                  <p>
+                    • <strong>Events:</strong> After 3 free events, each new
+                    event costs 0.5 credits ($2.50)
+                  </p>
+                  <p>
+                    • <strong>DPs:</strong> After 100 free DPs per event, each
+                    additional 1,000 DPs costs 1 credit ($5.00)
+                  </p>
+                  <p>
+                    • <strong>Auto-deduction:</strong> Credits are automatically
+                    used when free limits are reached
+                  </p>
+                  <p>
+                    • <strong>No expiry:</strong> Your credits never expire and
+                    can be used anytime
+                  </p>
                 </div>
               </div>
             </div>
@@ -207,7 +235,7 @@ export const CreditDetailsDialog: React.FC<CreditDetailsDialogProps> = ({
               <CreditCard className="w-5 h-5 mr-2" />
               Buy More Credits
             </Link>
-            
+
             <Link
               to="/events"
               className="flex-1 flex items-center justify-center px-6 py-3 bg-accent text-primary rounded-lg hover:bg-accent/90 transition-colors font-medium"
@@ -233,7 +261,8 @@ export const CreditDetailsDialog: React.FC<CreditDetailsDialogProps> = ({
                 </p>
               </div>
               <p className="text-yellow-700 text-sm mt-1">
-                Consider purchasing more credits to continue creating events and generating DPs without interruption.
+                Consider purchasing more credits to continue creating events and
+                generating DPs without interruption.
               </p>
             </motion.div>
           )}
