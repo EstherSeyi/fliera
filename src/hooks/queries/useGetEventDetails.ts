@@ -2,6 +2,7 @@ import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import { useState } from "react";
 import { useEvents } from "../../context/EventContext";
 import type { Event } from "../../types";
+import { GET_EVENT_DETAILS_KEY } from "./constants";
 
 interface UseGetEventDetailsReturn {
   event: Event | undefined;
@@ -22,7 +23,7 @@ export const useGetEventDetails = (
     isLoading,
     error,
   } = useQuery<Event, Error>({
-    queryKey: ["event", id],
+    queryKey: [GET_EVENT_DETAILS_KEY, id],
     queryFn: async () => {
       const eventData = await getEvent(id || "");
       if (!eventData) {
