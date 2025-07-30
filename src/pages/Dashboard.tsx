@@ -1,179 +1,86 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { 
-  Calendar, 
-  Users, 
-  Image as ImageIcon, 
-  Eye, 
-  Edit, 
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  Calendar,
+  Users,
+  Image as ImageIcon,
+  Eye,
+  Edit,
   Plus,
   CreditCard,
   Zap,
-  TrendingUp
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabase';
-import { getPlainTextSnippet } from '../lib/utils';
-import { CreditDetailsDialog } from '../components/CreditDetailsDialog';
-import { useUserCredits } from '../hooks/useUserCredits';
-import type { Event } from '../types';
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
-interface DashboardStats {
-  totalEvents: number;
-  totalDPs: number;
-  totalParticipants: number;
-}
+import { getPlainTextSnippet } from "../lib/utils";
+import { CreditDetailsDialog } from "../components/CreditDetailsDialog";
+import { useUserCredits } from "../hooks/useUserCredits";
+
+import { useDashboardStats } from "../hooks/queries/useGetDashboardStats";
+import { useRecentEvents } from "../hooks/queries/useGetRecentQueries";
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const { creditInfo, loading: loadingCredits } = useUserCredits();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalEvents: 0,
-    totalDPs: 0,
-    totalParticipants: 0,
-  });
-  const [recentEvents, setRecentEvents] = useState<Event[]>([]);
-  const [loadingStats, setLoadingStats] = useState(true);
-  const [loadingEvents, setLoadingEvents] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const {
+    creditInfo,
+    loading: loadingCredits,
+    // error,
+    // refetch,
+  } = useUserCredits();
+  const {
+    data: stats,
+    isPending: loadingStats,
+    isError,
+    error,
+  } = useDashboardStats(user?.id);
+
+  const {
+    data: recentEvents,
+    isLoading: loadingEvents,
+    // isError,
+    // error,
+  } = useRecentEvents(user?.id);
+
   const [showCreditDialog, setShowCreditDialog] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchDashboardStats();
-      fetchRecentEvents();
-    }
-  }, [user]);
-
-  const fetchDashboardStats = async () => {
-    if (!user) return;
-
-    try {
-      setLoadingStats(true);
-      setError(null);
-
-      // Fetch total events created by user
-      const { count: eventsCount, error: eventsError } = await supabase
-        .from('events')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      if (eventsError) throw eventsError;
-
-      // Fetch total DPs generated for user's events
-      const { data: userEvents, error: userEventsError } = await supabase
-        .from('events')
-        .select('id')
-        .eq('user_id', user.id);
-
-      if (userEventsError) throw userEventsError;
-
-      const eventIds = userEvents?.map(event => event.id) || [];
-
-      let dpsCount = 0;
-      let participantsCount = 0;
-
-      if (eventIds.length > 0) {
-        // Fetch total DPs for user's events
-        const { count: totalDPs, error: dpsError } = await supabase
-          .from('dps')
-          .select('*', { count: 'exact', head: true })
-          .in('event_id', eventIds);
-
-        if (dpsError) throw dpsError;
-        dpsCount = totalDPs || 0;
-
-        // Fetch unique participants (users who generated DPs for user's events)
-        const { data: participantsData, error: participantsError } = await supabase
-          .from('dps')
-          .select('user_id')
-          .in('event_id', eventIds)
-          .not('user_id', 'is', null);
-
-        if (participantsError) throw participantsError;
-
-        // Count unique participants
-        const uniqueParticipants = new Set(
-          participantsData?.map(dp => dp.user_id).filter(Boolean) || []
-        );
-        participantsCount = uniqueParticipants.size;
-      }
-
-      setStats({
-        totalEvents: eventsCount || 0,
-        totalDPs: dpsCount,
-        totalParticipants: participantsCount,
-      });
-    } catch (err) {
-      console.error('Error fetching dashboard stats:', err);
-      setError('Failed to load dashboard statistics');
-    } finally {
-      setLoadingStats(false);
-    }
-  };
-
-  const fetchRecentEvents = async () => {
-    if (!user) return;
-
-    try {
-      setLoadingEvents(true);
-
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-
-      setRecentEvents(data || []);
-    } catch (err) {
-      console.error('Error fetching recent events:', err);
-      setError('Failed to load recent events');
-    } finally {
-      setLoadingEvents(false);
-    }
-  };
-
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     const container = img.parentElement;
-    
-    // Remove loading animation from container
+
     if (container) {
-      container.classList.remove('animate-pulse', 'bg-gray-200');
+      container.classList.remove("animate-pulse", "bg-gray-200");
     }
-    
-    // Make image visible
-    img.classList.remove('opacity-0');
-    img.classList.add('opacity-100');
+
+    img.classList.remove("opacity-0");
+    img.classList.add("opacity-100");
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     const container = img.parentElement;
-    
+
     // Set fallback image
-    img.src = "https://images.pexels.com/photos/1036936/pexels-photo-1036936.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1";
-    
+    img.src =
+      "https://images.pexels.com/photos/1036936/pexels-photo-1036936.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1";
+
     // Remove loading animation from container
     if (container) {
-      container.classList.remove('animate-pulse', 'bg-gray-200');
+      container.classList.remove("animate-pulse", "bg-gray-200");
     }
-    
+
     // Make image visible
-    img.classList.remove('opacity-0');
-    img.classList.add('opacity-100');
+    img.classList.remove("opacity-0");
+    img.classList.add("opacity-100");
   };
 
   const StatCard: React.FC<{
@@ -191,7 +98,9 @@ export const Dashboard: React.FC = () => {
               <div className="h-8 bg-gray-200 rounded animate-pulse w-16"></div>
             </div>
           ) : (
-            <p className="text-3xl font-bold text-primary mt-2">{value.toLocaleString()}</p>
+            <p className="text-3xl font-bold text-primary mt-2">
+              {value.toLocaleString()}
+            </p>
           )}
         </div>
         <Icon className="w-8 h-8 text-accent" />
@@ -202,7 +111,10 @@ export const Dashboard: React.FC = () => {
   const RecentEventsSkeleton: React.FC = () => (
     <div className="space-y-4">
       {Array.from({ length: 5 }).map((_, index) => (
-        <div key={index} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg animate-pulse">
+        <div
+          key={index}
+          className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg animate-pulse"
+        >
           <div className="h-12 w-12 bg-gray-200 rounded-lg flex-shrink-0"></div>
           <div className="flex-1 space-y-2">
             <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -242,7 +154,7 @@ export const Dashboard: React.FC = () => {
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
-          {error}
+          {error?.message || "Something went wrong. Please try again."}
         </div>
       )}
 
@@ -252,7 +164,7 @@ export const Dashboard: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05 }}
       >
-        <div 
+        <div
           className="bg-gradient-to-r from-primary to-primary/90 text-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
           onClick={() => setShowCreditDialog(true)}
         >
@@ -260,7 +172,9 @@ export const Dashboard: React.FC = () => {
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-2">
                 <CreditCard className="w-5 h-5" />
-                <span className="text-white/90 font-medium">Credit Balance</span>
+                <span className="text-white/90 font-medium">
+                  Credit Balance
+                </span>
               </div>
               {loadingCredits ? (
                 <div className="space-y-2">
@@ -270,17 +184,28 @@ export const Dashboard: React.FC = () => {
               ) : (
                 <>
                   <div className="flex items-baseline space-x-2">
-                    <span className="text-3xl font-bold">{creditInfo.credits}</span>
-                    <span className="text-white/80">credit{creditInfo.credits !== 1 ? 's' : ''}</span>
+                    <span className="text-3xl font-bold">
+                      {creditInfo?.credits}
+                    </span>
+                    <span className="text-white/80">
+                      credit{creditInfo?.credits !== 1 ? "s" : ""}
+                    </span>
                   </div>
                   <p className="text-white/80 text-sm">
-                    {creditInfo.is_premium_user ? 'Premium Account' : 'Free Tier'} • 
-                    {creditInfo.freeEventsRemaining > 0 && (
-                      <span className="ml-1">{creditInfo.freeEventsRemaining} free events left</span>
-                    )}
-                    {creditInfo.freeEventsRemaining === 0 && !creditInfo.is_premium_user && (
-                      <span className="ml-1">All free events used</span>
-                    )}
+                    {creditInfo?.is_premium_user
+                      ? "Premium Account"
+                      : "Free Tier"}{" "}
+                    •
+                    {creditInfo?.freeEventsRemaining &&
+                      creditInfo?.freeEventsRemaining > 0 && (
+                        <span className="ml-1">
+                          {creditInfo.freeEventsRemaining} free events left
+                        </span>
+                      )}
+                    {creditInfo?.freeEventsRemaining === 0 &&
+                      !creditInfo?.is_premium_user && (
+                        <span className="ml-1">All free events used</span>
+                      )}
                   </p>
                 </>
               )}
@@ -292,21 +217,27 @@ export const Dashboard: React.FC = () => {
               <span className="text-xs text-white/70">Click for details</span>
             </div>
           </div>
-          
+
           {/* Quick stats bar */}
           {!loadingCredits && (
             <div className="mt-4 pt-4 border-t border-white/20">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-lg font-semibold">{creditInfo.eventsCreated}</div>
+                  <div className="text-lg font-semibold">
+                    {creditInfo?.eventsCreated}
+                  </div>
                   <div className="text-xs text-white/70">Events Created</div>
                 </div>
                 <div>
-                  <div className="text-lg font-semibold">{creditInfo.totalDPsGenerated}</div>
+                  <div className="text-lg font-semibold">
+                    {creditInfo?.totalDPsGenerated}
+                  </div>
                   <div className="text-xs text-white/70">DPs Generated</div>
                 </div>
                 <div>
-                  <div className="text-lg font-semibold">${(creditInfo.credits * 5).toFixed(0)}</div>
+                  <div className="text-lg font-semibold">
+                    ${((creditInfo?.credits ?? 0) * 5).toFixed(0)}
+                  </div>
                   <div className="text-xs text-white/70">Credit Value</div>
                 </div>
               </div>
@@ -324,19 +255,19 @@ export const Dashboard: React.FC = () => {
       >
         <StatCard
           label="Total Events"
-          value={stats.totalEvents}
+          value={stats?.totalEvents ?? 0}
           icon={Calendar}
           loading={loadingStats}
         />
         <StatCard
           label="Total Participants"
-          value={stats.totalParticipants}
+          value={stats?.totalParticipants ?? 0}
           icon={Users}
           loading={loadingStats}
         />
         <StatCard
           label="DPs Generated"
-          value={stats.totalDPs}
+          value={stats?.totalDPs ?? 0}
           icon={ImageIcon}
           loading={loadingStats}
         />
@@ -361,7 +292,7 @@ export const Dashboard: React.FC = () => {
 
         {loadingEvents ? (
           <RecentEventsSkeleton />
-        ) : recentEvents.length === 0 ? (
+        ) : recentEvents?.length === 0 ? (
           <div className="text-center py-12">
             <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-600 mb-2">
@@ -380,7 +311,7 @@ export const Dashboard: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {recentEvents.map((event, index) => (
+            {recentEvents?.map((event, index) => (
               <motion.div
                 key={event.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -439,7 +370,7 @@ export const Dashboard: React.FC = () => {
       <CreditDetailsDialog
         isOpen={showCreditDialog}
         onClose={() => setShowCreditDialog(false)}
-        creditInfo={creditInfo}
+        creditInfo={creditInfo ?? null}
       />
     </div>
   );
