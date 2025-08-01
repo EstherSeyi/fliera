@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "../lib/supabase";
 import { useToast } from "./ToastContext";
@@ -31,18 +31,10 @@ export interface SaveDPData {
 }
 
 interface EventContextType {
-  events: Event[];
-  loading: boolean;
   error: string | null;
   addEvent: (event: Event) => Promise<void>;
   getEvent: (id: string) => Promise<Event | null>;
-  refreshEvents: () => Promise<void>;
   fetchEventsByUser: (
-    page?: number,
-    limit?: number,
-    filters?: EventFilters
-  ) => Promise<PaginatedEventsResult>;
-  fetchPublicEvents: (
     page?: number,
     limit?: number,
     filters?: EventFilters
@@ -66,114 +58,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
   const { user } = useAuth();
   const { showToast } = useToast();
   const { checkAndDeductDPCredits } = useCreditSystem();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Get current date in YYYY-MM-DD format for comparison
-      const today = new Date().toISOString().split("T")[0];
-
-      const { data, error: fetchError } = await supabase
-        .from("events")
-        .select("*")
-        .eq("visibility", "public")
-        .gte("date", today) // Only fetch events that are today or in the future
-        .order("created_at", { ascending: false });
-
-      if (fetchError) throw fetchError;
-
-      setEvents(data || []);
-    } catch (err) {
-      console.error("Error fetching events:", err);
-      setError("Failed to load events");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchPublicEvents = async (
-    page = 1,
-    limit = 12,
-    filters: EventFilters = {}
-  ): Promise<PaginatedEventsResult> => {
-    try {
-      // Calculate offset for pagination
-      const offset = (page - 1) * limit;
-
-      // Get current date in YYYY-MM-DD format for comparison
-      const today = new Date().toISOString().split("T")[0];
-
-      // Build the base query for public events only (excluding past events)
-      let countQuery = supabase
-        .from("events")
-        .select("*", { count: "exact", head: true })
-        .eq("visibility", "public")
-        .gte("date", today); // Only include events that are today or in the future
-
-      let dataQuery = supabase
-        .from("events")
-        .select("*")
-        .eq("visibility", "public")
-        .gte("date", today); // Only include events that are today or in the future
-
-      // Apply filters
-      if (filters.title) {
-        const titleFilter = `%${filters.title}%`;
-        countQuery = countQuery.ilike("title", titleFilter);
-        dataQuery = dataQuery.ilike("title", titleFilter);
-      }
-
-      if (filters.category) {
-        if (filters.category === "other") {
-          // For "other" category, include events where category is 'other', null, or empty string
-          countQuery = countQuery.or(
-            "category.eq.other,category.is.null,category.eq."
-          );
-          dataQuery = dataQuery.or(
-            "category.eq.other,category.is.null,category.eq."
-          );
-        } else {
-          // For all other categories, use exact match
-          countQuery = countQuery.eq("category", filters.category);
-          dataQuery = dataQuery.eq("category", filters.category);
-        }
-      }
-
-      if (filters.dateFrom) {
-        countQuery = countQuery.gte("date", filters.dateFrom);
-        dataQuery = dataQuery.gte("date", filters.dateFrom);
-      }
-
-      if (filters.dateTo) {
-        countQuery = countQuery.lte("date", filters.dateTo);
-        dataQuery = dataQuery.lte("date", filters.dateTo);
-      }
-
-      // Execute count query
-      const { count, error: countError } = await countQuery;
-      if (countError) throw countError;
-
-      // Execute data query with pagination and ordering
-      const { data, error: fetchError } = await dataQuery
-        .order("created_at", { ascending: false })
-        .range(offset, offset + limit - 1);
-
-      if (fetchError) throw fetchError;
-
-      return {
-        events: data || [],
-        totalCount: count || 0,
-      };
-    } catch (err) {
-      console.error("Error fetching public events:", err);
-      throw new Error("Failed to load events");
-    }
-  };
 
   const fetchEventsByUser = async (
     page = 1,
@@ -402,18 +287,11 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
         .eq("user_id", user.id);
 
       if (deleteError) throw deleteError;
-
-      // Update local state if the event is in the current events list
-      setEvents(prev => prev.filter(event => event.id !== id));
     } catch (err) {
       console.error("Error deleting event:", err);
       throw new Error("Failed to delete event");
     }
   };
-
-  useEffect(() => {
-    fetchEvents();
-  }, []);
 
   const addEvent = async (eventData: Event) => {
     const { id: _, ...rest } = eventData;
@@ -429,7 +307,6 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (insertError) throw insertError;
 
-      setEvents(prev => [data, ...prev]);
       showToast("Event created successfully!", "success");
     } catch (err) {
       console.error("Error adding event:", err);
@@ -450,13 +327,6 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
         .eq("user_id", user.id);
 
       if (updateError) throw updateError;
-
-      // Update local state if the event is in the current events list
-      setEvents(prev =>
-        prev.map(event =>
-          event.id === id ? { ...event, ...eventData } : event
-        )
-      );
     } catch (err) {
       console.error("Error updating event:", err);
       throw new Error("Failed to update event");
@@ -575,14 +445,10 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <EventContext.Provider
       value={{
-        events,
-        loading,
         error,
         addEvent,
         getEvent,
-        refreshEvents: fetchEvents,
         fetchEventsByUser,
-        fetchPublicEvents,
         updateEvent,
         deleteEvent,
         uploadGeneratedDPImage,
