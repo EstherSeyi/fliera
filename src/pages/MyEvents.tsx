@@ -6,8 +6,6 @@ import {
   Eye,
   Edit,
   Plus,
-  ChevronLeft,
-  ChevronRight,
   Search,
   Filter,
   X,
@@ -16,9 +14,7 @@ import {
   Share2,
 } from "lucide-react";
 import DatePicker from "react-datepicker";
-import { isPast } from "date-fns";
 import "react-datepicker/dist/react-datepicker.css";
-import { useEvents } from "../context/EventContext";
 import { useToast } from "../context/ToastContext";
 import { MyEventTableSkeleton } from "../components/MyEventTableSkeleton";
 import { MyEventCardSkeleton } from "../components/MyEventCardSkeleton";
@@ -40,33 +36,30 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import type { Event, EventCategory, EventVisibility } from "../types";
-
-const CATEGORY_OPTIONS: { value: EventCategory; label: string }[] = [
-  { value: "business", label: "Business" },
-  { value: "technology", label: "Technology" },
-  { value: "music", label: "Music" },
-  { value: "social", label: "Social" },
-  { value: "sports", label: "Sports" },
-  { value: "activism", label: "Activism" },
-  { value: "other", label: "Other" },
-];
-
-const VISIBILITY_OPTIONS: { value: EventVisibility; label: string }[] = [
-  { value: "public", label: "Public" },
-  { value: "private", label: "Private" },
-  { value: "archived", label: "Archived" },
-];
+import { useUserEvents } from "../hooks/queries/useGetUserEvents";
+import { useAuth } from "../context/AuthContext";
+import {
+  EVENT_CATEGORY_OPTIONS,
+  EVENT_VISIBILITY_OPTIONS,
+  FALLBACK_EVENT_CARD_IMAGE,
+} from "../constants";
+import {
+  createImageErrorHandler,
+  createImageLoadHandler,
+} from "../helpers/images/create-image-error-handler";
+import { useDeleteEvent } from "../hooks/mutations/useDeleteEventById";
+import { dateIsInThetPast, formatDate } from "../lib/utils/dates";
+import { Pagination } from "../components/events_list/Pagination";
 
 export const MyEvents: React.FC = () => {
-  const { fetchEventsByUser, deleteEvent } = useEvents();
+  const { user } = useAuth();
+
   const { showToast } = useToast();
-  const [userEvents, setUserEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const { mutate: deleteEvent, isPending: isDeleting } = useDeleteEvent();
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalEvents, setTotalEvents] = useState(0);
   const eventsPerPage = 10;
 
   // Filter state
@@ -84,50 +77,29 @@ export const MyEvents: React.FC = () => {
   // Confirmation dialog state
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Debounce search term to avoid excessive API calls
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
+  const {
+    data,
+    isPending: loading,
+    error: eventsError,
+  } = useUserEvents(user?.id, currentPage, eventsPerPage, {
+    title: debouncedSearchTerm,
+    category: selectedCategory as EventCategory,
+    visibility: selectedVisibility as EventVisibility,
+    dateFrom: dateFrom?.toISOString().split("T")[0],
+    dateTo: dateTo?.toISOString().split("T")[0],
+  });
+
+  const userEvents = data?.events ?? [];
+  const totalEvents = data?.totalCount ?? 0;
+
+  const error = eventsError?.message ?? null;
+
   // Calculate total pages
   const totalPages = Math.ceil(totalEvents / eventsPerPage);
-
-  // Check if event date is in the past
-  const isEventPast = (eventDate: string) => {
-    return isPast(new Date(eventDate));
-  };
-
-  // Image loading handlers
-  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.currentTarget;
-    const container = img.parentElement;
-    
-    // Remove loading animation from container
-    if (container) {
-      container.classList.remove('animate-pulse', 'bg-gray-200');
-    }
-    
-    // Make image visible
-    img.classList.remove('opacity-0');
-    img.classList.add('opacity-100');
-  };
-
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.currentTarget;
-    const container = img.parentElement;
-    
-    // Set fallback image
-    img.src = "https://images.pexels.com/photos/1036936/pexels-photo-1036936.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1";
-    
-    // Remove loading animation from container
-    if (container) {
-      container.classList.remove('animate-pulse', 'bg-gray-200');
-    }
-    
-    // Make image visible
-    img.classList.remove('opacity-0');
-    img.classList.add('opacity-100');
-  };
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -139,54 +111,6 @@ export const MyEvents: React.FC = () => {
     dateFrom,
     dateTo,
   ]);
-
-  useEffect(() => {
-    const loadUserEvents = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const filters = {
-          ...(debouncedSearchTerm && { title: debouncedSearchTerm }),
-          ...(selectedCategory && { category: selectedCategory }),
-          ...(selectedVisibility && { visibility: selectedVisibility }),
-          ...(dateFrom && { dateFrom: dateFrom.toISOString().split("T")[0] }),
-          ...(dateTo && { dateTo: dateTo.toISOString().split("T")[0] }),
-        };
-
-        const result = await fetchEventsByUser(
-          currentPage,
-          eventsPerPage,
-          filters
-        );
-        setUserEvents(result.events);
-        setTotalEvents(result.totalCount);
-      } catch (err) {
-        console.error("Error loading user events:", err);
-        setError("Failed to load your events");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUserEvents();
-  }, [
-    fetchEventsByUser,
-    currentPage,
-    debouncedSearchTerm,
-    selectedCategory,
-    selectedVisibility,
-    dateFrom,
-    dateTo,
-  ]);
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   const getVisibilityBadge = (visibility: string) => {
     const safeVisibility = visibility || "public";
@@ -247,11 +171,11 @@ export const MyEvents: React.FC = () => {
   };
 
   const hasActiveFilters =
-    debouncedSearchTerm ||
-    selectedCategory ||
-    selectedVisibility ||
-    dateFrom ||
-    dateTo;
+    !!debouncedSearchTerm ||
+    !!selectedCategory ||
+    !!selectedVisibility ||
+    !!dateFrom ||
+    !!dateTo;
 
   const handleDeleteClick = (event: Event) => {
     setEventToDelete(event);
@@ -261,28 +185,16 @@ export const MyEvents: React.FC = () => {
   const handleConfirmDelete = async () => {
     if (!eventToDelete) return;
 
-    try {
-      setDeletingId(eventToDelete.id);
-      await deleteEvent(eventToDelete.id);
-      
-      // Remove the deleted event from the local state
-      setUserEvents(prev => prev.filter(event => event.id !== eventToDelete.id));
-      setTotalEvents(prev => prev - 1);
-      
-      showToast("Event deleted successfully!", "success");
-      
-      // If we deleted the last item on the current page and it's not the first page, go back one page
-      if (userEvents.length === 1 && currentPage > 1) {
-        setCurrentPage(prev => prev - 1);
-      }
-    } catch (err) {
-      console.error("Error deleting event:", err);
-      showToast("Failed to delete event", "error");
-    } finally {
-      setDeletingId(null);
-      setShowDeleteDialog(false);
-      setEventToDelete(null);
-    }
+    deleteEvent(eventToDelete?.id, {
+      onSuccess: () => {
+        showToast("Event deleted successfully!", "success");
+        setEventToDelete(null);
+        setShowDeleteDialog(false);
+      },
+      onError: () => {
+        showToast("Failed to delete event", "error");
+      },
+    });
   };
 
   const handleCancelDelete = () => {
@@ -299,7 +211,11 @@ export const MyEvents: React.FC = () => {
     };
 
     try {
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare(shareData)
+      ) {
         await navigator.share(shareData);
         showToast("Event shared successfully!", "success");
       } else {
@@ -315,101 +231,12 @@ export const MyEvents: React.FC = () => {
         showToast("Event link copied to clipboard!", "success");
       } catch (clipboardError) {
         console.error("Error copying to clipboard:", clipboardError);
-        showToast("Unable to share event. Please copy the URL manually.", "error");
+        showToast(
+          "Unable to share event. Please copy the URL manually.",
+          "error"
+        );
       }
     }
-  };
-
-  const renderPaginationControls = () => {
-    if (totalPages <= 1) return null;
-
-    const pageNumbers = [];
-    const maxVisiblePages = 5;
-
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pageNumbers.push(i);
-    }
-
-    return (
-      <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-gray-200">
-        <div className="flex items-center text-sm text-gray-500">
-          Showing {(currentPage - 1) * eventsPerPage + 1} to{" "}
-          {Math.min(currentPage * eventsPerPage, totalEvents)} of {totalEvents}{" "}
-          events
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Previous
-          </button>
-
-          <div className="flex space-x-1">
-            {startPage > 1 && (
-              <>
-                <button
-                  onClick={() => handlePageChange(1)}
-                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  1
-                </button>
-                {startPage > 2 && (
-                  <span className="px-3 py-2 text-sm text-gray-500">...</span>
-                )}
-              </>
-            )}
-
-            {pageNumbers.map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`px-3 py-2 text-sm font-medium rounded-md ${
-                  page === currentPage
-                    ? "text-primary bg-thistle border border-primary"
-                    : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-
-            {endPage < totalPages && (
-              <>
-                {endPage < totalPages - 1 && (
-                  <span className="px-3 py-2 text-sm text-gray-500">...</span>
-                )}
-                <button
-                  onClick={() => handlePageChange(totalPages)}
-                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  {totalPages}
-                </button>
-              </>
-            )}
-          </div>
-
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </button>
-        </div>
-      </div>
-    );
   };
 
   if (error) {
@@ -505,7 +332,7 @@ export const MyEvents: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all-categories">All categories</SelectItem>
-                  {CATEGORY_OPTIONS.map(({ value, label }) => (
+                  {EVENT_CATEGORY_OPTIONS.map(({ value, label }) => (
                     <SelectItem key={value} value={value}>
                       {label}
                     </SelectItem>
@@ -531,7 +358,7 @@ export const MyEvents: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all-visibility">All visibility</SelectItem>
-                  {VISIBILITY_OPTIONS.map(({ value, label }) => (
+                  {EVENT_VISIBILITY_OPTIONS.map(({ value, label }) => (
                     <SelectItem key={value} value={value}>
                       {label}
                     </SelectItem>
@@ -676,8 +503,10 @@ export const MyEvents: React.FC = () => {
                                 className="h-12 w-12 rounded-lg object-cover transition-opacity duration-300 opacity-0"
                                 src={event.flyer_url}
                                 alt={event.title}
-                                onLoad={handleImageLoad}
-                                onError={handleImageError}
+                                onLoad={createImageLoadHandler()}
+                                onError={createImageErrorHandler({
+                                  fallbackSrc: FALLBACK_EVENT_CARD_IMAGE,
+                                })}
                               />
                             </div>
                             <div className="ml-4">
@@ -695,8 +524,8 @@ export const MyEvents: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           <div className="flex flex-col">
-                            <span>{formatDate(event.date)}</span>
-                            {isEventPast(event.date) && (
+                            <span>{formatDate(event?.date)}</span>
+                            {dateIsInThetPast(event.date) && (
                               <span className="text-xs text-red-500 font-medium">
                                 Past Event
                               </span>
@@ -714,7 +543,7 @@ export const MyEvents: React.FC = () => {
                             <DropdownMenuTrigger asChild>
                               <button
                                 className="inline-flex items-center justify-center w-8 h-8 text-gray-500 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
-                                disabled={deletingId === event.id}
+                                disabled={eventToDelete?.id === event.id}
                               >
                                 <MoreHorizontal className="w-4 h-4" />
                                 <span className="sr-only">Open menu</span>
@@ -730,16 +559,18 @@ export const MyEvents: React.FC = () => {
                                   View Event
                                 </Link>
                               </DropdownMenuItem>
-                              
+
                               <DropdownMenuItem
-                                onClick={() => handleShareEvent(event.id, event.title)}
+                                onClick={() =>
+                                  handleShareEvent(event.id, event.title)
+                                }
                                 className="flex items-center w-full"
                               >
                                 <Share2 className="w-4 h-4 mr-2" />
                                 Share Event
                               </DropdownMenuItem>
-                              
-                              {!isEventPast(event.date) ? (
+
+                              {!dateIsInThetPast(event.date) ? (
                                 <DropdownMenuItem asChild>
                                   <Link
                                     to={`/admin/edit/${event.id}`}
@@ -753,19 +584,21 @@ export const MyEvents: React.FC = () => {
                                 <DropdownMenuItem disabled>
                                   <Edit className="w-4 h-4 mr-2" />
                                   Edit Event
-                                  <span className="ml-auto text-xs text-gray-400">Past event</span>
+                                  <span className="ml-auto text-xs text-gray-400">
+                                    Past event
+                                  </span>
                                 </DropdownMenuItem>
                               )}
-                              
+
                               <DropdownMenuSeparator />
-                              
+
                               <DropdownMenuItem
                                 onClick={() => handleDeleteClick(event)}
-                                disabled={deletingId === event.id}
+                                disabled={eventToDelete?.id === event.id}
                                 className="text-red-600 focus:text-red-600 focus:bg-red-50"
                               >
                                 <Trash2 className="w-4 h-4 mr-2" />
-                                {deletingId === event.id ? "Deleting..." : "Delete Event"}
+                                {isDeleting ? "Deleting..." : "Delete Event"}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -797,8 +630,10 @@ export const MyEvents: React.FC = () => {
                           className="h-16 w-16 rounded-lg object-cover transition-opacity duration-300 opacity-0"
                           src={event.flyer_url}
                           alt={event.title}
-                          onLoad={handleImageLoad}
-                          onError={handleImageError}
+                          onLoad={createImageLoadHandler()}
+                          onError={createImageErrorHandler({
+                            fallbackSrc: FALLBACK_EVENT_CARD_IMAGE,
+                          })}
                         />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -817,7 +652,7 @@ export const MyEvents: React.FC = () => {
                           <DropdownMenuTrigger asChild>
                             <button
                               className="inline-flex items-center justify-center w-8 h-8 text-gray-500 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
-                              disabled={deletingId === event.id}
+                              disabled={isDeleting}
                             >
                               <MoreHorizontal className="w-4 h-4" />
                               <span className="sr-only">Open menu</span>
@@ -833,16 +668,18 @@ export const MyEvents: React.FC = () => {
                                 View Event
                               </Link>
                             </DropdownMenuItem>
-                            
+
                             <DropdownMenuItem
-                              onClick={() => handleShareEvent(event.id, event.title)}
+                              onClick={() =>
+                                handleShareEvent(event.id, event.title)
+                              }
                               className="flex items-center w-full"
                             >
                               <Share2 className="w-4 h-4 mr-2" />
                               Share Event
                             </DropdownMenuItem>
-                            
-                            {!isEventPast(event.date) ? (
+
+                            {!dateIsInThetPast(event.date) ? (
                               <DropdownMenuItem asChild>
                                 <Link
                                   to={`/admin/edit/${event.id}`}
@@ -856,19 +693,21 @@ export const MyEvents: React.FC = () => {
                               <DropdownMenuItem disabled>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit Event
-                                <span className="ml-auto text-xs text-gray-400">Past event</span>
+                                <span className="ml-auto text-xs text-gray-400">
+                                  Past event
+                                </span>
                               </DropdownMenuItem>
                             )}
-                            
+
                             <DropdownMenuSeparator />
-                            
+
                             <DropdownMenuItem
                               onClick={() => handleDeleteClick(event)}
-                              disabled={deletingId === event.id}
+                              disabled={isDeleting}
                               className="text-red-600 focus:text-red-600 focus:bg-red-50"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              {deletingId === event.id ? "Deleting..." : "Delete Event"}
+                              {isDeleting ? "Deleting..." : "Delete Event"}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -880,7 +719,7 @@ export const MyEvents: React.FC = () => {
                         <span className="text-sm text-gray-600">
                           📅 {formatDate(event.date)}
                         </span>
-                        {isEventPast(event.date) && (
+                        {dateIsInThetPast(event.date) && (
                           <span className="text-xs text-red-500 font-medium">
                             Past Event
                           </span>
@@ -894,11 +733,16 @@ export const MyEvents: React.FC = () => {
           </div>
 
           {/* Pagination Controls */}
-          {renderPaginationControls()}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalEvents}
+            itemsPerPage={eventsPerPage}
+            onPageChange={handlePageChange}
+          />
         </motion.div>
       )}
 
-      {/* Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={showDeleteDialog}
         onClose={handleCancelDelete}
@@ -908,7 +752,7 @@ export const MyEvents: React.FC = () => {
         confirmText="Delete Event"
         cancelText="Cancel"
         variant="danger"
-        isLoading={deletingId === eventToDelete?.id}
+        isLoading={isDeleting}
       />
     </div>
   );
